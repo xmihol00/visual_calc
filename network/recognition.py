@@ -71,7 +71,7 @@ def resize_image(x, w, h):
 mser = cv2.MSER_create(delta=25, min_area=20, max_variation=0.4)
 
 # Load an equation image resize it if necessary
-img = cv2.imread("../testing/eq4.png")
+img = cv2.imread("../testing/eq1.png")
 if img.shape[1] > 400:
     img = imutils.resize(img, 400)
 orig = img.copy()

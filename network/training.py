@@ -7,18 +7,18 @@ from matplotlib import pyplot
 labelEncoder = preprocessing.LabelEncoder()
 
 # Load data
-data = np.load('../data/CompleteDataSet_training_tuples.npy', allow_pickle=True)
+data = np.load('../data/digits_and_characters_1/CompleteDataSet_testing_tuples.npy', allow_pickle=True)
 train_images = np.stack(data[:, 0])
 train_labels = np.stack(data[:, 1])
 labelEncoder.fit(train_labels)
 train_classes = labelEncoder.transform(train_labels)
 
-validation_data = np.load('../data/CompleteDataSet_validation_tuples.npy', allow_pickle=True)
+validation_data = np.load('../data/digits_and_characters_1/CompleteDataSet_validation_tuples.npy', allow_pickle=True)
 validation_images = np.stack(validation_data[:, 0])
 validation_labels = np.stack(validation_data[:, 1])
 validation_classes = labelEncoder.transform(validation_labels)
 
-test_data = np.load('../data/CompleteDataSet_testing_tuples.npy', allow_pickle=True)
+test_data = np.load('../data/digits_and_characters_1/CompleteDataSet_testing_tuples.npy', allow_pickle=True)
 test_images = np.stack(test_data[:, 0])
 test_labels = np.stack(test_data[:, 1])
 test_classes = labelEncoder.transform(test_labels)

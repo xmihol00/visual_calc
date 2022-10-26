@@ -1,9 +1,13 @@
+from sre_parse import DIGITS
 import numpy as np
 import random as rnd
 
 CHARACTERS_PATH = "../data/separated_characters/"
 EQUATIONS_PATH = "../data/equations/"
-NUMBER_OF_SAMPLES = 5000                                    # number of generated equations
+TRAINING_IMAGES_FILENAME = "equations_training_images.npy"
+TRAINING_LABELS_FILENAME = "equations_training_labels.npy"
+
+NUMBER_OF_SAMPLES = 1000                                    # number of generated equations
 CHAR_IMAGE_WIDTH = 28                                       # width of a character image in pixels
 CHAR_IMAGE_HEIGHT = 28                                      # height of a character image in pixels
 CHAR_IMAGE_WIDTH_HALF = int(CHAR_IMAGE_WIDTH / 2)           # half of the width of a character image in pixels
@@ -14,6 +18,8 @@ FINAL_IMAGE_WIDTH = 128                                     # width of the final
 FINAL_IMAGE_WIDTH_WITH_SHIFT = FINAL_IMAGE_WIDTH + X_SHIFT  # width of the final image with shift in pixels
 FINAL_IMAGE_HEIGHT = 48                                     # height of the final image in pixels
 CHARACTER_IN_IMAGE_WIDTH = int((FINAL_IMAGE_WIDTH) / 3)     # area for one character across the x axes, character is randomly placed in this area
+ONE_HOT_CHAR_CNT = 14                                       # number of true/false values to encode a character
+POSITION_CNT = 3                                            # one position for each character in the final image
 
 digits = []
 for file_name in ["zeros.npy", "ones.npy", "twos.npy", "threes.npy", "fours.npy", 
@@ -26,10 +32,9 @@ for file_name in ["pluses.npy", "minuses.npy", "astrics.npy", "slashes.npy"]:
 
 DIGIT_CNT = len(digits)
 OPERATOR_CNT = len(operators)
-POSITION_CNT = 3    # one position for each character in the final image
 
 images = np.zeros((NUMBER_OF_SAMPLES, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH_WITH_SHIFT), dtype=np.float32)
-labels = np.zeros((NUMBER_OF_SAMPLES, 2 * DIGIT_CNT + OPERATOR_CNT + POSITION_CNT), dtype=np.float32)
+labels = np.zeros((NUMBER_OF_SAMPLES, 3 * ONE_HOT_CHAR_CNT + POSITION_CNT), dtype=np.float32)
 for i in range(NUMBER_OF_SAMPLES):
     # random selection of the 1st digit
     digit_type_1 = rnd.randint(0, DIGIT_CNT - 1)
@@ -65,13 +70,13 @@ for i in range(NUMBER_OF_SAMPLES):
 
     # one-hot encoding of the classes
     labels[i, digit_type_1] = 1.0
-    labels[i, digit_type_2 + DIGIT_CNT] = 1.0
-    labels[i, operator_type_1 + 2 * DIGIT_CNT] = 1.0
+    labels[i, operator_type_1 + DIGIT_CNT + ONE_HOT_CHAR_CNT] = 1.0
+    labels[i, digit_type_2 + 2 * ONE_HOT_CHAR_CNT] = 1.0
 
     # possition assignment and normalization to values between 0 and 2
-    labels[i, 2 * DIGIT_CNT + OPERATOR_CNT:] = x1 + CHAR_IMAGE_WIDTH_HALF, x2 + CHAR_IMAGE_WIDTH_HALF, x3 + CHAR_IMAGE_WIDTH_HALF
-    labels[i, 2 * DIGIT_CNT + OPERATOR_CNT:] += x_shift
-    labels[i, 2 * DIGIT_CNT + OPERATOR_CNT:] /= (FINAL_IMAGE_WIDTH + X_SHIFT) / 2
+    labels[i, 3 * ONE_HOT_CHAR_CNT:] = x1 + CHAR_IMAGE_WIDTH_HALF, x2 + CHAR_IMAGE_WIDTH_HALF, x3 + CHAR_IMAGE_WIDTH_HALF
+    labels[i, 3 * ONE_HOT_CHAR_CNT:] += x_shift
+    labels[i, 3 * ONE_HOT_CHAR_CNT:] /= FINAL_IMAGE_WIDTH + X_SHIFT
 
-np.save(f"{EQUATIONS_PATH}equations_training_images.npy", images)
-np.save(f"{EQUATIONS_PATH}equations_training_labels.npy", labels)
+np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME}", images)
+np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME}", labels)

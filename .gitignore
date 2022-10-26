@@ -3,3 +3,5 @@ data/
 models/test_model/
 
 network/__pycache__/
+
+.idea/

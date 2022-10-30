@@ -10,16 +10,16 @@ MNIST_PATH = "../data/mnist/"
 MODEL_PATH = "../models/"
 
 TRAINING_IMAGES_FILENAME = "train-images.idx3-ubyte"
-TRAINING_LABELS_FILENAME = "train-labels.idx3-ubyte"
+TRAINING_LABELS_FILENAME = "train-labels.idx1-ubyte"
 TESTING_IMAGES_FILENAME = "t10k-images.idx3-ubyte"
-TESTING_LABELS_FILENAME = "t10k-labels.idx3-ubyte"
+TESTING_LABELS_FILENAME = "t10k-labels.idx1-ubyte"
 
 MODEL_FILE_NAME = "mnist_CNN.pt"
 
 class TrainingDataset():
     def __init__(self):
         self.training_data = torch.from_numpy(np.expand_dims(idx2numpy.convert_from_file(f"{MNIST_PATH}{TRAINING_IMAGES_FILENAME}") / 255.0, axis=1)).to(torch.float32)
-        self.training_labels = torch.from_numpy(np.array(idx2numpy.convert_from_file(f"{MNIST_PATH}{TRAINING_IMAGES_FILENAME}")))
+        self.training_labels = torch.from_numpy(np.array(idx2numpy.convert_from_file(f"{MNIST_PATH}{TRAINING_LABELS_FILENAME}")))
 
     def __getitem__(self, idx):
         return self.training_data[idx], self.training_labels[idx]
@@ -49,7 +49,7 @@ class MNIST_CNN(nn.Module):
             nn.Conv2d(32, 96, (3, 3)),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(96 * 24 * 24, 10)
+            nn.Linear(96 * 22 * 22, 10)
         )
     
     def forward(self, x):
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(classifier.parameters(), lr=0.005)
 
         for i in range(1, 6):
-            for images, labels in DataLoader(TrainingDataset(), 32):
+            for images, labels in DataLoader(TrainingDataset(), 1):
                 output = classifier(images)
                 loss = loss_function(output, labels)
 

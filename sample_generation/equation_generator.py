@@ -8,9 +8,9 @@ TRAINING_IMAGES_FILENAME = "equations_%s_training_images_%s.npy"
 TRAINING_LABELS_FILENAME = "equations_%s_training_labels_%s.npy"
 
 HELP_MSG = "Run as: python equation_generator.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
-BATCH_SIZE = 4
+BATCH_SIZE = 8
 BATCHES_PER_FILE = 100
-FILES = 3
+FILES = 4
 NUMBER_OF_DIGITS = 10
 NUMBER_OF_OPERATORS = 4
 
@@ -60,12 +60,12 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
     WIDTH_FOR_CHARCTER = IMAGE_WIDTH // 3
 
     for i in range(files):
-        batches_of_images = np.empty((batches_per_file), dtype=object)
-        batches_of_labels = np.empty((batches_per_file), dtype=object)
+        batches_of_images = np.zeros((batches_per_file), dtype=object)
+        batches_of_labels = np.zeros((batches_per_file), dtype=object)
 
         for j in range(batches_per_file):
-            image_batch = np.empty((batch_size, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
-            label_batch = np.empty((batch_size, 3), dtype=np.uint8)
+            image_batch = np.zeros((batch_size, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
+            label_batch = np.zeros((batch_size, 3), dtype=np.uint8)
 
             for k in range(batch_size):
                 # randomly select 2 digits and 1 operator
@@ -126,65 +126,3 @@ if __name__ == "__main__":
         print("Unknown image type.", file=sys.stderr)
         print(HELP_MSG, file=sys.stderr)
         exit(1)
-
-    exit(0)
-
-digits = []
-for file_name in ["zeros.npy", "ones.npy", "twos.npy", "threes.npy", "fours.npy", 
-                  "fives.npy", "sixes.npy", "sevens.npy", "eights.npy", "nines.npy"]:
-    digits.append(np.load(f"{CHARACTERS_PATH}{file_name}", allow_pickle=True))
-
-operators = []
-for file_name in ["pluses.npy", "minuses.npy", "astrics.npy", "slashes.npy"]:
-    operators.append(np.load(f"{CHARACTERS_PATH}{file_name}", allow_pickle=True))
-
-NUMBER_OF_DIGITS = len(digits)
-NUMBER_OF_OPERATORS = len(operators)
-
-images = np.zeros((NUMBER_OF_SAMPLES, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH_WITH_SHIFT), dtype=np.float32)
-labels = np.zeros((NUMBER_OF_SAMPLES, 3), dtype=np.uint8)
-for i in range(NUMBER_OF_SAMPLES):
-    # random selection of the 1st digit
-    digit_type_1 = rnd.randint(0, NUMBER_OF_DIGITS - 1)
-    digit_idx_1 = rnd.randint(0, digits[digit_type_1].shape[0] - 1)
-    digit_1 = digits[digit_type_1][digit_idx_1][0]
-
-    # random selection of the operator
-    operator_type_1 = rnd.randint(0, NUMBER_OF_OPERATORS - 1)
-    operator_idx_1 = rnd.randint(0, operators[operator_type_1].shape[0] - 1)
-    operator_1 = operators[operator_type_1][operator_idx_1][0]
-
-    # random selection of the 2nd digit
-    digit_type_2 = rnd.randint(0, 9)
-    digit_idx_2 = rnd.randint(0, digits[digit_type_2].shape[0] - 1)
-    digit_2 = digits[digit_type_2][digit_idx_2][0]
-
-    # random position of the characters across the y axes
-    y1, y2, y3 = np.random.randint(0, FINAL_IMAGE_HEIGHT - CHARACTER_IMAGE_WIDTH, 3)
-    
-    # random positions of the characters across the x axes
-    x1 = rnd.randint(X_SHIFT_HALF, CHARACTER_IN_IMAGE_WIDTH - X_SHIFT_HALF_OVERLAP)
-    x2 = rnd.randint(CHARACTER_IN_IMAGE_WIDTH + X_SHIFT_HALF_OVERLAP, 2 * CHARACTER_IN_IMAGE_WIDTH - X_SHIFT_HALF_OVERLAP)
-    x3 = rnd.randint(2 * CHARACTER_IN_IMAGE_WIDTH + X_SHIFT_HALF_OVERLAP, FINAL_IMAGE_WIDTH + X_SHIFT_HALF - CHARACTER_IMAGE_WIDTH - 1)
-
-    # shift of all the characters in the final image in the width direction
-    x_shift = rnd.randint(-X_SHIFT_HALF, X_SHIFT_HALF)
-    x_shift_image = x_shift + CHARACTER_IMAGE_WIDTH
-    
-    # composition of the final image from 2 randomly chosen digits and a randomly chosen character
-    images[i, y1:y1 + CHARACTER_IMAGE_HEIGHT, x1 + x_shift:x1 + x_shift_image] += digit_1
-    images[i, y2:y2 + CHARACTER_IMAGE_HEIGHT, x2 + x_shift:x2 + x_shift_image] += operator_1
-    images[i, y3:y3 + CHARACTER_IMAGE_HEIGHT, x3 + x_shift:x3 + x_shift_image] += digit_2
-
-    # labels for digits 0-9 and for operators 0-3
-    labels[i, 0] = digit_type_1
-    labels[i, 1] = operator_type_1
-    labels[i, 2] = digit_type_2
-
-    # possition assignment and normalization to values between 0 and 2
-    # labels[i, 3:] = x1 + CHAR_IMAGE_WIDTH_HALF, x2 + CHAR_IMAGE_WIDTH_HALF, x3 + CHAR_IMAGE_WIDTH_HALF
-    # labels[i, 3:] += x_shift
-    # labels[i, 3:] /= FINAL_IMAGE_WIDTH + X_SHIFT
-
-np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME}", images)
-np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME}", labels)

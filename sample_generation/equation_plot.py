@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-EQUATIONS_PATH = "../data/equations/"
+EQUATIONS_PATH = "./data/equations/"
 TRAINING_IMAGES_FILENAME = "equations_%s_training_images_%s.npy"
 TRAINING_LABELS_FILENAME = "equations_%s_training_labels_%s.npy"
 
@@ -13,7 +13,7 @@ FILES = 4
 
 PLOTTED_WINDOWS_COUNT = 10
 SUBPLOT_X_COUNT = 4
-SUBPLOT_Y_COUNT = 3
+SUBPLOT_Y_COUNT = 2
 
 ONE_HOT_CHAR_CNT = 14  # number of true/false values to encode a character
 DIGIT_CNT = 10
@@ -35,8 +35,8 @@ class ImagePlotter():
             self.label_extractor = self.extract_dod_90x30_label
         elif file_type == "DOD_132x40":
             pass
-        elif file_type == "RND_222x38":
-            pass
+        elif file_type == "RND_230x38":
+            self.label_extractor = lambda x: "TODO" 
         else:
             print("Unknown image type.", file=sys.stderr)
             print(HELP_MSG, file=sys.stderr)

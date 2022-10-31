@@ -2,8 +2,8 @@ import numpy as np
 import random as rnd
 import sys
 
-CHARACTERS_PATH = "../data/separated_characters/"
-EQUATIONS_PATH = "../data/equations/"
+CHARACTERS_PATH = "./data/separated_characters/"
+EQUATIONS_PATH = "./data/equations/"
 TRAINING_IMAGES_FILENAME = "equations_%s_training_images_%s.npy"
 TRAINING_LABELS_FILENAME = "equations_%s_training_labels_%s.npy"
 
@@ -98,6 +98,75 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
         np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME % str(i)}", batches_of_images)
         np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME % str(i)}", batches_of_labels)
 
+def rnd_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
+    IMAGE_WIDTH = 230
+    IMAGE_HEIGHT = 38
+    MIN_CHARACTERS = 3
+    MAX_CHARACTERS = 8
+    LABELS_PER_IMAGE = 26
+
+    for i in range(files):
+        batches_of_images = np.zeros((batches_per_file), dtype=object)
+        batches_of_labels = np.zeros((batches_per_file), dtype=object)
+
+        for j in range(batches_per_file):
+            image_batch = np.zeros((batch_size, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
+            label_batch = np.zeros((batch_size * LABELS_PER_IMAGE, 2), dtype=np.uint8)
+
+            for k in range(batch_size):
+                number_of_characters = rnd.randint(MIN_CHARACTERS, MAX_CHARACTERS)
+                character_middle_idxs = np.zeros(number_of_characters)
+                labels = np.zeros(number_of_characters, dtype=np.uint8)
+                digit_probability = 1.0 # first character must be a digit
+                current_image_idx = 0
+                for l in range(number_of_characters):
+                    if l == number_of_characters - 1: # last character must be a digit
+                        digit_probability = 1.0
+
+                    character = None
+                    label = None
+                    if rnd.random() <= digit_probability: # next character is a digit
+                        character, label = digits.get()
+                        digit_probability /= 2
+                    else: # next character is an operator
+                        character, label = operators.get()
+                        digit_probability = 1.0 # next character must be a digit
+                    
+                    character_height = character.shape[0]
+                    character_width = character.shape[1]
+                    y_idx = rnd.randint(0, IMAGE_HEIGHT - character_height) # randomly verticaly place the character
+                    image_batch[k, y_idx:y_idx + character_height, current_image_idx:current_image_idx + character_width] = character
+                    character_middle_idxs[l] = current_image_idx + character_width // 2 # store the middle index of the character
+                    current_image_idx += character_width
+                    labels[l] = label # store the label for the character
+            
+                x_shift = rnd.randint(0, IMAGE_WIDTH - current_image_idx)
+                image_batch[k] = np.roll(image_batch[k], shift=x_shift, axis=1) # shifting the image across x axis
+                character_middle_idxs = (character_middle_idxs + x_shift) % IMAGE_WIDTH
+
+                width_per_label_box = IMAGE_WIDTH / LABELS_PER_IMAGE
+                current_label_box = 0.0
+                character_idx = 0
+                for l in range(LABELS_PER_IMAGE):
+                    label_idx = k * LABELS_PER_IMAGE + l
+                    if (character_idx < number_of_characters and character_middle_idxs[character_idx] >= current_label_box and 
+                        character_middle_idxs[character_idx] <= current_label_box + width_per_label_box): # center pf a character is in a label box
+                        label_batch[label_idx, 0] = 1
+                        label_batch[label_idx, 1] = labels[character_idx]
+                        character_idx += 1
+                    else:
+                        label_batch[label_idx, 0] = 0
+                        label_batch[label_idx, 1] = 0
+
+                    current_label_box += width_per_label_box # next label box
+
+            batches_of_images[j] = image_batch
+            batches_of_labels[j] = label_batch
+    
+        # save file of chosen number of batches
+        np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME % str(i)}", batches_of_images)
+        np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME % str(i)}", batches_of_labels)
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Not enough arguments.", file=sys.stderr)
@@ -120,8 +189,8 @@ if __name__ == "__main__":
         dod_90x30(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, FILES)
     elif argument == "DOD_132x40":
         pass
-    elif argument == "RND_222x38":
-        pass
+    elif argument == "RND_230x38":
+        rnd_230x38(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, FILES)
     else:
         print("Unknown image type.", file=sys.stderr)
         print(HELP_MSG, file=sys.stderr)

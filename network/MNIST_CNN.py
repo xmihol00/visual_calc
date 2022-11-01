@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from torch import nn
 from torch.utils.data import DataLoader
 
-MNIST_PATH = "../data/mnist/"
-MODEL_PATH = "../models/"
+MNIST_PATH = "/data/mnist/"
+MODEL_PATH = "/models/"
 
 TRAINING_IMAGES_FILENAME = "train-images.idx3-ubyte"
 TRAINING_LABELS_FILENAME = "train-labels.idx1-ubyte"

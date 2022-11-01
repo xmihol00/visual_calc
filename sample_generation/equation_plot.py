@@ -16,10 +16,7 @@ SUBPLOT_X_COUNT = 4
 SUBPLOT_Y_COUNT = 2
 
 ONE_HOT_CHAR_CNT = 14  # number of true/false values to encode a character
-DIGIT_CNT = 10
-POS_1_IDX = 3
-POS_2_IDX = POS_1_IDX + 1
-POS_3_IDX = POS_1_IDX + 2
+NUMBER_OF_DIGITS = 10
 
 class ImagePlotter():
     def __init__(self, subplot_x_cnt, subplot_y_cnt, file_type, figsize=(13, 12)):
@@ -36,15 +33,16 @@ class ImagePlotter():
         elif file_type == "DOD_132x40":
             pass
         elif file_type == "RND_230x38":
-            self.label_extractor = lambda x: "TODO" 
+            self.label_extractor = self.extract_rnd_230x38_label
         else:
             print("Unknown image type.", file=sys.stderr)
             print(HELP_MSG, file=sys.stderr)
             exit(1)
     
-    def plot(self, image, label):
+    def plot(self, images, labels, idx):
+        image = images[idx, 0]
         self.axes[self.row_idx, self.col_idx].imshow(image, cmap="gray")
-        self.axes[self.row_idx, self.col_idx].set_title(self.label_extractor(label))
+        self.axes[self.row_idx, self.col_idx].set_title(self.label_extractor(labels, idx))
         
         self.col_idx += 1
         if self.col_idx == self.subplot_y_cnt:
@@ -55,8 +53,21 @@ class ImagePlotter():
                 plt.show()
                 _, self.axes = plt.subplots(self.subplot_x_cnt, self.subplot_y_cnt, figsize=self.figsize)
 
-    def extract_dod_90x30_label(self, label):
+    def extract_dod_90x30_label(self, labels, idx):
+        label = labels[idx]
         return f"{int(label[0])} {self.operator_dict[label[1]]} {int(label[2])}"
+    
+    def extract_rnd_230x38_label(self, labels, idx):
+        LABELS_PER_IMAGE = 25
+        label_str = ""
+        for label in labels[idx * LABELS_PER_IMAGE : LABELS_PER_IMAGE + idx * LABELS_PER_IMAGE]:
+            if label[0] == 1: # label contains digit or operator
+                if label[1] > 9: # label contains operator
+                    label_str += f" {self.operator_dict[label[1]]} "
+                else: # label contains digit
+                    label_str += f"{label[1]}"
+
+        return label_str
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -80,4 +91,4 @@ if __name__ == "__main__":
             image_batch = image_file[j]
             label_batch = label_file[j]
             for k in range(BATCH_SIZE):
-                plotter.plot(image_batch[k], label_batch[k])
+                plotter.plot(image_batch, label_batch, k)

@@ -5,10 +5,10 @@ from torch import nn
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
-EQUATIONS_PATH = "../data/equations/"
+EQUATIONS_PATH = "./data/equations/"
 TRAINING_IMAGES_FILENAME = "equations_132x40_training_images.npy"
 TRAINING_LABELS_FILENAME = "equations_132x40_training_labels.npy"
-MODEL_PATH = "../models/"
+MODEL_PATH = "./models/"
 
 IMAGE_WIDTH = 132
 IMAGE_HEIGHT = 40
@@ -26,14 +26,17 @@ class TrainingDataset():
     def __len__(self):
         return self.training_labels.shape[0]
 
-class ThreeCharLoss():
+class ThreeCharLoss(nn.Module):
     def __init__(self):
-        self.CrossEntropyLoss = nn.CrossEntropyLoss()
+        super().__init__()
+        self.cel = nn.CrossEntropyLoss()
 
-    def __call__(self, output, labels):
-        return (self.CrossEntropyLoss(output[:,  0:10], labels[:, 0]) + 
-                self.CrossEntropyLoss(output[:, 10:14], labels[:, 1]) + 
-                self.CrossEntropyLoss(output[:, 14:24], labels[:, 2]))
+    def forward(self, predictions, labels):
+        print((predictions[:,  0:10].shape, labels[:, 0].shape))
+        exit(0)
+        return (self.cel(predictions[:,  0:10], labels[:, 0]) + 
+                self.cel(predictions[:, 10:14], labels[:, 1]) + 
+                self.cel(predictions[:, 14:24], labels[:, 2]))
 
 class ThreeCharDetector(nn.Module):
     def __init__(self):

@@ -64,7 +64,7 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
         batches_of_labels = np.zeros((batches_per_file), dtype=object)
 
         for j in range(batches_per_file):
-            image_batch = np.zeros((batch_size, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
+            image_batch = np.zeros((batch_size, 1, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
             label_batch = np.zeros((batch_size, 3), dtype=np.uint8)
 
             for k in range(batch_size):
@@ -82,9 +82,9 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
                 y1, y2, y3 = np.random.randint(0, IMAGE_HEIGHT - CHARACTER_IMAGE_HEIGHT, 3)
 
                 # composition of the final image from 2 randomly chosen digits and 1 randomly chosen character
-                image_batch[k, y1:y1 + CHARACTER_IMAGE_HEIGHT, x1:x1 + CHARACTER_IMAGE_WIDTH] = digit_1
-                image_batch[k, y2:y2 + CHARACTER_IMAGE_HEIGHT, x2:x2 + CHARACTER_IMAGE_WIDTH] = operator_1
-                image_batch[k, y3:y3 + CHARACTER_IMAGE_HEIGHT, x3:x3 + CHARACTER_IMAGE_WIDTH] = digit_2
+                image_batch[k, 0, y1 : y1 + CHARACTER_IMAGE_HEIGHT, x1 : x1 + CHARACTER_IMAGE_WIDTH] = digit_1
+                image_batch[k, 0, y2 : y2 + CHARACTER_IMAGE_HEIGHT, x2 : x2 + CHARACTER_IMAGE_WIDTH] = operator_1
+                image_batch[k, 0, y3 : y3 + CHARACTER_IMAGE_HEIGHT, x3 : x3 + CHARACTER_IMAGE_WIDTH] = digit_2
 
                 # labels for digits 0-9 and for operators 0-3
                 label_batch[k, 0] = label_1
@@ -103,14 +103,14 @@ def rnd_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size,
     IMAGE_HEIGHT = 38
     MIN_CHARACTERS = 3
     MAX_CHARACTERS = 8
-    LABELS_PER_IMAGE = 26
+    LABELS_PER_IMAGE = 25
 
     for i in range(files):
         batches_of_images = np.zeros((batches_per_file), dtype=object)
         batches_of_labels = np.zeros((batches_per_file), dtype=object)
 
         for j in range(batches_per_file):
-            image_batch = np.zeros((batch_size, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
+            image_batch = np.zeros((batch_size, 1, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
             label_batch = np.zeros((batch_size * LABELS_PER_IMAGE, 2), dtype=np.uint8)
 
             for k in range(batch_size):
@@ -135,13 +135,13 @@ def rnd_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size,
                     character_height = character.shape[0]
                     character_width = character.shape[1]
                     y_idx = rnd.randint(0, IMAGE_HEIGHT - character_height) # randomly verticaly place the character
-                    image_batch[k, y_idx:y_idx + character_height, current_image_idx:current_image_idx + character_width] = character
+                    image_batch[k, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character
                     character_middle_idxs[l] = current_image_idx + character_width // 2 # store the middle index of the character
                     current_image_idx += character_width
                     labels[l] = label # store the label for the character
             
                 x_shift = rnd.randint(0, IMAGE_WIDTH - current_image_idx)
-                image_batch[k] = np.roll(image_batch[k], shift=x_shift, axis=1) # shifting the image across x axis
+                image_batch[k] = np.roll(image_batch[k], shift=x_shift, axis=2) # shifting the image across x axis
                 character_middle_idxs = (character_middle_idxs + x_shift) % IMAGE_WIDTH
 
                 width_per_label_box = IMAGE_WIDTH / LABELS_PER_IMAGE

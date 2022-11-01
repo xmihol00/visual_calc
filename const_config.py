@@ -1,4 +1,6 @@
-CUDA = True
+import torch
+
+CUDA = torch.cuda.is_available()
 
 CHARACTERS_PATH = "./data/separated_characters/"
 EQUATIONS_PATH = "./data/equations/"
@@ -16,5 +18,7 @@ NUMBER_OF_OPERATORS = 4
 
 YOLO_V1_TRAINING_IMAGES_FILENAME = "equations_YOLO_V1_training_images_%s.npy"
 YOLO_V1_TRAINING_LABELS_FILENAME = "equations_YOLO_V1_training_labels_%s.npy"
-YOLO_V1_MODEL_FILENAME = "YoloInspiredDetectorV1.pt"
+YOLO_V1_MODEL_FILENAME = "YOLO_inspired_CNN_v1.pt"
 YOLO_V1_LABELS_PER_IMAGE = 25
+
+YOLO_V2_MODEL_FILENAME = "YOLO_inspired_CNN_v2.pt"

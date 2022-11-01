@@ -1,33 +1,21 @@
+import os
 import numpy as np
 import random as rnd
 import sys
 
-CHARACTERS_PATH = "./data/separated_characters/"
-EQUATIONS_PATH = "./data/equations/"
-TRAINING_IMAGES_FILENAME = "equations_%s_training_images_%s.npy"
-TRAINING_LABELS_FILENAME = "equations_%s_training_labels_%s.npy"
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from const_config import BATCH_SIZE
+from const_config import BATCHES_PER_FILE
+from const_config import NUMBER_OF_FILES
+from const_config import NUMBER_OF_DIGITS 
+from const_config import NUMBER_OF_OPERATORS
+from const_config import CHARACTERS_PATH
+from const_config import EQUATIONS_PATH
+from const_config import YOLO_V1_LABELS_PER_IMAGE
+from const_config import TRAINING_IMAGES_FILENAME
+from const_config import TRAINING_LABELS_FILENAME
 
 HELP_MSG = "Run as: python equation_generator.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
-BATCH_SIZE = 8
-BATCHES_PER_FILE = 100
-FILES = 4
-NUMBER_OF_DIGITS = 10
-NUMBER_OF_OPERATORS = 4
-
-NUMBER_OF_SAMPLES = 50000                                   # number of generated equations
-CHARACTER_IMAGE_WIDTH = 28                                  # width of a character image in pixels
-CHARACTER_IMAGE_HEIGHT = 28                                 # height of a character image in pixels
-CHAR_IMAGE_WIDTH_HALF = int(CHARACTER_IMAGE_WIDTH / 2)      # half of the width of a character image in pixels
-X_SHIFT = 30                                                # number of pixels by which the constructed image can be shifted in the final image
-X_SHIFT_HALF = int(X_SHIFT / 2)                             # half of the whole image shift in pixels
-X_SHIFT_HALF_OVERLAP = max(X_SHIFT_HALF - 5, 0)             # decreased half of the shift, so images can overlap a bit
-FINAL_IMAGE_WIDTH = 102                                     # width of the final image without shift in pixels
-FINAL_IMAGE_WIDTH_WITH_SHIFT = FINAL_IMAGE_WIDTH + X_SHIFT  # width of the final image with shift in pixels
-FINAL_IMAGE_HEIGHT = 40                                     # height of the final image in pixels
-CHARACTER_IN_IMAGE_WIDTH = int((FINAL_IMAGE_WIDTH) / 3)     # area for one character across the x axes, character is randomly placed in this area
-
-def get_digit():
-    pass
 
 class DigitGenerator():
     def __init__(self):
@@ -55,16 +43,18 @@ class OperatorGenerator():
         return operator, operator_type + NUMBER_OF_DIGITS
 
 def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
-    IMAGE_WIDTH = 90
-    IMAGE_HEIGHT = 30
-    WIDTH_FOR_CHARCTER = IMAGE_WIDTH // 3
+    CHARACTER_IMAGE_WIDTH = 28                    # width of a character image in pixels
+    CHARACTER_IMAGE_HEIGHT = 28                   # height of a character image in pixels
+    FINAL_IMAGE_WIDTH = 90                        # width of the generated image
+    FINAL_IMAGE_HEIGHT = 30                       # height of the generated image
+    WIDTH_FOR_CHARCTER = FINAL_IMAGE_WIDTH // 3   # space along the x axis for a single character
 
     for i in range(files):
         batches_of_images = np.zeros((batches_per_file), dtype=object)
         batches_of_labels = np.zeros((batches_per_file), dtype=object)
 
         for j in range(batches_per_file):
-            image_batch = np.zeros((batch_size, 1, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
+            image_batch = np.zeros((batch_size, 1, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH), dtype=np.float32)
             label_batch = np.zeros((batch_size, 3), dtype=np.uint8)
 
             for k in range(batch_size):
@@ -79,7 +69,7 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
                 x3 += 2 * CHARACTER_IMAGE_WIDTH
 
                 # random position of the characters across the y axes
-                y1, y2, y3 = np.random.randint(0, IMAGE_HEIGHT - CHARACTER_IMAGE_HEIGHT, 3)
+                y1, y2, y3 = np.random.randint(0, FINAL_IMAGE_HEIGHT - CHARACTER_IMAGE_HEIGHT, 3)
 
                 # composition of the final image from 2 randomly chosen digits and 1 randomly chosen character
                 image_batch[k, 0, y1 : y1 + CHARACTER_IMAGE_HEIGHT, x1 : x1 + CHARACTER_IMAGE_WIDTH] = digit_1
@@ -98,20 +88,19 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
         np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME % str(i)}", batches_of_images)
         np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME % str(i)}", batches_of_labels)
 
-def rnd_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
-    IMAGE_WIDTH = 230
-    IMAGE_HEIGHT = 38
-    MIN_CHARACTERS = 3
-    MAX_CHARACTERS = 8
-    LABELS_PER_IMAGE = 25
+def yolo_v1(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
+    FINAL_IMAGE_WIDTH = 230     # width of the generated image
+    FINAL_IMAGE_HEIGHT = 38     # height of the generated image
+    MIN_CHARACTERS = 3          # minimum characters in an image
+    MAX_CHARACTERS = 8          # maximum characters in an image
 
     for i in range(files):
         batches_of_images = np.zeros((batches_per_file), dtype=object)
         batches_of_labels = np.zeros((batches_per_file), dtype=object)
 
         for j in range(batches_per_file):
-            image_batch = np.zeros((batch_size, 1, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
-            label_batch = np.zeros((batch_size * LABELS_PER_IMAGE, 2), dtype=np.uint8)
+            image_batch = np.zeros((batch_size, 1, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH), dtype=np.float32)
+            label_batch = np.zeros((batch_size * YOLO_V1_LABELS_PER_IMAGE, 2), dtype=np.uint8)
 
             for k in range(batch_size):
                 number_of_characters = rnd.randint(MIN_CHARACTERS, MAX_CHARACTERS)
@@ -134,21 +123,21 @@ def rnd_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size,
                     
                     character_height = character.shape[0]
                     character_width = character.shape[1]
-                    y_idx = rnd.randint(0, IMAGE_HEIGHT - character_height) # randomly verticaly place the character
+                    y_idx = rnd.randint(0, FINAL_IMAGE_HEIGHT - character_height) # randomly verticaly place the character
                     image_batch[k, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character
                     character_middle_idxs[l] = current_image_idx + character_width // 2 # store the middle index of the character
                     current_image_idx += character_width
                     labels[l] = label # store the label for the character
             
-                x_shift = rnd.randint(0, IMAGE_WIDTH - current_image_idx)
+                x_shift = rnd.randint(0, FINAL_IMAGE_WIDTH - current_image_idx)
                 image_batch[k] = np.roll(image_batch[k], shift=x_shift, axis=2) # shifting the image across x axis
-                character_middle_idxs = (character_middle_idxs + x_shift) % IMAGE_WIDTH
+                character_middle_idxs = (character_middle_idxs + x_shift) % FINAL_IMAGE_WIDTH
 
-                width_per_label_box = IMAGE_WIDTH / LABELS_PER_IMAGE
+                width_per_label_box = FINAL_IMAGE_WIDTH / YOLO_V1_LABELS_PER_IMAGE
                 current_label_box = 0.0
                 character_idx = 0
-                for l in range(LABELS_PER_IMAGE):
-                    label_idx = k * LABELS_PER_IMAGE + l
+                for l in range(YOLO_V1_LABELS_PER_IMAGE):
+                    label_idx = k * YOLO_V1_LABELS_PER_IMAGE + l
                     if (character_idx < number_of_characters and character_middle_idxs[character_idx] >= current_label_box and 
                         character_middle_idxs[character_idx] <= current_label_box + width_per_label_box): # center pf a character is in a label box
                         label_batch[label_idx, 0] = 1
@@ -176,7 +165,7 @@ if __name__ == "__main__":
     if len(sys.argv) >= 5:
         BATCH_SIZE = int(sys.argv[2])
         BATCHES_PER_FILE = int(sys.argv[3])
-        FILES = int(sys.argv[4])
+        NUMBER_OF_FILES = int(sys.argv[4])
 
     digits = DigitGenerator()
     operators = OperatorGenerator()
@@ -186,11 +175,11 @@ if __name__ == "__main__":
     TRAINING_LABELS_FILENAME = TRAINING_LABELS_FILENAME % (argument, "%s")
 
     if argument == "DOD_90x30":
-        dod_90x30(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, FILES)
+        dod_90x30(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
     elif argument == "DOD_132x40":
         pass
-    elif argument == "RND_230x38":
-        rnd_230x38(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, FILES)
+    elif argument == "YOLO_V1":
+        yolo_v1(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
     else:
         print("Unknown image type.", file=sys.stderr)
         print(HELP_MSG, file=sys.stderr)

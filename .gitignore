@@ -7,3 +7,5 @@ network/__pycache__/
 .idea/
 
 *.pt
+
+__pycache__/

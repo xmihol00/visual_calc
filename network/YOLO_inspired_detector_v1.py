@@ -1,47 +1,22 @@
+import os
 import sys
 import numpy as np
 import torch
-import idx2numpy
 import matplotlib.pyplot as plt
 from torch import nn
 
-EQUATIONS_PATH = "./data/equations/"
-TRAINING_IMAGES_FILENAME = "equations_RND_230x38_training_images_%s.npy"
-TRAINING_LABELS_FILENAME = "equations_RND_230x38_training_labels_%s.npy"
-MODEL_PATH = "./models/"
-
-IMAGE_WIDTH = 132
-IMAGE_HEIGHT = 40
-
-BATCH_SIZE = 4
-
-class DataLoader():
-    def __init__(self, batch_size, batches_per_file, number_of_files):
-        self.file_idx = -1
-        self.batch_idx = batches_per_file - 1 # point to the last index of a batch
-        self.BATCH_SIZE = batch_size
-        self.BATCHES_PER_FILE = batches_per_file
-        self.NUMBER_OF_FILES = number_of_files
-        self.image_file = None
-        self.label_file = None
-        pass
-
-    def __iter__(self):
-        return self
-    
-    def __next__(self):
-        if self.batch_idx == self.BATCHES_PER_FILE - 1: # iterated through all batches in file, new must be opened
-            self.file_idx += 1
-            if self.file_idx == self.NUMBER_OF_FILES: # iterated through all files, reset to initial state and stop iteration
-                self.__init__(self.BATCH_SIZE, self.BATCHES_PER_FILE, self.NUMBER_OF_FILES)
-                raise StopIteration
-
-            self.batch_idx = -1 # new batch is loaded
-            self.image_file = np.load(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME % self.file_idx}", allow_pickle=True)
-            self.label_file = np.load(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME % self.file_idx}", allow_pickle=True)
-        
-        self.batch_idx += 1 # move to the next index in a batch
-        return torch.from_numpy(self.image_file[self.batch_idx]), torch.from_numpy(self.label_file[self.batch_idx])
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from const_config import BATCH_SIZE, NUMBER_OF_DIGITS
+from const_config import BATCHES_PER_FILE
+from const_config import NUMBER_OF_FILES
+from const_config import CUDA
+from const_config import EQUATIONS_PATH
+from const_config import YOLO_V1_TRAINING_IMAGES_FILENAME
+from const_config import YOLO_V1_TRAINING_LABELS_FILENAME
+from const_config import MODEL_PATH
+from const_config import YOLO_V1_MODEL_FILENAME
+import label_extractors
+from utils.data_loaders import DataLoader
 
 class YoloInspiredDetectorV1(nn.Module):
     def __init__(self):
@@ -72,11 +47,19 @@ class YoloInspiredDetectorV1(nn.Module):
             nn.BatchNorm2d(256),
             nn.LeakyReLU(0.1),
 
-            nn.Conv2d(256, 64, (1, 1), stride=1, padding=0),
+            nn.Conv2d(256, 128, (1, 1), stride=1, padding=0),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.1),
+
+            nn.Conv2d(128, 64, (1, 1), stride=1, padding=0),
             nn.BatchNorm2d(64),
             nn.LeakyReLU(0.1),
 
-            nn.Conv2d(64, 15, (1, 1), stride=1, padding=0),
+            nn.Conv2d(64, 32, (1, 1), stride=1, padding=0),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(0.1),
+
+            nn.Conv2d(32, 15, (1, 1), stride=1, padding=0),
         )
     
     def forward(self, x):
@@ -93,27 +76,30 @@ class YoloLoss(nn.Module):
         return self.bcel(predictions[:, 0:1], labels[:, 0:1].to(torch.float32)) + self.cel(predictions[indices_with_class, 1:], labels[indices_with_class, 1])
 
 if __name__ == "__main__":
-    #t1 = torch.tensor([[[[1, 2, 3, 4]], [[5, 6, 7, 8]], [[9, 10, 11, 12]]], [[[13, 14, 15, 16]], [[17, 18, 19, 20]], [[21, 22, 23, 24]]]])
-    #print(t1.shape)
-    #print(t1)
-    #t2 = t1.reshape(t1.shape[0] * 4, 3)
-    #print(t2.shape)
-    #print(t2)
-    #t3 = t2.reshape(t1.shape)
-    #print(t3)
-    #exit()
+    device = None
+    if CUDA:
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+    
+    print(f"Running on device: {device}")
 
     model = YoloInspiredDetectorV1()
+    model.to(device)
     loss_function = YoloLoss()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-        #with open(f"{MODEL_PATH}shifts_3char_1head_detector.pt", "rb") as file:
-        #    classifier.load_state_dict(torch.load(file))
+        
+        try:
+            with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "rb") as file:
+                model.load_state_dict(torch.load(file))
+        except:
+            pass
 
-        for i in range(1, 101):
+        for i in range(1, 25):
             j = 0
-            for images, labels in DataLoader(8, 100, 4):
+            for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_V1_TRAINING_IMAGES_FILENAME, YOLO_V1_TRAINING_LABELS_FILENAME):
                 output = model(images)
                 loss = loss_function(output, labels)
 
@@ -124,22 +110,24 @@ if __name__ == "__main__":
                 if j % 100 == 0:
                     print(f"Loss in epoch {i}, iteration {j}: {loss.item()}")
             
-            
-            #with open(f"{MODEL_PATH}shifts_3char_1head_detector_{i}.pt", "wb") as file:
-            #        torch.save(classifier.state_dict(), file)
+            with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "wb") as file:
+                    torch.save(model.state_dict(), file)
 
     else:
-        #with open(f"{MODEL_PATH}shifts_3char_1head_detector.pt", "rb") as file:
-        #    classifier.load_state_dict(torch.load(file))
+        with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "rb") as file:
+            model.load_state_dict(torch.load(file))
         
         operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for batch in DataLoader(8, 100, 4):
-            for image, label in batch:
-                output = model(image)
-                #classified = [torch.argmax(output[0, 0:10]).item(), operators[torch.argmax(output[0, 10:14]).item()], torch.argmax(output[0, 14:24]).item()]
-                #labeled = [label[0][0].item(), operators[label[0][1].item()], label[0][2].item()]
+        for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_V1_TRAINING_IMAGES_FILENAME, YOLO_V1_TRAINING_LABELS_FILENAME):
+            labels = labels.to("cpu").numpy()
+            for i in range(BATCH_SIZE):
+                prediction = model(images[i : i + 1])
+                print(prediction)
+                
+                labeled = label_extractors.yolo_v1(labels, i)
+                classified = label_extractors.yolo_v1_prediction(prediction)
 
-                plt.imshow(image[0][0].numpy(), cmap='gray')
-                #plt.title(f"Image classified as {classified} and labeled as {labeled}.")
+                plt.imshow(images[i][0].to("cpu").numpy(), cmap='gray')
+                plt.title(f"Image classified as {classified} and labeled as {labeled}.")
                 plt.show()

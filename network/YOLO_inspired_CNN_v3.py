@@ -57,8 +57,8 @@ class YoloInspiredCNNv3(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.downsample_blocks = [CNN_downsampling_block(1, 32), CNN_downsampling_block(32, 64), CNN_downsampling_block(64, 128)]
-        self.blocks = [CNN_block(32), CNN_block(64), CNN_block(128)]
+        self.downsample_blocks = nn.ModuleList([CNN_downsampling_block(1, 32), CNN_downsampling_block(32, 64), CNN_downsampling_block(64, 128)])
+        self.blocks = nn.ModuleList([CNN_block(32), CNN_block(64), CNN_block(128)])
         self.YOLO_block = YOLO_block(128, YOLO_OUTPUTS_PER_LABEL)
 
     def forward(self, x):
@@ -68,38 +68,27 @@ class YoloInspiredCNNv3(nn.Module):
         
         x = self.YOLO_block(x)
         return x.reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL)
-    
-    def to(self, device):
-        super().to(device)
-        for i in range(len(self.blocks)):
-            self.downsample_blocks[i].to(device)
-            self.blocks[i].to(device)
-        
-        self.YOLO_block.to(device)
 
 if __name__ == "__main__":
-    device = None
-    if CUDA:
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-    
-    print(f"Running on device: {device}")
-
     model = YoloInspiredCNNv3()
-    model.to(device)
     loss_function = YoloLoss()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         
+        device = torch.device("cpu")
+        if CUDA:
+            device = torch.device("cuda")
+            model.to(device)
+            print(f"Running on GPU")
+
         try: # loading already pre-trained model
             with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "rb") as file:
                 model.load_state_dict(torch.load(file))
         except:
             pass
 
-        for i in range(1, 101):
+        for i in range(1, 16):
             j = 0
             for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
                 output = model(images)
@@ -121,14 +110,14 @@ if __name__ == "__main__":
         
         operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
-            labels = labels.to("cpu").numpy()
+        for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, torch.device("cpu"), YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+            labels = labels.numpy()
             for i in range(BATCH_SIZE):
                 prediction = model(images[i : i + 1])
                 
                 labeled = label_extractors.yolo(labels, i)
                 classified = label_extractors.yolo_prediction(prediction)
 
-                plt.imshow(images[i][0].to("cpu").numpy(), cmap='gray')
+                plt.imshow(images[i][0].numpy(), cmap='gray')
                 plt.title(f"Image classified as {classified} and labeled as {labeled}.")
                 plt.show()

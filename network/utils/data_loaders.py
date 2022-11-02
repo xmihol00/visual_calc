@@ -16,8 +16,8 @@ class DataLoader():
         self.BATCHES_PER_FILE = batches_per_file
         self.NUMBER_OF_FILES = number_of_files
         self.device = device
-        self.images_file_template = images_file_template
-        self.labels_file_template = labels_file_template
+        self.images_file_template = images_file_template 
+        self.labels_file_template = labels_file_template 
         self.image_file = None
         self.label_file = None
         pass

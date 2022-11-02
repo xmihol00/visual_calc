@@ -18,7 +18,7 @@ NUMBER_OF_OPERATORS = 4         # labels for operators are 10-13 (+, -, *, /)
 
 YOLO_TRAINING_IMAGES_FILENAME = "equations_230x38_training_images_%s.npy"
 YOLO_TRAINING_LABELS_FILENAME = "equations_230x38_training_labels_%s.npy"
-YOLO_LABELS_PER_IMAGE = 25      # image is separated into 25 parts of the same size along the x axis, each part has separate label
+YOLO_LABELS_PER_IMAGE = 25      # image is separated into 25 parts of the same size along the x axis, each part has separate label, the YOLO networks are design such that the output is 25 predictions
 YOLO_OUTPUTS_PER_LABEL = 15     # each label consist of an indicator if there is (1) a character or not (0) at index 0 and probabilities of a class at indices 1-14
 
 YOLO_V1_MODEL_FILENAME = "YOLO_inspired_CNN_v1.pt"

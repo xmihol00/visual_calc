@@ -89,7 +89,7 @@ if __name__ == "__main__":
     loss_function = YoloLoss()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
         
         try:
             with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "rb") as file:
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         except:
             pass
 
-        for i in range(1, 25):
+        for i in range(1, 101):
             j = 0
             for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_V1_TRAINING_IMAGES_FILENAME, YOLO_V1_TRAINING_LABELS_FILENAME):
                 output = model(images)
@@ -123,7 +123,6 @@ if __name__ == "__main__":
             labels = labels.to("cpu").numpy()
             for i in range(BATCH_SIZE):
                 prediction = model(images[i : i + 1])
-                print(prediction)
                 
                 labeled = label_extractors.yolo_v1(labels, i)
                 classified = label_extractors.yolo_v1_prediction(prediction)

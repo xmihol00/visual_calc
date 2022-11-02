@@ -23,7 +23,7 @@ def yolo_v1(labels, idx):
 def yolo_v1_prediction(predictions):
     label = ""
     for prediction in predictions:
-        if prediction[0] > 0:
+        if torch.sigmoid(prediction[0]) > 0.5:
             idx = torch.argmax(prediction[1:])
             if idx >= NUMBER_OF_DIGITS:
                 label += f" {['+', '-', '*', '/'][idx - NUMBER_OF_DIGITS]} "

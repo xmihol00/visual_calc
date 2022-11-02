@@ -1,24 +1,23 @@
 import os
 import sys
-import numpy as np
 import torch
 import matplotlib.pyplot as plt
 from torch import nn
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from const_config import BATCH_SIZE, NUMBER_OF_DIGITS
+from const_config import BATCH_SIZE
 from const_config import BATCHES_PER_FILE
 from const_config import NUMBER_OF_FILES
 from const_config import CUDA
-from const_config import EQUATIONS_PATH
 from const_config import YOLO_V1_TRAINING_IMAGES_FILENAME
 from const_config import YOLO_V1_TRAINING_LABELS_FILENAME
 from const_config import MODEL_PATH
 from const_config import YOLO_V1_MODEL_FILENAME
 import label_extractors
 from utils.data_loaders import DataLoader
+from utils.loss_functions import YoloLoss
 
-class YoloInspiredDetectorV1(nn.Module):
+class YoloInspiredCNNv1(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
@@ -65,16 +64,6 @@ class YoloInspiredDetectorV1(nn.Module):
     def forward(self, x):
         return self.model(x).reshape(x.shape[0] * 25, 15)
 
-class YoloLoss(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.bcel = nn.BCEWithLogitsLoss()
-        self.cel = nn.CrossEntropyLoss()
-    
-    def forward(self, predictions, labels):
-        indices_with_class = (labels[:, 0] == 1).nonzero(as_tuple=True)[0]
-        return self.bcel(predictions[:, 0:1], labels[:, 0:1].to(torch.float32)) + self.cel(predictions[indices_with_class, 1:], labels[indices_with_class, 1])
-
 if __name__ == "__main__":
     device = None
     if CUDA:
@@ -84,14 +73,14 @@ if __name__ == "__main__":
     
     print(f"Running on device: {device}")
 
-    model = YoloInspiredDetectorV1()
+    model = YoloInspiredCNNv1()
     model.to(device)
     loss_function = YoloLoss()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
         
-        try:
+        try: # loading already pre-trained model
             with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "rb") as file:
                 model.load_state_dict(torch.load(file))
         except:

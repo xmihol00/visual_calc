@@ -18,7 +18,7 @@ from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import YOLO_OUTPUTS_PER_LABEL
 import label_extractors
 from utils.data_loaders import DataLoader
-from utils.loss_functions import YoloLoss
+from utils.loss_functions import YoloLossBias
 
 class YoloInspiredCNNv2(nn.Module):
     def __init__(self):
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     model = YoloInspiredCNNv2()
     model.to(device)
-    loss_function = YoloLoss()
+    loss_function = YoloLossBias()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)

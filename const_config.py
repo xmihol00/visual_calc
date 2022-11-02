@@ -9,9 +9,9 @@ MODEL_PATH = "./models/"
 TRAINING_IMAGES_FILENAME_TEMPLATE = "equations_%s_training_images_%s.npy"
 TRAINING_LABELS_FILENAME_TEMPLATE = "equations_%s_training_labels_%s.npy"
 
-BATCH_SIZE = 20
+BATCH_SIZE = 4
 BATCHES_PER_FILE = 25
-NUMBER_OF_FILES = 100
+NUMBER_OF_FILES = 10
 
 NUMBER_OF_DIGITS = 10           # labels for digits are 0-9
 NUMBER_OF_OPERATORS = 4         # labels for operators are 10-13 (+, -, *, /)
@@ -25,5 +25,6 @@ YOLO_OUTPUTS_PER_LABEL_NO_CLASS = 16     # one more output than above indicating
 YOLO_V1_MODEL_FILENAME = "YOLO_inspired_CNN_v1.pt"
 YOLO_V2_MODEL_FILENAME = "YOLO_inspired_CNN_v2.pt"
 YOLO_V3_MODEL_FILENAME = "YOLO_inspired_CNN_v3.pt"
+YOLO_V4_MODEL_FILENAME = "YOLO_inspired_CNN_v4.pt"
 
-YOLO_LOSS_BIAS = 4
+YOLO_LOSS_BIAS = 5

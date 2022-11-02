@@ -13,21 +13,21 @@ from const_config import CUDA
 from const_config import YOLO_TRAINING_IMAGES_FILENAME
 from const_config import YOLO_TRAINING_LABELS_FILENAME
 from const_config import MODEL_PATH
-from const_config import YOLO_V3_MODEL_FILENAME
+from const_config import YOLO_V4_MODEL_FILENAME
 from const_config import YOLO_LABELS_PER_IMAGE
-from const_config import YOLO_OUTPUTS_PER_LABEL
+from const_config import YOLO_OUTPUTS_PER_LABEL_NO_CLASS
 import label_extractors
 from utils.data_loaders import DataLoader
-from utils.loss_functions import YoloLossBias
+from utils.loss_functions import YoloLossNoClassBias
 import utils.NN_blocks as blocks
 
-class YoloInspiredCNNv3(nn.Module):
+class YoloInspiredCNNv4(nn.Module):
     def __init__(self):
         super().__init__()
 
         self.downsample_blocks = nn.ModuleList([blocks.CNN_downsampling(1, 32), blocks.CNN_downsampling(32, 64), blocks.CNN_downsampling(64, 128)])
         self.blocks = nn.ModuleList([blocks.CNN_residual(32), blocks.CNN_residual(64), blocks.CNN_residual(128)])
-        self.YOLO_block = blocks.YOLO(128, YOLO_OUTPUTS_PER_LABEL)
+        self.YOLO_block = blocks.YOLO(128, YOLO_OUTPUTS_PER_LABEL_NO_CLASS)
 
     def forward(self, x):
         for i in range(len(self.blocks)):
@@ -35,11 +35,11 @@ class YoloInspiredCNNv3(nn.Module):
             x = self.blocks[i](x) + x
         
         x = self.YOLO_block(x)
-        return x.reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL)
+        return x.reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL_NO_CLASS)
 
 if __name__ == "__main__":
-    model = YoloInspiredCNNv3()
-    loss_function = YoloLossBias()
+    model = YoloInspiredCNNv4()
+    loss_function = YoloLossNoClassBias()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
@@ -52,14 +52,13 @@ if __name__ == "__main__":
             print(f"Running on GPU")
 
         try: # loading already pre-trained model
-            with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "rb") as file:
+            with open(f"{MODEL_PATH}{YOLO_V4_MODEL_FILENAME}", "rb") as file:
                 model.load_state_dict(torch.load(file))
         except:
             pass
 
         for i in range(1, 91):
             for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
-                
                 output = model(images)
                 loss = loss_function(output, labels)
 
@@ -69,11 +68,11 @@ if __name__ == "__main__":
             
             scheduler.step()
             print(f"Loss in epoch {i}: {loss.item()}")
-            with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "wb") as file:
+            with open(f"{MODEL_PATH}{YOLO_V4_MODEL_FILENAME}", "wb") as file:
                     torch.save(model.state_dict(), file)
 
     else:
-        with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "rb") as file:
+        with open(f"{MODEL_PATH}{YOLO_V4_MODEL_FILENAME}", "rb") as file:
             model.load_state_dict(torch.load(file))
         
         operators = ["+", "-", "*", "/"]

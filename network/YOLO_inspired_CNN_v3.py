@@ -74,7 +74,7 @@ if __name__ == "__main__":
     loss_function = YoloLoss()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
         
         device = torch.device("cpu")
         if CUDA:

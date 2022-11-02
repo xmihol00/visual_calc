@@ -24,3 +24,5 @@ YOLO_OUTPUTS_PER_LABEL = 15     # each label consist of an indicator if there is
 YOLO_V1_MODEL_FILENAME = "YOLO_inspired_CNN_v1.pt"
 YOLO_V2_MODEL_FILENAME = "YOLO_inspired_CNN_v2.pt"
 YOLO_V3_MODEL_FILENAME = "YOLO_inspired_CNN_v3.pt"
+
+YOLO_LOSS_BIAS = 4

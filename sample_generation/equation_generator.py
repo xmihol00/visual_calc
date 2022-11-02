@@ -91,7 +91,7 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
         np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
         np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
 
-def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
+def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files, no_class_label):
     FINAL_IMAGE_WIDTH = 230     # width of the generated image
     FINAL_IMAGE_HEIGHT = 38     # height of the generated image
     MIN_CHARACTERS = 3          # minimum characters in an image
@@ -152,7 +152,7 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size
                         character_idx += 1
                     else:
                         label_batch[label_idx, 0] = 0 # this part of an image doesn't contain a character
-                        label_batch[label_idx, 1] = 0 # here the value doen't matter
+                        label_batch[label_idx, 1] = (NUMBER_OF_DIGITS + NUMBER_OF_OPERATORS + 1) * no_class_label # if no_class_label is true, there is a special class also for none-character
 
                     current_label_box += width_per_label_box # next label box
 
@@ -169,25 +169,23 @@ if __name__ == "__main__":
         print("Not enough arguments.", file=sys.stderr)
         print(HELP_MSG, file=sys.stderr)
         exit(1)
-    
-    if len(sys.argv) >= 5:
-        BATCH_SIZE = int(sys.argv[2])
-        BATCHES_PER_FILE = int(sys.argv[3])
-        NUMBER_OF_FILES = int(sys.argv[4])
 
     digits = DigitGenerator()
     operators = OperatorGenerator()
 
-    argument = sys.argv[1]
-    TRAINING_IMAGES_FILENAME_TEMPLATE = TRAINING_IMAGES_FILENAME_TEMPLATE % (argument, "%s")
-    TRAINING_LABELS_FILENAME_TEMPLATE = TRAINING_LABELS_FILENAME_TEMPLATE % (argument, "%s")
+    type = sys.argv[1]
+    TRAINING_IMAGES_FILENAME_TEMPLATE = TRAINING_IMAGES_FILENAME_TEMPLATE % (type, "%s")
+    TRAINING_LABELS_FILENAME_TEMPLATE = TRAINING_LABELS_FILENAME_TEMPLATE % (type, "%s")
 
-    if argument == "90x30":
+    if type == "90x30":
         dod_90x30(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
-    elif argument == "132x40":
+    elif type == "132x40":
         pass
-    elif argument == "230x38":
-        yolo_230x38(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
+    elif type == "230x38":
+        no_class_label = False
+        if len(sys.argv) > 2:
+            no_class_label = sys.argv[2] == "no_class"
+        yolo_230x38(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, no_class_label)
     else:
         print("Unknown image type.", file=sys.stderr)
         print(HELP_MSG, file=sys.stderr)

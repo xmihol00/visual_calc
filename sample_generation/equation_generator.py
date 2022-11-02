@@ -25,9 +25,9 @@ class DigitGenerator():
             self.digits.append(np.load(f"{CHARACTERS_PATH}{file_name}", allow_pickle=True))
     
     def get(self):
-        digit_type = rnd.randint(0, NUMBER_OF_DIGITS - 1)
-        digit_idx = rnd.randint(0, self.digits[digit_type].shape[0] - 1)
-        digit = self.digits[digit_type][digit_idx][0]
+        digit_type = rnd.randint(0, NUMBER_OF_DIGITS - 1) # randomly choose type of a digit
+        digit_idx = rnd.randint(0, self.digits[digit_type].shape[0] - 1) # randomly choose a digit of the chosen type
+        digit = self.digits[digit_type][digit_idx][0] # find the digit
         return digit, digit_type
 
 class OperatorGenerator():
@@ -37,10 +37,10 @@ class OperatorGenerator():
             self.operators.append(np.load(f"{CHARACTERS_PATH}{file_name}", allow_pickle=True))
     
     def get(self):
-        operator_type = rnd.randint(0, NUMBER_OF_OPERATORS - 1)
-        operator_idx = rnd.randint(0, self.operators[operator_type].shape[0] - 1)
-        operator = self.operators[operator_type][operator_idx][0]
-        return operator, operator_type + NUMBER_OF_DIGITS
+        operator_type = rnd.randint(0, NUMBER_OF_OPERATORS - 1) # randomly choose type of a digit
+        operator_idx = rnd.randint(0, self.operators[operator_type].shape[0] - 1) # randomly choose a digit of the chosen type
+        operator = self.operators[operator_type][operator_idx][0] # find the operator
+        return operator, operator_type + NUMBER_OF_DIGITS # change the label for operators from 0-3 to 10-13
 
 def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
     CHARACTER_IMAGE_WIDTH = 28                    # width of a character image in pixels
@@ -50,10 +50,12 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
     WIDTH_FOR_CHARCTER = FINAL_IMAGE_WIDTH // 3   # space along the x axis for a single character
 
     for i in range(files):
+        # allocate space for batches in a file
         batches_of_images = np.zeros((batches_per_file), dtype=object)
         batches_of_labels = np.zeros((batches_per_file), dtype=object)
 
         for j in range(batches_per_file):
+            # allocate space for a batch
             image_batch = np.zeros((batch_size, 1, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH), dtype=np.float32)
             label_batch = np.zeros((batch_size, 3), dtype=np.uint8)
 
@@ -81,6 +83,7 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
                 label_batch[k, 1] = label_2
                 label_batch[k, 2] = label_3
 
+            # inser current batch in to the file
             batches_of_images[j] = image_batch
             batches_of_labels[j] = label_batch
     
@@ -95,19 +98,23 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size
     MAX_CHARACTERS = 8          # maximum characters in an image
 
     for i in range(files):
+        # allocate space for batches in a file
         batches_of_images = np.zeros((batches_per_file), dtype=object)
         batches_of_labels = np.zeros((batches_per_file), dtype=object)
 
         for j in range(batches_per_file):
+            # allocate space for a batch
             image_batch = np.zeros((batch_size, 1, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH), dtype=np.float32)
-            label_batch = np.zeros((batch_size * YOLO_LABELS_PER_IMAGE, 2), dtype=np.uint8)
+            # each label consist of a information, wheather there is ([:, 0]=1) or isn't ([:, 0]=0) a character and 
+            # if there is, then it's label i.e. [2, 1] = 5 (second part of the image contains digit 5)
+            label_batch = np.zeros((batch_size * YOLO_LABELS_PER_IMAGE, 2), dtype=np.uint8) 
 
             for k in range(batch_size):
-                number_of_characters = rnd.randint(MIN_CHARACTERS, MAX_CHARACTERS)
-                character_middle_idxs = np.zeros(number_of_characters)
-                labels = np.zeros(number_of_characters, dtype=np.uint8)
+                number_of_characters = rnd.randint(MIN_CHARACTERS, MAX_CHARACTERS) # randomly pick number of generated character for this image
+                character_middle_idxs = np.zeros(number_of_characters) # allocate space to store indices where character were placed in to the image
+                labels = np.zeros(number_of_characters, dtype=np.uint8) # allocate space for intermidiate labels, consisting just of class identification
                 digit_probability = 1.0 # first character must be a digit
-                current_image_idx = 0
+                current_image_idx = 0 # first character will be placed at the start of the image
                 for l in range(number_of_characters):
                     if l == number_of_characters - 1: # last character must be a digit
                         digit_probability = 1.0
@@ -116,7 +123,7 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size
                     label = None
                     if rnd.random() <= digit_probability: # next character is a digit
                         character, label = digits.get()
-                        digit_probability /= 2
+                        digit_probability /= 2 # decrease the probability of next character being a digit
                     else: # next character is an operator
                         character, label = operators.get()
                         digit_probability = 1.0 # next character must be a digit
@@ -124,31 +131,32 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size
                     character_height = character.shape[0]
                     character_width = character.shape[1]
                     y_idx = rnd.randint(0, FINAL_IMAGE_HEIGHT - character_height) # randomly verticaly place the character
-                    image_batch[k, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character
-                    character_middle_idxs[l] = current_image_idx + character_width // 2 # store the middle index of the character
-                    current_image_idx += character_width
+                    image_batch[k, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character # place the character just behind the previous one
+                    character_middle_idxs[l] = current_image_idx + character_width // 2 # store the index of the middle of the character
+                    current_image_idx += character_width # update the index, where next character will be place
                     labels[l] = label # store the label for the character
             
                 x_shift = rnd.randint(0, FINAL_IMAGE_WIDTH - current_image_idx)
-                image_batch[k] = np.roll(image_batch[k], shift=x_shift, axis=2) # shifting the image across x axis
-                character_middle_idxs = (character_middle_idxs + x_shift) % FINAL_IMAGE_WIDTH
+                image_batch[k] = np.roll(image_batch[k], shift=x_shift, axis=2) # shifting the image to right across x axis
+                character_middle_idxs = (character_middle_idxs + x_shift) % FINAL_IMAGE_WIDTH # the position of the midpoints of the characters must be shifted as well
 
-                width_per_label_box = FINAL_IMAGE_WIDTH / YOLO_LABELS_PER_IMAGE
+                width_per_label_box = FINAL_IMAGE_WIDTH / YOLO_LABELS_PER_IMAGE # wdth of a part of an image, which is labeled
                 current_label_box = 0.0
                 character_idx = 0
                 for l in range(YOLO_LABELS_PER_IMAGE):
-                    label_idx = k * YOLO_LABELS_PER_IMAGE + l
+                    label_idx = k * YOLO_LABELS_PER_IMAGE + l # get the index for labels for this image
                     if (character_idx < number_of_characters and character_middle_idxs[character_idx] >= current_label_box and 
-                        character_middle_idxs[character_idx] <= current_label_box + width_per_label_box): # center pf a character is in a label box
-                        label_batch[label_idx, 0] = 1
-                        label_batch[label_idx, 1] = labels[character_idx]
+                        character_middle_idxs[character_idx] <= current_label_box + width_per_label_box): # if the center of a character is in a label box
+                        label_batch[label_idx, 0] = 1 # this part of an image contains a character
+                        label_batch[label_idx, 1] = labels[character_idx] # class of the character
                         character_idx += 1
                     else:
-                        label_batch[label_idx, 0] = 0
-                        label_batch[label_idx, 1] = 0
+                        label_batch[label_idx, 0] = 0 # this part of an image doesn't contain a character
+                        label_batch[label_idx, 1] = 0 # here the value doen't matter
 
                     current_label_box += width_per_label_box # next label box
 
+            # insert batch to the file
             batches_of_images[j] = image_batch
             batches_of_labels[j] = label_batch
     

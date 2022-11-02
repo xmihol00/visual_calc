@@ -3,6 +3,7 @@ import sys
 import torch
 import matplotlib.pyplot as plt
 from torch import nn
+from torch.optim import lr_scheduler as sdl
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import BATCH_SIZE
@@ -17,49 +18,16 @@ from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import YOLO_OUTPUTS_PER_LABEL
 import label_extractors
 from utils.data_loaders import DataLoader
-from utils.loss_functions import YoloLoss
-
-def CNN_downsampling_block(in_channels, out_channels):
-    intermidiate_channels = out_channels * 2
-    return nn.Sequential(
-        nn.Conv2d(in_channels, out_channels, (3, 3), stride=1, padding=0),
-        nn.BatchNorm2d(out_channels),
-        nn.LeakyReLU(0.1),
-        nn.Conv2d(out_channels, intermidiate_channels, (3, 3), stride=2, padding=1),
-        nn.BatchNorm2d(intermidiate_channels),
-        nn.LeakyReLU(0.1),
-        nn.Conv2d(intermidiate_channels, out_channels, (1, 1), stride=1, padding=0),
-        nn.BatchNorm2d(out_channels),
-        nn.LeakyReLU(0.1)
-    )
-
-def CNN_block(channels):
-    intermidiate_channels = channels * 2
-    return nn.Sequential(
-        nn.Conv2d(channels, intermidiate_channels, (3, 3), stride=1, padding=1),
-        nn.BatchNorm2d(intermidiate_channels),
-        nn.LeakyReLU(0.1),
-        nn.Conv2d(intermidiate_channels, channels, (1, 1), stride=1, padding=0),
-        nn.BatchNorm2d(channels),
-        nn.LeakyReLU(0.1),
-    )
-
-def YOLO_block(in_channels, out_channels):
-    intermidiate_channels = in_channels * 2
-    return nn.Sequential(
-        nn.Conv2d(in_channels, intermidiate_channels, (3, 3), stride=1, padding=0),
-        nn.BatchNorm2d(intermidiate_channels),
-        nn.LeakyReLU(0.1),
-        nn.Conv2d(intermidiate_channels, out_channels, (1, 1), stride=1, padding=0),
-    )
+import utils.loss_functions as lf
+import utils.NN_blocks as blocks
 
 class YoloInspiredCNNv3(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.downsample_blocks = nn.ModuleList([CNN_downsampling_block(1, 32), CNN_downsampling_block(32, 64), CNN_downsampling_block(64, 128)])
-        self.blocks = nn.ModuleList([CNN_block(32), CNN_block(64), CNN_block(128)])
-        self.YOLO_block = YOLO_block(128, YOLO_OUTPUTS_PER_LABEL)
+        self.downsample_blocks = nn.ModuleList([blocks.CNN_downsampling(1, 32), blocks.CNN_downsampling(32, 64), blocks.CNN_downsampling(64, 128)])
+        self.blocks = nn.ModuleList([blocks.CNN_residual(32), blocks.CNN_residual(64), blocks.CNN_residual(128)])
+        self.YOLO_block = blocks.YOLO(128, YOLO_OUTPUTS_PER_LABEL)
 
     def forward(self, x):
         for i in range(len(self.blocks)):
@@ -71,10 +39,11 @@ class YoloInspiredCNNv3(nn.Module):
 
 if __name__ == "__main__":
     model = YoloInspiredCNNv3()
-    loss_function = YoloLoss()
+    loss_function = lf.YoloLossBias()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+        scheduler = sdl.StepLR(optimizer, 15, 0.5)
         
         device = torch.device("cpu")
         if CUDA:
@@ -88,8 +57,7 @@ if __name__ == "__main__":
         except:
             pass
 
-        for i in range(1, 16):
-            j = 0
+        for i in range(1, 91):
             for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
                 output = model(images)
                 loss = loss_function(output, labels)
@@ -97,10 +65,9 @@ if __name__ == "__main__":
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                j += 1
-                if j % 100 == 0:
-                    print(f"Loss in epoch {i}, iteration {j}: {loss.item()}")
+                scheduler.step()
             
+            print(f"Loss in epoch {i}: {loss.item()}")
             with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "wb") as file:
                     torch.save(model.state_dict(), file)
 

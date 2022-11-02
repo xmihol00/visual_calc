@@ -68,6 +68,14 @@ class YoloInspiredCNNv3(nn.Module):
         
         x = self.YOLO_block(x)
         return x.reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL)
+    
+    def to(self, device):
+        super().to(device)
+        for i in range(len(self.blocks)):
+            self.downsample_blocks[i].to(device)
+            self.blocks[i].to(device)
+        
+        self.YOLO_block.to(device)
 
 if __name__ == "__main__":
     device = None

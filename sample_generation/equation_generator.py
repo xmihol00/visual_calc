@@ -11,9 +11,9 @@ from const_config import NUMBER_OF_DIGITS
 from const_config import NUMBER_OF_OPERATORS
 from const_config import CHARACTERS_PATH
 from const_config import EQUATIONS_PATH
-from const_config import YOLO_V1_LABELS_PER_IMAGE
-from const_config import TRAINING_IMAGES_FILENAME
-from const_config import TRAINING_LABELS_FILENAME
+from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import TRAINING_IMAGES_FILENAME_TEMPLATE
+from const_config import TRAINING_LABELS_FILENAME_TEMPLATE
 
 HELP_MSG = "Run as: python equation_generator.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
 
@@ -85,10 +85,10 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
             batches_of_labels[j] = label_batch
     
         # save file of chosen number of batches
-        np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME % str(i)}", batches_of_images)
-        np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME % str(i)}", batches_of_labels)
+        np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
+        np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
 
-def yolo_v1(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
+def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
     FINAL_IMAGE_WIDTH = 230     # width of the generated image
     FINAL_IMAGE_HEIGHT = 38     # height of the generated image
     MIN_CHARACTERS = 3          # minimum characters in an image
@@ -100,7 +100,7 @@ def yolo_v1(digits: DigitGenerator, operators: OperatorGenerator, batch_size, ba
 
         for j in range(batches_per_file):
             image_batch = np.zeros((batch_size, 1, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH), dtype=np.float32)
-            label_batch = np.zeros((batch_size * YOLO_V1_LABELS_PER_IMAGE, 2), dtype=np.uint8)
+            label_batch = np.zeros((batch_size * YOLO_LABELS_PER_IMAGE, 2), dtype=np.uint8)
 
             for k in range(batch_size):
                 number_of_characters = rnd.randint(MIN_CHARACTERS, MAX_CHARACTERS)
@@ -133,11 +133,11 @@ def yolo_v1(digits: DigitGenerator, operators: OperatorGenerator, batch_size, ba
                 image_batch[k] = np.roll(image_batch[k], shift=x_shift, axis=2) # shifting the image across x axis
                 character_middle_idxs = (character_middle_idxs + x_shift) % FINAL_IMAGE_WIDTH
 
-                width_per_label_box = FINAL_IMAGE_WIDTH / YOLO_V1_LABELS_PER_IMAGE
+                width_per_label_box = FINAL_IMAGE_WIDTH / YOLO_LABELS_PER_IMAGE
                 current_label_box = 0.0
                 character_idx = 0
-                for l in range(YOLO_V1_LABELS_PER_IMAGE):
-                    label_idx = k * YOLO_V1_LABELS_PER_IMAGE + l
+                for l in range(YOLO_LABELS_PER_IMAGE):
+                    label_idx = k * YOLO_LABELS_PER_IMAGE + l
                     if (character_idx < number_of_characters and character_middle_idxs[character_idx] >= current_label_box and 
                         character_middle_idxs[character_idx] <= current_label_box + width_per_label_box): # center pf a character is in a label box
                         label_batch[label_idx, 0] = 1
@@ -153,8 +153,8 @@ def yolo_v1(digits: DigitGenerator, operators: OperatorGenerator, batch_size, ba
             batches_of_labels[j] = label_batch
     
         # save file of chosen number of batches
-        np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME % str(i)}", batches_of_images)
-        np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME % str(i)}", batches_of_labels)
+        np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
+        np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -171,15 +171,15 @@ if __name__ == "__main__":
     operators = OperatorGenerator()
 
     argument = sys.argv[1]
-    TRAINING_IMAGES_FILENAME = TRAINING_IMAGES_FILENAME % (argument, "%s")
-    TRAINING_LABELS_FILENAME = TRAINING_LABELS_FILENAME % (argument, "%s")
+    TRAINING_IMAGES_FILENAME_TEMPLATE = TRAINING_IMAGES_FILENAME_TEMPLATE % (argument, "%s")
+    TRAINING_LABELS_FILENAME_TEMPLATE = TRAINING_LABELS_FILENAME_TEMPLATE % (argument, "%s")
 
-    if argument == "DOD_90x30":
+    if argument == "90x30":
         dod_90x30(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
-    elif argument == "DOD_132x40":
+    elif argument == "132x40":
         pass
-    elif argument == "YOLO_V1":
-        yolo_v1(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
+    elif argument == "230x38":
+        yolo_230x38(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
     else:
         print("Unknown image type.", file=sys.stderr)
         print(HELP_MSG, file=sys.stderr)

@@ -12,59 +12,62 @@ from const_config import CUDA
 from const_config import YOLO_TRAINING_IMAGES_FILENAME
 from const_config import YOLO_TRAINING_LABELS_FILENAME
 from const_config import MODEL_PATH
-from const_config import YOLO_V1_MODEL_FILENAME
+from const_config import YOLO_V3_MODEL_FILENAME
 from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import YOLO_OUTPUTS_PER_LABEL
 import label_extractors
 from utils.data_loaders import DataLoader
 from utils.loss_functions import YoloLoss
 
-class YoloInspiredCNNv1(nn.Module):
+def CNN_downsampling_block(in_channels, out_channels):
+    intermidiate_channels = out_channels * 2
+    return nn.Sequential(
+        nn.Conv2d(in_channels, out_channels, (3, 3), stride=1, padding=0),
+        nn.BatchNorm2d(out_channels),
+        nn.LeakyReLU(0.1),
+        nn.Conv2d(out_channels, intermidiate_channels, (3, 3), stride=2, padding=1),
+        nn.BatchNorm2d(intermidiate_channels),
+        nn.LeakyReLU(0.1),
+        nn.Conv2d(intermidiate_channels, out_channels, (1, 1), stride=1, padding=0),
+        nn.BatchNorm2d(out_channels),
+        nn.LeakyReLU(0.1)
+    )
+
+def CNN_block(channels):
+    intermidiate_channels = channels * 2
+    return nn.Sequential(
+        nn.Conv2d(channels, intermidiate_channels, (3, 3), stride=1, padding=1),
+        nn.BatchNorm2d(intermidiate_channels),
+        nn.LeakyReLU(0.1),
+        nn.Conv2d(intermidiate_channels, channels, (1, 1), stride=1, padding=0),
+        nn.BatchNorm2d(channels),
+        nn.LeakyReLU(0.1),
+    )
+
+def YOLO_block(in_channels, out_channels):
+    intermidiate_channels = in_channels * 2
+    return nn.Sequential(
+        nn.Conv2d(in_channels, intermidiate_channels, (3, 3), stride=1, padding=0),
+        nn.BatchNorm2d(intermidiate_channels),
+        nn.LeakyReLU(0.1),
+        nn.Conv2d(intermidiate_channels, out_channels, (1, 1), stride=1, padding=0),
+    )
+
+class YoloInspiredCNNv3(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = nn.Sequential(
-            nn.Conv2d(1, 32, (3, 3), stride=1, padding=0),
-            nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(32, 32, (3, 3), stride=2, padding=0),
-            nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.1),
 
-            nn.Conv2d(32, 64, (3, 3), stride=1, padding=0),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(64, 64, (3, 3), stride=2, padding=1),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.1),
+        self.downsample_blocks = [CNN_downsampling_block(1, 32), CNN_downsampling_block(32, 64), CNN_downsampling_block(64, 128)]
+        self.blocks = [CNN_block(32), CNN_block(64), CNN_block(128)]
+        self.YOLO_block = YOLO_block(128, YOLO_OUTPUTS_PER_LABEL)
 
-            nn.Conv2d(64, 128, (3, 3), stride=1, padding=0),
-            nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(128, 128, (3, 3), stride=2, padding=1),
-            nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.1),
-
-            nn.Conv2d(128, 256, (3, 3), stride=1, padding=0),
-            nn.BatchNorm2d(256),
-            nn.LeakyReLU(0.1),
-
-            nn.Conv2d(256, 128, (1, 1), stride=1, padding=0),
-            nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.1),
-
-            nn.Conv2d(128, 64, (1, 1), stride=1, padding=0),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.1),
-
-            nn.Conv2d(64, 32, (1, 1), stride=1, padding=0),
-            nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.1),
-
-            nn.Conv2d(32, YOLO_OUTPUTS_PER_LABEL, (1, 1), stride=1, padding=0),
-        )
-    
     def forward(self, x):
-        return self.model(x).reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL)
+        for i in range(len(self.blocks)):
+            x = self.downsample_blocks[i](x)
+            x = self.blocks[i](x) + x
+        
+        x = self.YOLO_block(x)
+        return x.reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL)
 
 if __name__ == "__main__":
     device = None
@@ -75,15 +78,15 @@ if __name__ == "__main__":
     
     print(f"Running on device: {device}")
 
-    model = YoloInspiredCNNv1()
+    model = YoloInspiredCNNv3()
     model.to(device)
     loss_function = YoloLoss()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         
         try: # loading already pre-trained model
-            with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "rb") as file:
+            with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "rb") as file:
                 model.load_state_dict(torch.load(file))
         except:
             pass
@@ -101,11 +104,11 @@ if __name__ == "__main__":
                 if j % 100 == 0:
                     print(f"Loss in epoch {i}, iteration {j}: {loss.item()}")
             
-            with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "wb") as file:
+            with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "wb") as file:
                     torch.save(model.state_dict(), file)
 
     else:
-        with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "rb") as file:
+        with open(f"{MODEL_PATH}{YOLO_V3_MODEL_FILENAME}", "rb") as file:
             model.load_state_dict(torch.load(file))
         
         operators = ["+", "-", "*", "/"]

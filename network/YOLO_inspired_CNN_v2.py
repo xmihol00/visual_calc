@@ -10,10 +10,12 @@ from const_config import BATCH_SIZE
 from const_config import BATCHES_PER_FILE
 from const_config import NUMBER_OF_FILES
 from const_config import CUDA
-from const_config import YOLO_V1_TRAINING_IMAGES_FILENAME
-from const_config import YOLO_V1_TRAINING_LABELS_FILENAME
+from const_config import YOLO_TRAINING_IMAGES_FILENAME
+from const_config import YOLO_TRAINING_LABELS_FILENAME
 from const_config import MODEL_PATH
 from const_config import YOLO_V2_MODEL_FILENAME
+from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import YOLO_OUTPUTS_PER_LABEL
 import label_extractors
 from utils.data_loaders import DataLoader
 from utils.loss_functions import YoloLoss
@@ -64,7 +66,7 @@ class YoloInspiredCNNv2(nn.Module):
         )
     
     def forward(self, x):
-        return self.model(x).reshape(x.shape[0] * 25, 15)
+        return self.model(x).reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL)
 
 if __name__ == "__main__":
     device = None
@@ -90,7 +92,7 @@ if __name__ == "__main__":
 
         for i in range(1, 101):
             j = 0
-            for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_V1_TRAINING_IMAGES_FILENAME, YOLO_V1_TRAINING_LABELS_FILENAME):
+            for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
                 output = model(images)
                 loss = loss_function(output, labels)
 
@@ -110,13 +112,13 @@ if __name__ == "__main__":
         
         operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_V1_TRAINING_IMAGES_FILENAME, YOLO_V1_TRAINING_LABELS_FILENAME):
+        for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
             labels = labels.to("cpu").numpy()
             for i in range(BATCH_SIZE):
                 prediction = model(images[i : i + 1])
                 
-                labeled = label_extractors.yolo_v1(labels, i)
-                classified = label_extractors.yolo_v1_prediction(prediction)
+                labeled = label_extractors.yolo(labels, i)
+                classified = label_extractors.yolo_prediction(prediction)
 
                 plt.imshow(images[i][0].to("cpu").numpy(), cmap='gray')
                 plt.title(f"Image classified as {classified} and labeled as {labeled}.")

@@ -29,12 +29,12 @@ class ImagePlotter():
         _, self.axes = plt.subplots(self.subplot_x_cnt, self.subplot_y_cnt, figsize=self.figsize)
         self.operator_dict = { 10.0: "+", 11.0: "-", 12.0: "*", 13.0: "/"}
 
-        if file_type == "DOD_90x30":
+        if file_type == "90x30":
             self.label_extractor = label_extractors.dod_90x30
-        elif file_type == "DOD_132x40":
+        elif file_type == "132x40":
             pass
-        elif file_type == "YOLO_V1":
-            self.label_extractor = label_extractors.yolo_v1
+        elif file_type == "230x38":
+            self.label_extractor = label_extractors.yolo
         else:
             print("Unknown image type.", file=sys.stderr)
             print(HELP_MSG, file=sys.stderr)

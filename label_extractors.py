@@ -1,6 +1,6 @@
 import torch
 
-from const_config import YOLO_V1_LABELS_PER_IMAGE
+from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import NUMBER_OF_DIGITS
 
 OPERATOR_DICT = { 10.0: "+", 11.0: "-", 12.0: "*", 13.0: "/"}
@@ -9,9 +9,9 @@ def dod_90x30(labels, idx):
         label = labels[idx]
         return f"{int(label[0])} {OPERATOR_DICT[label[1]]} {int(label[2])}"
     
-def yolo_v1(labels, idx):
+def yolo(labels, idx):
     label_str = ""
-    for label in labels[idx * YOLO_V1_LABELS_PER_IMAGE : YOLO_V1_LABELS_PER_IMAGE + idx * YOLO_V1_LABELS_PER_IMAGE]:
+    for label in labels[idx * YOLO_LABELS_PER_IMAGE : YOLO_LABELS_PER_IMAGE + idx * YOLO_LABELS_PER_IMAGE]:
         if label[0] == 1: # label contains digit or operator
             if label[1] >= NUMBER_OF_DIGITS: # label contains operator
                 label_str += f" {OPERATOR_DICT[label[1]]} "
@@ -20,7 +20,7 @@ def yolo_v1(labels, idx):
 
     return label_str
 
-def yolo_v1_prediction(predictions):
+def yolo_prediction(predictions):
     label = ""
     for prediction in predictions:
         if torch.sigmoid(prediction[0]) > 0.5:

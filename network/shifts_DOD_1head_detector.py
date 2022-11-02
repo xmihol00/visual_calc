@@ -32,8 +32,6 @@ class ThreeCharLoss(nn.Module):
         self.cel = nn.CrossEntropyLoss()
 
     def forward(self, predictions, labels):
-        print((predictions[:,  0:10].shape, labels[:, 0].shape))
-        exit(0)
         return (self.cel(predictions[:,  0:10], labels[:, 0]) + 
                 self.cel(predictions[:, 10:14], labels[:, 1]) + 
                 self.cel(predictions[:, 14:24], labels[:, 2]))

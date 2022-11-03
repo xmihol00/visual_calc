@@ -196,13 +196,13 @@ class Controller:
             if self.display_output:
                 cv2.imshow('Output', self.get_output_frame())
 
-            key = cv2.waitKey(1000//30) & 0xff # 30 fps and catch key pressed
-            if key == ord('q') or key == 27: # Q key of Esc to quit the program
+            key = cv2.waitKey(1000//30) & 0xff  # 30 fps and catch key pressed
+            if key == ord('q') or key == 27:  # Q key of Esc to quit the program
                 break
-            elif key == 13:  # Enter key to save the draw and begin the next one
+            elif key == 13 or key == 32:  # Enter or Space key to save the draw and begin the next one
                 self.save()
                 self.img, self.current_class = self.set_new_image()
-            elif key == ord('u'):  # U key to undo the draw
+            elif key == ord('u') or key == ord('c'):  # U or C key to undo the draw
                 self.img = self.img * 0
                 for designer in self.designers.flatten():
                     designer.new_image()

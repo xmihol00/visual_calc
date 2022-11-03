@@ -21,6 +21,19 @@ or
 python3 main.py (for default config.json)
 ```
 
+If the drawing seems laggy, try resizing the window slightly (bug)
+
+## Usage
+Draw the digit or operator which is shown as current class: "..."
+
+(x/y) refers to the current image count of the class (x) and the required total count (y)
+
+It is recommended to finish the annotation for all classes as resuming is currently broken (max total count can be set in the config under volume)
+
+* Clearing canvas ("C" or "U")
+* Next annotation ("Space" or "Enter")
+* Exit ("Esc")
+
 ## Configuration JSON file
 
 *  ***input → H*** (int): height of the drawing image

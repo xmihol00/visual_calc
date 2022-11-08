@@ -33,7 +33,7 @@ class DigitGenerator():
 class OperatorGenerator():
     def __init__(self):
         self.operators = []
-        for file_name in ["pluses.npy", "minuses.npy", "astrics.npy", "slashes.npy"]:
+        for file_name in ["pluses.npy", "minuses.npy", "asterisks.npy", "slashes.npy"]:
             self.operators.append(np.load(f"{CHARACTERS_PATH}{file_name}", allow_pickle=True))
     
     def get(self):

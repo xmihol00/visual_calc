@@ -2,12 +2,21 @@ import torch
 
 CUDA = torch.cuda.is_available()
 
-CHARACTERS_PATH = "./data/separated_characters/"
+DIGIT_AND_OPERATORS_1_PATH = "./data/digits_and_operators_1/"
+DIGIT_AND_OPERATORS_2_PATH = "./data/digits_and_operators_2/"
+NPY_IMAGE_PATH = "./data/prerocessed_separated_characters/"
+TRAINING_NPY_IMAGE_PATH = NPY_IMAGE_PATH + "training/"
+VALIDATION_NPY_IMAGE_PATH = NPY_IMAGE_PATH + "validation/"
+TESTING_NPY_IMAGE_PATH = NPY_IMAGE_PATH + "testing/"
+CHARACTERS_PATH = "./data/prerocessed_separated_characters/"
 EQUATIONS_PATH = "./data/equations/"
 MODEL_PATH = "./models/"
 
 TRAINING_IMAGES_FILENAME_TEMPLATE = "equations_%s_training_images_%s.npy"
 TRAINING_LABELS_FILENAME_TEMPLATE = "equations_%s_training_labels_%s.npy"
+
+IMAGE_WIDTH = 28
+IMAGE_HEIGHT = 28
 
 BATCH_SIZE = 4
 BATCHES_PER_FILE = 25

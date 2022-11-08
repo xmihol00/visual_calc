@@ -19,6 +19,12 @@ BATCH_SIZE = 2
 # cite: https://towardsdatascience.com/object-detection-with-neural-networks-a4e2c46b4491
 # cite: https://blog.paperspace.com/how-to-implement-a-yolo-v3-object-detector-from-scratch-in-pytorch-part-2/
 
+# data sets
+# cite: https://github.com/sueiras/handwritting_characters_database
+# cite: https://www.kaggle.com/datasets/michelheusser/handwritten-digits-and-operators
+# cite: http://yann.lecun.com/exdb/mnist/
+# cite: https://www.kaggle.com/datasets/xainano/handwrittenmathsymbols
+
 class TrainingDataset():
     def __init__(self):
         self.training_data = torch.from_numpy(np.expand_dims(np.load(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME}", allow_pickle=True), axis=1))

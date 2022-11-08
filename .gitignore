@@ -9,3 +9,5 @@ network/__pycache__/
 *.pt
 
 __pycache__/
+
+out.txt

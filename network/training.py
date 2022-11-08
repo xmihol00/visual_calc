@@ -3,7 +3,7 @@ import tensorflow as tf
 from sklearn import preprocessing
 from matplotlib import pyplot
 
-DATA_PATH = "../data/digits_and_characters_1/"
+DATA_PATH = "../data/digits_and_operators_1/"
 
 # Encode string labels to integers
 labelEncoder = preprocessing.LabelEncoder()

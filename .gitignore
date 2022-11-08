@@ -10,3 +10,5 @@ network/__pycache__/
 
 __pycache__/
 /annotation/dataset/
+
+out.txt

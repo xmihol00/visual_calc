@@ -4,13 +4,17 @@ CUDA = torch.cuda.is_available()
 
 DIGIT_AND_OPERATORS_1_PATH = "./data/digits_and_operators_1/"
 DIGIT_AND_OPERATORS_2_PATH = "./data/digits_and_operators_2/"
-NPY_IMAGE_PATH = "./data/prerocessed_separated_characters/"
-TRAINING_NPY_IMAGE_PATH = NPY_IMAGE_PATH + "training/"
-VALIDATION_NPY_IMAGE_PATH = NPY_IMAGE_PATH + "validation/"
-TESTING_NPY_IMAGE_PATH = NPY_IMAGE_PATH + "testing/"
+PREPROCESSED_PATH = "./data/prerocessed_separated_characters/"
+TRAINING_PREPROCESSED_PATH = PREPROCESSED_PATH + "training/"
+VALIDATION_PREPROCESSED_PATH = PREPROCESSED_PATH + "validation/"
+TESTING_PREPROCESSED_PATH = PREPROCESSED_PATH + "testing/"
+ALL_MERGED_PREPROCESSED_PATH = PREPROCESSED_PATH + "all/"
 CHARACTERS_PATH = "./data/prerocessed_separated_characters/"
 EQUATIONS_PATH = "./data/equations/"
 MODEL_PATH = "./models/"
+
+ALL_IMAGES_FILENAME = "images.npy"
+ALL_LABELS_FILENAME = "labels.npy"
 
 TRAINING_IMAGES_FILENAME_TEMPLATE = "equations_%s_training_images_%s.npy"
 TRAINING_LABELS_FILENAME_TEMPLATE = "equations_%s_training_labels_%s.npy"

@@ -35,6 +35,7 @@ YOLO_LABELS_PER_IMAGE = 25      # image is separated into 25 parts of the same s
 YOLO_OUTPUTS_PER_LABEL = 15     # each label consist of an indicator if there is (1) a character or not (0) at index 0 and probabilities of a class at indices 1-14
 YOLO_OUTPUTS_PER_LABEL_NO_CLASS = 16     # one more output than above indicating there is no digit on the image
 
+OUTLIERS_DETECTOR_FILENAME = "outliers_detector.pt"
 YOLO_V1_MODEL_FILENAME = "YOLO_inspired_CNN_v1.pt"
 YOLO_V2_MODEL_FILENAME = "YOLO_inspired_CNN_v2.pt"
 YOLO_V3_MODEL_FILENAME = "YOLO_inspired_CNN_v3.pt"

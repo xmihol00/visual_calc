@@ -14,35 +14,36 @@ from const_config import EQUATIONS_PATH
 from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import TRAINING_IMAGES_FILENAME_TEMPLATE
 from const_config import TRAINING_LABELS_FILENAME_TEMPLATE
+from const_config import DATA_DIRECTORIES
 
 HELP_MSG = "Run as: python equation_generator.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
 
 class DigitGenerator():
-    def __init__(self):
+    def __init__(self, directory = "training/"):
         self.digits = []
         for file_name in ["zeros.npy", "ones.npy", "twos.npy", "threes.npy", "fours.npy", 
                           "fives.npy", "sixes.npy", "sevens.npy", "eights.npy", "nines.npy"]:
-            self.digits.append(np.load(f"{CHARACTERS_PATH}{file_name}", allow_pickle=True))
+            self.digits.append(np.load(f"{CHARACTERS_PATH}{directory}{file_name}", allow_pickle=True))
     
     def get(self):
         digit_type = rnd.randint(0, NUMBER_OF_DIGITS - 1) # randomly choose type of a digit
         digit_idx = rnd.randint(0, self.digits[digit_type].shape[0] - 1) # randomly choose a digit of the chosen type
-        digit = self.digits[digit_type][digit_idx][0] # find the digit
+        digit = self.digits[digit_type][digit_idx] # find the digit
         return digit, digit_type
 
 class OperatorGenerator():
-    def __init__(self):
+    def __init__(self, directory = "training/"):
         self.operators = []
         for file_name in ["pluses.npy", "minuses.npy", "asterisks.npy", "slashes.npy"]:
-            self.operators.append(np.load(f"{CHARACTERS_PATH}{file_name}", allow_pickle=True))
+            self.operators.append(np.load(f"{CHARACTERS_PATH}{directory}{file_name}", allow_pickle=True))
     
     def get(self):
         operator_type = rnd.randint(0, NUMBER_OF_OPERATORS - 1) # randomly choose type of a digit
         operator_idx = rnd.randint(0, self.operators[operator_type].shape[0] - 1) # randomly choose a digit of the chosen type
-        operator = self.operators[operator_type][operator_idx][0] # find the operator
-        return operator, operator_type + NUMBER_OF_DIGITS # change the label for operators from 0-3 to 10-13
+        operator = self.operators[operator_type][operator_idx] # find the operator
+        return operator, operator_type + NUMBER_OF_DIGITS      # change the label for operators from 0-3 to 10-13
 
-def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
+def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
     CHARACTER_IMAGE_WIDTH = 28                    # width of a character image in pixels
     CHARACTER_IMAGE_HEIGHT = 28                   # height of a character image in pixels
     FINAL_IMAGE_WIDTH = 90                        # width of the generated image
@@ -88,14 +89,15 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, batch_size, 
             batches_of_labels[j] = label_batch
     
         # save file of chosen number of batches
-        np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
-        np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
+        np.save(f"{EQUATIONS_PATH}{directory}{TRAINING_IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
+        np.save(f"{EQUATIONS_PATH}{directory}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
 
-def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size, batches_per_file, files):
+def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
     FINAL_IMAGE_WIDTH = 230     # width of the generated image
     FINAL_IMAGE_HEIGHT = 38     # height of the generated image
     MIN_CHARACTERS = 3          # minimum characters in an image
     MAX_CHARACTERS = 8          # maximum characters in an image
+    MIN_CHARACTER_WIDTH = int(FINAL_IMAGE_WIDTH / YOLO_LABELS_PER_IMAGE + 0.5)
 
     for i in range(files):
         # allocate space for batches in a file
@@ -115,6 +117,7 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size
                 labels = np.zeros(number_of_characters, dtype=np.uint8) # allocate space for intermidiate labels, consisting just of class identification
                 digit_probability = 1.0 # first character must be a digit
                 current_image_idx = 0 # first character will be placed at the start of the image
+                charactor_separator = 0
                 for l in range(number_of_characters):
                     if l == number_of_characters - 1: # last character must be a digit
                         digit_probability = 1.0
@@ -130,10 +133,18 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size
                     
                     character_height = character.shape[0]
                     character_width = character.shape[1]
+                    left_padding = 0
+                    right_padding = 0
+                    if character_width < MIN_CHARACTER_WIDTH: # character is not wide enough 
+                        padding = MIN_CHARACTER_WIDTH - character_width
+                        left_padding = rnd.randint(0, padding)  # padding before character
+                        right_padding = padding - left_padding  # padding after character
+
+                    current_image_idx += left_padding
                     y_idx = rnd.randint(0, FINAL_IMAGE_HEIGHT - character_height) # randomly verticaly place the character
                     image_batch[k, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character # place the character just behind the previous one
                     character_middle_idxs[l] = current_image_idx + character_width // 2 # store the index of the middle of the character
-                    current_image_idx += character_width # update the index, where next character will be place
+                    current_image_idx += character_width + left_padding + rnd.randint(1, 5) # update the index, where next character will be place, add padding between characters
                     labels[l] = label # store the label for the character
             
                 x_shift = rnd.randint(0, FINAL_IMAGE_WIDTH - current_image_idx)
@@ -161,8 +172,8 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, batch_size
             batches_of_labels[j] = label_batch
     
         # save file of chosen number of batches
-        np.save(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
-        np.save(f"{EQUATIONS_PATH}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
+        np.save(f"{EQUATIONS_PATH}{directory}{TRAINING_IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
+        np.save(f"{EQUATIONS_PATH}{directory}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -170,20 +181,21 @@ if __name__ == "__main__":
         print(HELP_MSG, file=sys.stderr)
         exit(1)
 
-    digits = DigitGenerator()
-    operators = OperatorGenerator()
-
     type = sys.argv[1]
     TRAINING_IMAGES_FILENAME_TEMPLATE = TRAINING_IMAGES_FILENAME_TEMPLATE % (type, "%s")
     TRAINING_LABELS_FILENAME_TEMPLATE = TRAINING_LABELS_FILENAME_TEMPLATE % (type, "%s")
 
-    if type == "90x30":
-        dod_90x30(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
-    elif type == "132x40":
-        pass
-    elif type == "230x38":
-        yolo_230x38(digits, operators, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
-    else:
-        print("Unknown image type.", file=sys.stderr)
-        print(HELP_MSG, file=sys.stderr)
-        exit(1)
+    for directory in DATA_DIRECTORIES:
+        digits = DigitGenerator(directory)
+        operators = OperatorGenerator(directory)
+
+        if type == "90x30":
+            dod_90x30(digits, operators, directory, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
+        elif type == "132x40":
+            pass
+        elif type == "230x38":
+            yolo_230x38(digits, operators, directory, BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES)
+        else:
+            print("Unknown image type.", file=sys.stderr)
+            print(HELP_MSG, file=sys.stderr)
+            exit(1)

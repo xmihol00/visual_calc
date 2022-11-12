@@ -15,6 +15,9 @@ from const_config import IMAGE_HEIGHT
 from const_config import IMAGE_WIDTH
 from const_config import MODEL_PATH
 from const_config import OUTLIERS_DETECTOR_FILENAME
+from const_config import CLEANED_PREPROCESSED_PATH
+from const_config import CLEANED_IMAGES_FILENAME
+from const_config import CLEANED_LABELS_FILENAME
 
 class MergedDataset():
     def __init__(self):
@@ -109,7 +112,7 @@ if __name__ == "__main__":
         accuracy = model_accuracy(classifier, data_set, batch_size)
         print(f"Model accuracy: {accuracy * 100}%")
 
-    elif len(sys.argv) > 1 and sys.argv[1].lower() == "clear":
+    elif len(sys.argv) > 1 and sys.argv[1].lower() == "clean":
         correct_indices = torch.empty((0))
         classifier = classifier.eval()
         softmax = nn.Softmax(dim=1)
@@ -123,8 +126,17 @@ if __name__ == "__main__":
             
             indices = torch.add((torch.argmax(output, dim=1) == labels * (softmax(output) > 0.85).sum(dim=1)).nonzero(), index_shift)
             correct_indices = torch.cat((correct_indices, indices))
+        
+        print(f"Original number of samples: {data_set.__len__()}, number of samples after cleaning: {correct_indices.shape[0]}.")
+        print("%.2f%s samples removed." % ((1 - correct_indices.shape[0] / data_set.__len__()) * 100, "%"))
+        
+        del data_set
+        correct_indices = correct_indices.to(torch.int32).numpy()
+        np.save(f"{CLEANED_PREPROCESSED_PATH}{CLEANED_IMAGES_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_IMAGES_FILENAME}", allow_pickle=True)[correct_indices])
+        np.save(f"{CLEANED_PREPROCESSED_PATH}{CLEANED_LABELS_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_LABELS_FILENAME}", allow_pickle=True)[correct_indices])
 
-        print(correct_indices.shape[0], data_set.__len__(), correct_indices.shape[0] / data_set.__len__())
+        print("Images file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{CLEANED_IMAGES_FILENAME}').st_size / (1024 * 1024)))
+        print("Labels file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{CLEANED_LABELS_FILENAME}').st_size / (1024 * 1024)))
 
     else:
         classifier = classifier.eval()

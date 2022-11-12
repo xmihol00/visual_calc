@@ -18,7 +18,6 @@ label_dict = { "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "
 data_set_1 = np.concatenate((np.load(f"{DIGIT_AND_OPERATORS_1_PATH}CompleteDataSet_training_tuples.npy", allow_pickle=True),
                              np.load(f"{DIGIT_AND_OPERATORS_1_PATH}CompleteDataSet_testing_tuples.npy", allow_pickle=True),
                              np.load(f"{DIGIT_AND_OPERATORS_1_PATH}CompleteDataSet_validation_tuples.npy", allow_pickle=True)))
-                            
 data_set_1 = data_set_1[((data_set_1[:, 1] >= "0") & (data_set_1[:, 1] <= "9")) | (data_set_1[:, 1] == "+") |
                          (data_set_1[:, 1] == "-") | (data_set_1[:, 1] == "*") | (data_set_1[:, 1] == "%")]
 
@@ -29,18 +28,17 @@ for directory in os.listdir(f"{DIGIT_AND_OPERATORS_2_PATH}"):
 images = np.zeros((sample_count, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
 labels = np.zeros(sample_count, dtype=np.uint8)
 
-indices = np.random.randint(0, sample_count, sample_count) # randomly place images and labels in the final file
+indices = np.random.choice(sample_count, sample_count, replace=False) # randomly place images and labels in the final file
 index = 0
 
 for image_label in data_set_1:
-    images[indices[index]] = image_label[0]
+    images[indices[index], :, :] = image_label[0]
     labels[indices[index]] = label_dict[image_label[1]]
     index += 1
 
 for directory, label in [("0/", 0), ("1/", 1), ("2/", 2), ("3/", 3), ("4/", 4), ("5/", 5), ("6/", 6),
-                                    ("7/", 7), ("8/", 8), ("9/", 9),
-                                    ("plus/", 10), ("minus/", 11), ("asterisk/", 12), ("slash/", 13)]:
-    file_names = os.listdir(f"{DIGIT_AND_OPERATORS_2_PATH}{directory}")
+                         ("7/", 7), ("8/", 8), ("9/", 9),
+                         ("plus/", 10), ("minus/", 11), ("asterisk/", 12), ("slash/", 13)]:
     for file_name in os.listdir(f"{DIGIT_AND_OPERATORS_2_PATH}{directory}"):
         image = np.array(Image.open(f"{DIGIT_AND_OPERATORS_2_PATH}{directory}{file_name}").resize((IMAGE_HEIGHT, IMAGE_WIDTH)))
 

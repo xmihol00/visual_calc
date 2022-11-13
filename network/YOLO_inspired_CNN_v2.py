@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 from torch import nn
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from const_config import BATCH_SIZE
-from const_config import BATCHES_PER_FILE
-from const_config import NUMBER_OF_FILES
+from const_config import BATCH_SIZE_TRAINING
+from const_config import BATCHES_PER_FILE_TRAINING
+from const_config import NUMBER_OF_FILES_TRAINING
 from const_config import CUDA
 from const_config import YOLO_TRAINING_IMAGES_FILENAME
 from const_config import YOLO_TRAINING_LABELS_FILENAME
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         for i in range(1, 101):
             j = 0
-            for images, labels in DataLoader("training/", BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+            for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
                 output = model(images)
                 loss = loss_function(output, labels)
 
@@ -112,9 +112,9 @@ if __name__ == "__main__":
         
         operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for images, labels in DataLoader("training/", BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+        for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
             labels = labels.to("cpu").numpy()
-            for i in range(BATCH_SIZE):
+            for i in range(BATCH_SIZE_TRAINING):
                 prediction = model(images[i : i + 1])
                 
                 labeled = label_extractors.yolo(labels, i)

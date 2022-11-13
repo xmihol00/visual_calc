@@ -54,4 +54,4 @@ class YoloLossOnlyClasses(nn.Module):
         self.cel = nn.CrossEntropyLoss()
     
     def forward(self, predictions, labels):
-        return self.cel(predictions[:, 1:], labels[:, 1]) # the Cross Entropy error on all predictions
+        return self.cel(predictions, labels[:, 1]) # the Cross Entropy error on all predictions

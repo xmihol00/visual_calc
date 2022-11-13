@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
         for i in range(1, 6):
             j = 0
-            for images, labels in DataLoader(training_set, BATCH_SIZE):
+            for images, labels in DataLoader("training/", training_set, BATCH_SIZE):
                 output = classifier(images)
                 loss = loss_function(output, labels)
 
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         
         operators = ["+", "-", "*", "/"]
         classifier = classifier.eval()
-        for image, label in DataLoader(TrainingDataset(), 1):
+        for image, label in DataLoader("training/", TrainingDataset(), 1):
             output = classifier(image)
             classified = [torch.argmax(output[0, 0:10]).item(), operators[torch.argmax(output[0, 10:14]).item()], torch.argmax(output[0, 14:24]).item()]
             labeled = [label[0][0].item(), operators[label[0][1].item()], label[0][2].item()]

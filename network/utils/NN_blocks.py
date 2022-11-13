@@ -1,9 +1,9 @@
 from torch import nn
 
-def CNN_downsampling(in_channels, out_channels):
+def CNN_downsampling(in_channels, out_channels, first_padding=0):
     intermidiate_channels = out_channels * 2
     return nn.Sequential(
-        nn.Conv2d(in_channels, out_channels, (3, 3), stride=1, padding=0),
+        nn.Conv2d(in_channels, out_channels, (3, 3), stride=1, padding=first_padding),
         nn.BatchNorm2d(out_channels),
         nn.LeakyReLU(0.1),
         nn.Conv2d(out_channels, intermidiate_channels, (3, 3), stride=2, padding=1),

@@ -9,7 +9,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from const_config import EQUATIONS_PATH
 
 class DataLoader():
-    def __init__(self, batch_size, batches_per_file, number_of_files, device, images_file_template, labels_file_template):
+    def __init__(self, directory, batch_size, batches_per_file, number_of_files, device, images_file_template, labels_file_template):
+        self.directory = directory
         self.file_idx = -1
         self.batch_idx = batches_per_file - 1 # point to the last index of a batch
         self.BATCH_SIZE = batch_size
@@ -29,12 +30,13 @@ class DataLoader():
         if self.batch_idx == self.BATCHES_PER_FILE - 1: # iterated through all batches in file, new must be opened
             self.file_idx += 1
             if self.file_idx == self.NUMBER_OF_FILES: # iterated through all files, reset to initial state and stop iteration
-                self.__init__(self.BATCH_SIZE, self.BATCHES_PER_FILE, self.NUMBER_OF_FILES, self.device, self.images_file_template, self.labels_file_template)
+                self.__init__(self.directory, self.BATCH_SIZE, self.BATCHES_PER_FILE, self.NUMBER_OF_FILES, self.device, 
+                              self.images_file_template, self.labels_file_template)
                 raise StopIteration
 
             self.batch_idx = -1 # new batch is loaded
-            self.image_file = np.load(f"{EQUATIONS_PATH}{self.images_file_template % self.file_idx}", allow_pickle=True)
-            self.label_file = np.load(f"{EQUATIONS_PATH}{self.labels_file_template % self.file_idx}", allow_pickle=True)
+            self.image_file = np.load(f"{EQUATIONS_PATH}{self.directory}{self.images_file_template % self.file_idx}", allow_pickle=True)
+            self.label_file = np.load(f"{EQUATIONS_PATH}{self.directory}{self.labels_file_template % self.file_idx}", allow_pickle=True)
         
         self.batch_idx += 1 # move to the next index in a batch
         return torch.from_numpy(self.image_file[self.batch_idx]).to(self.device), torch.from_numpy(self.label_file[self.batch_idx]).to(self.device)

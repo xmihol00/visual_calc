@@ -61,7 +61,7 @@ class OutliersDetector(nn.Module):
 def model_accuracy(classifier, data_set, batch_size):
     classifier = classifier.eval()
     correct = 0
-    for images, labels in DataLoader(data_set, batch_size):
+    for images, labels in DataLoader("training/", data_set, batch_size):
         output = classifier(images)
         correct += (torch.argmax(output, dim=1) == labels.to(torch.int64)).sum()
         
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         for i in range(1, 16):
             j = 0
             classifier = classifier.train()
-            for images, labels in DataLoader(data_set, batch_size):
+            for images, labels in DataLoader("training/", data_set, batch_size):
                 output = classifier(images)
                 loss = loss_function(output, labels)
 
@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     else:
         classifier = classifier.eval()
-        for image, label in DataLoader(data_set, 1):
+        for image, label in DataLoader("training/", data_set, 1):
             output = classifier(image)
             classified = torch.argmax(output).item()
             labeled = label.item()

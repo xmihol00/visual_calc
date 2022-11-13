@@ -11,7 +11,7 @@ def dod_90x30(labels, idx):
     
 def yolo(labels, idx):
     label_str = ""
-    for label in labels[idx * YOLO_LABELS_PER_IMAGE : YOLO_LABELS_PER_IMAGE + idx * YOLO_LABELS_PER_IMAGE]:
+    for label in labels[idx]:
         if label[0] == 1: # label contains digit or operator
             if label[1] >= NUMBER_OF_DIGITS: # label contains operator
                 label_str += f" {OPERATOR_DICT[label[1]]} "

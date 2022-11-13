@@ -26,9 +26,9 @@ TRAINING_LABELS_FILENAME_TEMPLATE = "equations_%s_training_labels_%s.npy"
 IMAGE_WIDTH = 28
 IMAGE_HEIGHT = 28
 
-BATCH_SIZE = 8
-BATCHES_PER_FILE = 10
-NUMBER_OF_FILES = 5
+BATCH_SIZE = 32
+BATCHES_PER_FILE = 40
+NUMBER_OF_FILES = 10
 
 NUMBER_OF_DIGITS = 10           # labels for digits are 0-9
 NUMBER_OF_OPERATORS = 4         # labels for operators are 10-13 (+, -, *, /)
@@ -46,5 +46,6 @@ YOLO_V1_MODEL_FILENAME = "YOLO_inspired_CNN_v1.pt"
 YOLO_V2_MODEL_FILENAME = "YOLO_inspired_CNN_v2.pt"
 YOLO_V3_MODEL_FILENAME = "YOLO_inspired_CNN_v3.pt"
 YOLO_V4_MODEL_FILENAME = "YOLO_inspired_CNN_v4.pt"
+YOLO_V5_MODEL_FILENAME = "YOLO_inspired_CNN_v5.pt"
 
 YOLO_LOSS_BIAS = 5

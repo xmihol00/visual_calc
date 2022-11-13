@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         for i in range(1, 101):
             j = 0
-            for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+            for images, labels in DataLoader("training/", BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
                 output = model(images)
                 loss = loss_function(output, labels)
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         
         operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+        for images, labels in DataLoader("training/", BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
             labels = labels.to("cpu").numpy()
             for i in range(BATCH_SIZE):
                 prediction = model(images[i : i + 1])

@@ -97,7 +97,7 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, directory,
     FINAL_IMAGE_HEIGHT = 38     # height of the generated image
     MIN_CHARACTERS = 3          # minimum characters in an image
     MAX_CHARACTERS = 8          # maximum characters in an image
-    MIN_CHARACTER_WIDTH = int(FINAL_IMAGE_WIDTH / YOLO_LABELS_PER_IMAGE + 0.5)
+    MIN_CHARACTER_WIDTH = FINAL_IMAGE_WIDTH // YOLO_LABELS_PER_IMAGE
 
     for i in range(files):
         # allocate space for batches in a file
@@ -144,7 +144,7 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, directory,
                     y_idx = rnd.randint(0, FINAL_IMAGE_HEIGHT - character_height) # randomly verticaly place the character
                     image_batch[k, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character # place the character just behind the previous one
                     character_middle_idxs[l] = current_image_idx + character_width // 2 # store the index of the middle of the character
-                    current_image_idx += character_width + left_padding + rnd.randint(1, 5) # update the index, where next character will be place, add padding between characters
+                    current_image_idx += character_width + right_padding + rnd.randint(1, 2) # update the index, where next character will be place, add padding between characters
                     labels[l] = label # store the label for the character
             
                 x_shift = rnd.randint(0, FINAL_IMAGE_WIDTH - current_image_idx)

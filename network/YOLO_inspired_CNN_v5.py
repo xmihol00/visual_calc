@@ -27,11 +27,11 @@ import utils.NN_blocks as blocks
 class YoloInspiredCNNv5(nn.Module):
     def __init__(self):
         super().__init__()
-
-        self.downsample_blocks = nn.ModuleList([blocks.CNN_downsampling(1, 8, 1), blocks.CNN_downsampling(8, 16, 1), 
-                                                blocks.CNN_downsampling(16, 32, 1), blocks.CNN_downsampling(32, 64, 1)])
-        self.blocks = nn.ModuleList([blocks.CNN_residual(8), blocks.CNN_residual(16), blocks.CNN_residual(32), blocks.CNN_residual(64)])
-        self.YOLO_block = blocks.YOLO(64, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
+        
+        self.downsample_blocks = nn.ModuleList([blocks.CNN_downsampling(1, 16, 1), blocks.CNN_downsampling(16, 32, 1), 
+                                                blocks.CNN_downsampling(32, 64, 1), blocks.CNN_downsampling(64, 128, 1)])
+        self.blocks = nn.ModuleList([blocks.CNN_residual(16), blocks.CNN_residual(32), blocks.CNN_residual(64), blocks.CNN_residual(128)])
+        self.YOLO_block = blocks.YOLO(128, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
 
     def forward(self, x):
         for i in range(len(self.blocks)):
@@ -46,17 +46,18 @@ if __name__ == "__main__":
     loss_function = YoloLossOnlyClasses()
     
     device = torch.device("cpu")
-    if CUDA: # move to GPU, if available
-        device = torch.device("cuda")
-        model.to(device)
-        print(f"Running on GPU")
     
     training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME)
     validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME)
 
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
+        if CUDA: # move to GPU, if available
+            device = torch.device("cuda")
+            model.to(device)
+            print(f"Running on GPU")
+
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 25, 0.5)
+        scheduler = sdl.StepLR(optimizer, 50, 0.5)
 
         try: # loading already pre-trained model
             with open(f"{MODEL_PATH}{YOLO_V5_MODEL_FILENAME}", "rb") as file:
@@ -102,8 +103,8 @@ if __name__ == "__main__":
             for i in range(BATCH_SIZE_TRAINING):
                 prediction = model(images[i : i + 1])
                 
-                labeled = label_extractors.yolo(labels, i)
-                classified = label_extractors.yolo_prediction(prediction)
+                labeled = label_extractors.yolo_only_class(labels, i)
+                classified = label_extractors.yolo_prediction_only_class(prediction)
 
                 plt.imshow(images[i][0].numpy(), cmap='gray')
                 plt.title(f"Image classified as {classified} and labeled as {labeled}.")

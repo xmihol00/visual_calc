@@ -47,3 +47,11 @@ class YoloLossNoClassBias(nn.Module):
     def forward(self, predictions, labels):
         return (YOLO_LOSS_BIAS * self.bcel(predictions[:, 0:1], labels[:, 0:1].to(torch.float32)) + # the error if the network is correct that a part of an image contains character or not
                 self.cel(predictions[:, 1:], labels[:, 1])) # the Cross Entropy error on all predictions
+
+class YoloLossOnlyClasses(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.cel = nn.CrossEntropyLoss()
+    
+    def forward(self, predictions, labels):
+        return self.cel(predictions[:, 1:], labels[:, 1]) # the Cross Entropy error on all predictions

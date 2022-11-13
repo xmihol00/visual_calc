@@ -9,6 +9,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import BATCH_SIZE_TRAINING
 from const_config import BATCHES_PER_FILE_TRAINING
 from const_config import NUMBER_OF_FILES_TRAINING
+from const_config import BATCH_SIZE_VALIDATION
+from const_config import BATCHES_PER_FILE_VALIDATION
+from const_config import NUMBER_OF_FILES_VALIDATION
 from const_config import CUDA
 from const_config import YOLO_TRAINING_IMAGES_FILENAME
 from const_config import YOLO_TRAINING_LABELS_FILENAME
@@ -42,15 +45,18 @@ if __name__ == "__main__":
     model = YoloInspiredCNNv5()
     loss_function = YoloLossOnlyClasses()
     
+    device = torch.device("cpu")
+    if CUDA: # move to GPU, if available
+        device = torch.device("cuda")
+        model.to(device)
+        print(f"Running on GPU")
+    
+    training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME)
+    validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME)
+
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         scheduler = sdl.StepLR(optimizer, 25, 0.5)
-        
-        device = torch.device("cpu")
-        if CUDA: # move to GPU, if available
-            device = torch.device("cuda")
-            model.to(device)
-            print(f"Running on GPU")
 
         try: # loading already pre-trained model
             with open(f"{MODEL_PATH}{YOLO_V5_MODEL_FILENAME}", "rb") as file:
@@ -59,18 +65,31 @@ if __name__ == "__main__":
             pass
 
         for i in range(1, 125):
-            for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+
+            model.train()
+            average_loss = 0
+            for images, labels in training_loader:
                 output = model(images)
                 loss = loss_function(output, labels)
 
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                average_loss += loss.item()
             
             scheduler.step()
-            print(f"Loss in epoch {i}: {loss.item()}")
+            print(f"Training loss in epoch {i}: {average_loss / (BATCHES_PER_FILE_TRAINING * NUMBER_OF_FILES_TRAINING)}")
             with open(f"{MODEL_PATH}{YOLO_V5_MODEL_FILENAME}", "wb") as file:
                     torch.save(model.state_dict(), file)
+            
+            model.eval()
+            average_loss = 0
+            for images, labels in validation_loader:
+                output = model(images)
+                loss = loss_function(output, labels)
+                average_loss += loss.item()
+            
+            print(f"  Validation loss in epoch {i}: {average_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
 
     else:
         with open(f"{MODEL_PATH}{YOLO_V5_MODEL_FILENAME}", "rb") as file:
@@ -78,7 +97,7 @@ if __name__ == "__main__":
         
         operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, torch.device("cpu"), YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+        for images, labels in validation_loader:
             labels = labels.numpy()
             for i in range(BATCH_SIZE_TRAINING):
                 prediction = model(images[i : i + 1])

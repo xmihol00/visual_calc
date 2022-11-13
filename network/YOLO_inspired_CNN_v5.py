@@ -18,7 +18,7 @@ from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import YOLO_OUTPUTS_PER_LABEL_NO_CLASS
 import label_extractors
 from utils.data_loaders import DataLoader
-from utils.loss_functions import YoloLossNoClassBias
+from utils.loss_functions import YoloLossOnlyClasses
 import utils.NN_blocks as blocks
 
 class YoloInspiredCNNv5(nn.Module):
@@ -40,7 +40,7 @@ class YoloInspiredCNNv5(nn.Module):
 
 if __name__ == "__main__":
     model = YoloInspiredCNNv5()
-    loss_function = YoloLossNoClassBias()
+    loss_function = YoloLossOnlyClasses()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)

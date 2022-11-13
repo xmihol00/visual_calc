@@ -21,7 +21,7 @@ from utils.data_loaders import DataLoader
 from utils.loss_functions import YoloLossNoClassBias
 import utils.NN_blocks as blocks
 
-class YoloInspiredCNNv4(nn.Module):
+class YoloInspiredCNNv5(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -39,12 +39,12 @@ class YoloInspiredCNNv4(nn.Module):
         return x.reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL_NO_CLASS)
 
 if __name__ == "__main__":
-    model = YoloInspiredCNNv4()
+    model = YoloInspiredCNNv5()
     loss_function = YoloLossNoClassBias()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 5, 0.5)
+        scheduler = sdl.StepLR(optimizer, 25, 0.5)
         
         device = torch.device("cpu")
         if CUDA: # move to GPU, if available
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         except:
             pass
 
-        for i in range(1, 91):
+        for i in range(1, 125):
             for images, labels in DataLoader("training/", BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
                 output = model(images)
                 loss = loss_function(output, labels)

@@ -27,8 +27,8 @@ IMAGE_WIDTH = 28
 IMAGE_HEIGHT = 28
 
 BATCH_SIZE = 32
-BATCHES_PER_FILE = 40
-NUMBER_OF_FILES = 10
+BATCHES_PER_FILE = 64
+NUMBER_OF_FILES = 25
 
 NUMBER_OF_DIGITS = 10           # labels for digits are 0-9
 NUMBER_OF_OPERATORS = 4         # labels for operators are 10-13 (+, -, *, /)

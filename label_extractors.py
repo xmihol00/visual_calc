@@ -26,7 +26,7 @@ def yolo_prediction(predictions):
         if torch.sigmoid(prediction[0]) > 0.5:
             idx = torch.argmax(prediction[1:])
             if idx >= NUMBER_OF_DIGITS:
-                label += f" {['+', '-', '*', '/'][idx - NUMBER_OF_DIGITS]} "
+                label += f" {['+', '-', '*', '/', ''][idx - NUMBER_OF_DIGITS]} "
             else:
                 label += f"{idx}"
     

@@ -49,6 +49,7 @@ This will save a npy file in the dataset folder which can then be used for train
 *  ***input → thickness*** (float): proportionnal thickness according to the diagonal of the image size
 *  ***output → H*** (int): height of the output image
 *  ***output → W*** (int): width of the output image
+*  ***output → crop*** (bool): whether to crop the output image to only be the region where the user has drawn 
 *  ***process → volume*** (int): number of sample by class we can to get at the end
 *  ***process → selection*** (str): process of selection. can be RANDOM|CLASSBYCLASS|ROTATE
 *  ***process → display_output*** (bool): display the ouput in a window or not

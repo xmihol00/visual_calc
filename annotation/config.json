@@ -12,8 +12,10 @@
   {
       "H": 28,
       "W": 28,
+      "crop": true,
       "comment H": "int: height of the output image",
-      "comment W": "int: width of the output image"
+      "comment W": "int: width of the output image",
+      "comment crop": "bool: whether to crop the output image to only be the region where the user has drawn"
   },
   "process":
   {

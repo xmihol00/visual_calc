@@ -16,6 +16,7 @@ class Controller:
         self.thickness = int(config["input"]["thickness"] * diagonal) + 1
         # output
         self.output_size = (config["output"]["W"], config["output"]["H"])
+        self.crop_to_draw_region = config["output"]["crop"]
         # line
         thicknesses = self.to_list(config["line"]["thickness"])
         self.range_value = self.to_list(config["line"]["range_value"])
@@ -68,7 +69,8 @@ class Controller:
                     thickness=thickness,
                     range_value=range_value,
                     fading=self.fading,
-                    interpolation=interpolation
+                    interpolation=interpolation,
+                    crop_to_draw_region=self.crop_to_draw_region
                 ))
         return np.array(designers)
 

@@ -34,6 +34,14 @@ It is recommended to finish the annotation for all classes as resuming is curren
 * Next annotation ("Space" or "Enter")
 * Exit ("Esc")
 
+## Conversion to numpy data
+After finishing the annotation you can convert and store the images in a single numpy array by executing:
+```
+python3 converter.py
+```
+This will save a npy file in the dataset folder which can then be used for training
+
+
 ## Configuration JSON file
 
 *  ***input → H*** (int): height of the drawing image

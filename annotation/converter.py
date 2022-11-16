@@ -15,7 +15,14 @@ def folder_name_to_label(name):
         return name
 
 
+def unison_shuffled_copies(a, b):
+    assert len(a) == len(b)
+    p = np.random.permutation(len(a)).astype(int)
+    return np.array(a)[p], np.array(b)[p]
+
+
 if __name__ == '__main__':
+    shuffle_data = True
     images = []
     labels = []
     for classFolder in classes:
@@ -23,5 +30,10 @@ if __name__ == '__main__':
         for filepath in os.listdir(classDirectory):
             images.append(cv2.imread(classDirectory + "/" + filepath, 0))
             labels.append(folder_name_to_label(classFolder))
-    dataset = [images, labels]
-    np.save("./dataset/handwritten_dataset.npy", dataset)
+    if shuffle_data:
+        shuffled_images, shuffled_labels = unison_shuffled_copies(images, labels)
+        np.save("./dataset/handwritten_dataset_images.npy", shuffled_images)
+        np.save("./dataset/handwritten_dataset_labels.npy", shuffled_labels)
+    else:
+        np.save("./dataset/handwritten_dataset_images.npy", images)
+        np.save("./dataset/handwritten_dataset_labels.npy", labels)

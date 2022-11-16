@@ -39,7 +39,7 @@ After finishing the annotation you can convert and store the images in a single 
 ```
 python3 converter.py
 ```
-This will save a npy file in the dataset folder which can then be used for training
+This will save two npy files (one containing the image data and the other containing the labels) in the dataset folder which can then be used for training
 
 
 ## Configuration JSON file

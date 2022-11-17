@@ -1,4 +1,5 @@
 import os
+import time
 
 import cv2
 import numpy as np
@@ -192,18 +193,26 @@ class Controller:
 
     def run(self):
         # draw classes until the volume is not reached
+        last_save_ms = int(time.time() * 1000)
+        minimum_ms_between_save = 500
+
         while self.not_finished():
             # display the frames of the drawing part and ouput part if asked
             cv2.imshow('Writing Frame', self.get_drawing_frame())
             if self.display_output:
                 cv2.imshow('Output', self.get_output_frame())
 
+            current_ms = int(time.time() * 1000)
+
             key = cv2.waitKey(1000//30) & 0xff  # 30 fps and catch key pressed
             if key == ord('q') or key == 27:  # Q key of Esc to quit the program
                 break
             elif key == 13 or key == 32:  # Enter or Space key to save the draw and begin the next one
-                self.save()
-                self.img, self.current_class = self.set_new_image()
+                # Check if enough time has passed to prevent accidental double input
+                if current_ms > (last_save_ms + minimum_ms_between_save):
+                    self.save()
+                    self.img, self.current_class = self.set_new_image()
+                    last_save_ms = current_ms
             elif key == ord('u') or key == ord('c'):  # U or C key to undo the draw
                 self.img = self.img * 0
                 for designer in self.designers.flatten():

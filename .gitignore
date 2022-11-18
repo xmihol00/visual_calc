@@ -9,3 +9,4 @@ network/__pycache__/
 *.pt
 
 __pycache__/
+/annotation/dataset/

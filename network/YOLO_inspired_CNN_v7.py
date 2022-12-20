@@ -16,37 +16,60 @@ from const_config import CUDA
 from const_config import YOLO_TRAINING_IMAGES_FILENAME
 from const_config import YOLO_TRAINING_LABELS_FILENAME
 from const_config import MODEL_PATH
-from const_config import YOLO_V5_MODEL_FILENAME
+from const_config import YOLO_V7_MODEL_FILENAME
 from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES
 import label_extractors
 from utils.data_loaders import DataLoader
 from utils.loss_functions import YoloLossOnlyClasses
-import utils.NN_blocks as blocks
+from utils.evaluation import EarlyStopping
 
-class YoloInspiredCNNv5(nn.Module):
+class YoloInspiredCNNv6(nn.Module):
     def __init__(self):
         super().__init__()
-        
-        self.downsample_blocks = nn.ModuleList([blocks.CNN_downsampling(1, 16, 1), blocks.CNN_downsampling(16, 32, 1), 
-                                                blocks.CNN_downsampling(32, 64, 1), blocks.CNN_downsampling(64, 128, 1)])
-        self.blocks = nn.ModuleList([blocks.CNN_residual(16), blocks.CNN_residual(32), blocks.CNN_residual(64), blocks.CNN_residual(128)])
-        self.YOLO_block = blocks.YOLO(128, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
+        self.conv_part = nn.Sequential(
+            nn.BatchNorm2d(1),
+            nn.Conv2d(1, 32, (2, 2), padding=0),
+            nn.BatchNorm2d(32),
+            nn.ReLU(0.1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, (2, 2), padding=0),
+            nn.BatchNorm2d(64),
+            nn.ReLU(0.1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, (2, 2), padding=0),
+            nn.BatchNorm2d(128),
+            nn.ReLU(0.1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(128, 256, (3, 2), padding=0),
+            nn.BatchNorm2d(256),
+            nn.ReLU(0.1),
+        )
+
+        self.fully_conn_part = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(0.4),
+            nn.Linear(256 * 2, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(0.1),
+            nn.Dropout(0.4),
+            nn.Linear(256, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES),
+        )
 
     def forward(self, x):
-        for i in range(len(self.blocks)):
-            x = self.downsample_blocks[i](x)
-            x = self.blocks[i](x) + x
-        
-        x = self.YOLO_block(x)
-        return x.reshape(x.shape[0] * YOLO_LABELS_PER_IMAGE, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
+        results = [None] * 13
+        x = self.conv_part(x)
+        for i in range(YOLO_LABELS_PER_IMAGE):
+            j = 2 * i
+            results[i] = self.fully_conn_part(x[:, :, :, j:j+2])
+        return torch.cat(results, 1).reshape(-1, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
 
 if __name__ == "__main__":
-    model = YoloInspiredCNNv5()
+    model = YoloInspiredCNNv6()
     loss_function = YoloLossOnlyClasses()
     
     device = torch.device("cpu")
-    if CUDA: # move to GPU, if available
+    if CUDA and len(sys.argv) > 1 and sys.argv[1].lower() == "train": # move to GPU, if available
         device = torch.device("cuda")
         model.to(device)
         print(f"Running on GPU")
@@ -55,54 +78,48 @@ if __name__ == "__main__":
     validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME)
 
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
-
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 50, 0.5)
-
-        try: # loading already pre-trained model
-            with open(f"{MODEL_PATH}{YOLO_V5_MODEL_FILENAME}", "rb") as file:
-                model.load_state_dict(torch.load(file))
-        except:
-            pass
+        scheduler = sdl.StepLR(optimizer, 40, 0.5)
+        early_stopper = EarlyStopping()
 
         for i in range(1, 125):
 
             model.train()
-            average_loss = 0
+            total_loss = 0
             for images, labels in training_loader:
                 output = model(images)
-                print(output.shape)
-                exit(0)
                 loss = loss_function(output, labels)
 
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                average_loss += loss.item()
+                total_loss += loss.item()
             
             scheduler.step()
-            print(f"Training loss in epoch {i}: {average_loss / (BATCHES_PER_FILE_TRAINING * NUMBER_OF_FILES_TRAINING)}")
-            with open(f"{MODEL_PATH}{YOLO_V5_MODEL_FILENAME}", "wb") as file:
-                    torch.save(model.state_dict(), file)
+            print(f"Training loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_TRAINING * NUMBER_OF_FILES_TRAINING)}")
             
             model.eval()
-            average_loss = 0
+            total_loss = 0
             for images, labels in validation_loader:
                 output = model(images)
                 loss = loss_function(output, labels)
-                average_loss += loss.item()
+                total_loss += loss.item()
             
-            print(f"  Validation loss in epoch {i}: {average_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
+            print(f"  Validation loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
+            if early_stopper(model, total_loss):
+                break
 
+        with open(f"{MODEL_PATH}{YOLO_V7_MODEL_FILENAME}", "wb") as file:
+            torch.save(model.state_dict(), file)
     else:
-        with open(f"{MODEL_PATH}{YOLO_V5_MODEL_FILENAME}", "rb") as file:
+        with open(f"{MODEL_PATH}{YOLO_V7_MODEL_FILENAME}", "rb") as file:
             model.load_state_dict(torch.load(file))
         
         operators = ["+", "-", "*", "/"]
         model = model.eval()
         for images, labels in validation_loader:
             labels = labels.numpy()
-            for i in range(BATCH_SIZE_TRAINING):
+            for i in range(BATCH_SIZE_VALIDATION):
                 prediction = model(images[i : i + 1])
                 
                 labeled = label_extractors.yolo_only_class(labels, i)

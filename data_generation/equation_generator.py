@@ -13,6 +13,7 @@ from const_config import YOLO_LABEL_DIMENSIONS
 from const_config import TRAINING_IMAGES_FILENAME_TEMPLATE
 from const_config import TRAINING_LABELS_FILENAME_TEMPLATE
 from const_config import DATA_DIRECTORIES_INFO
+from const_config import IMAGE_WIDTH
 
 HELP_MSG = "Run as: python equation_generator.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
 
@@ -91,11 +92,11 @@ def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, directory, b
         np.save(f"{EQUATIONS_PATH}{directory}{TRAINING_LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
 
 def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
-    FINAL_IMAGE_WIDTH = 230     # width of the generated image
+    FINAL_IMAGE_WIDTH = 228     # width of the generated image
     FINAL_IMAGE_HEIGHT = 38     # height of the generated image
     MIN_CHARACTERS = 3          # minimum characters in an image
     MAX_CHARACTERS = 8          # maximum characters in an image
-    MIN_CHARACTER_WIDTH = FINAL_IMAGE_WIDTH // YOLO_LABELS_PER_IMAGE
+    MIN_CHARACTER_WIDTH = (FINAL_IMAGE_WIDTH + YOLO_LABELS_PER_IMAGE - 1) // YOLO_LABELS_PER_IMAGE
     SAMPLES_PER_FILE = batches_per_file * batch_size
 
     for i in range(files):
@@ -125,18 +126,15 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, directory,
                 
                 character_height = character.shape[0]
                 character_width = character.shape[1]
-                left_padding = 0
-                right_padding = 0
+                padding = 0
                 if character_width < MIN_CHARACTER_WIDTH: # character is not wide enough 
-                    padding = MIN_CHARACTER_WIDTH - character_width
-                    left_padding = rnd.randint(0, padding)  # padding before character
-                    right_padding = padding - left_padding  # padding after character
+                    padding = (MIN_CHARACTER_WIDTH - character_width + 1) // 2
 
-                current_image_idx += left_padding
+                current_image_idx += padding
                 y_idx = rnd.randint(0, FINAL_IMAGE_HEIGHT - character_height) # randomly verticaly place the character
                 images_file[j, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character # place the character just behind the previous one
                 character_middle_idxs[k] = current_image_idx + character_width // 2 # store the index of the middle of the character
-                current_image_idx += character_width + right_padding + rnd.randint(1, 2) # update the index, where next character will be place, add padding between characters
+                current_image_idx += character_width + padding + rnd.randint(1, (IMAGE_WIDTH - character_width - 2 * padding) // 2 + 1) # update the index, where next character will be place, add padding between characters
                 labels[k] = label # store the label for the character
         
             x_shift = rnd.randint(0, FINAL_IMAGE_WIDTH - current_image_idx)
@@ -147,8 +145,8 @@ def yolo_230x38(digits: DigitGenerator, operators: OperatorGenerator, directory,
             current_label_box = 0.0
             character_idx = 0
             for k in range(YOLO_LABELS_PER_IMAGE):
-                if (character_idx < number_of_characters and character_middle_idxs[character_idx] >= current_label_box and 
-                    character_middle_idxs[character_idx] <= current_label_box + width_per_label_box): # if the center of a character is in a label box
+                if (character_idx < number_of_characters and character_middle_idxs[character_idx] >= current_label_box - 0.001 and 
+                    character_middle_idxs[character_idx] <= current_label_box + width_per_label_box + 0.001): # if the center of a character is in a label box
                     labels_file[j, k, 0] = 1 # this part of an image contains a character
                     labels_file[j, k, 1] = labels[character_idx] # class of the character
                     character_idx += 1

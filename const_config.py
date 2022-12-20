@@ -47,7 +47,7 @@ DATA_DIRECTORIES_INFO = [("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRA
 
 YOLO_TRAINING_IMAGES_FILENAME = "equations_230x38_training_images_%s.npy"
 YOLO_TRAINING_LABELS_FILENAME = "equations_230x38_training_labels_%s.npy"
-YOLO_LABELS_PER_IMAGE = 13      # image is separated into 25 parts of the same size along the x axis, each part has separate label, the YOLO networks are design such that the output is 25 predictions
+YOLO_LABELS_PER_IMAGE = 13      # image is separated into 13 parts of the same size along the x axis, each part has separate label, the YOLO networks are design such that the output is 25 predictions
 YOLO_OUTPUTS_PER_LABEL = 15     # each label consist of an indicator if there is (1) a character or not (0) at index 0 and probabilities of a class at indices 1-14
 YOLO_OUTPUTS_PER_LABEL_NO_CLASS = 16     # one more output than above indicating there is no digit on the image
 YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES = 15 # only outputs for class classification including one non-character class
@@ -59,5 +59,7 @@ YOLO_V2_MODEL_FILENAME = "YOLO_inspired_CNN_v2.pt"
 YOLO_V3_MODEL_FILENAME = "YOLO_inspired_CNN_v3.pt"
 YOLO_V4_MODEL_FILENAME = "YOLO_inspired_CNN_v4.pt"
 YOLO_V5_MODEL_FILENAME = "YOLO_inspired_CNN_v5.pt"
+YOLO_V6_MODEL_FILENAME = "YOLO_inspired_CNN_v6.pt"
+YOLO_V7_MODEL_FILENAME = "YOLO_inspired_CNN_v7.pt"
 
 YOLO_LOSS_BIAS = 5

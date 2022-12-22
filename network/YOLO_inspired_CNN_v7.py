@@ -24,7 +24,7 @@ from utils.data_loaders import DataLoader
 from utils.loss_functions import YoloLossOnlyClasses
 from utils.evaluation import EarlyStopping
 
-class YoloInspiredCNNv6(nn.Module):
+class YoloInspiredCNNv7(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv_part = nn.Sequential(
@@ -65,7 +65,7 @@ class YoloInspiredCNNv6(nn.Module):
         return torch.cat(results, 1).reshape(-1, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
 
 if __name__ == "__main__":
-    model = YoloInspiredCNNv6()
+    model = YoloInspiredCNNv7()
     loss_function = YoloLossOnlyClasses()
     
     device = torch.device("cpu")
@@ -120,6 +120,7 @@ if __name__ == "__main__":
         for images, labels in validation_loader:
             labels = labels.numpy()
             for i in range(BATCH_SIZE_VALIDATION):
+                print(images[i : i + 1].shape)
                 prediction = model(images[i : i + 1])
                 
                 labeled = label_extractors.yolo_only_class(labels, i)
@@ -128,3 +129,4 @@ if __name__ == "__main__":
                 plt.imshow(images[i][0].numpy(), cmap='gray')
                 plt.title(f"Image classified as {classified} and labeled as {labeled}.")
                 plt.show()
+                

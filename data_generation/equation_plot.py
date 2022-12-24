@@ -7,12 +7,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import BATCH_SIZE_TRAINING
 from const_config import BATCHES_PER_FILE_TRAINING
 from const_config import DATA_DIRECTORIES_INFO
+from const_config import IMAGES_FILENAME_TEMPLATE
+from const_config import LABELS_FILENAME_TEMPLATE
 import label_extractors
 
 
 EQUATIONS_PATH = "./data/equations/"
-TRAINING_IMAGES_FILENAME = "equations_%s_training_images_%s.npy"
-TRAINING_LABELS_FILENAME = "equations_%s_training_labels_%s.npy"
 
 HELP_MSG = "Run as: python equation_plot.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
 
@@ -34,14 +34,8 @@ class ImagePlotter():
 
         if file_type == "90x30":
             self.label_extractor = label_extractors.dod_90x30
-        elif file_type == "132x40":
-            pass
-        elif file_type == "230x38":
-            self.label_extractor = label_extractors.yolo
         else:
-            print("Unknown image type.", file=sys.stderr)
-            print(HELP_MSG, file=sys.stderr)
-            exit(1)
+            self.label_extractor = label_extractors.yolo
     
     def plot(self, images, labels, idx):
         image = images[idx, 0]
@@ -77,14 +71,14 @@ if __name__ == "__main__":
         BATCHES_PER_FILE_TRAINING = int(sys.argv[3])
         NUMBER_OF_FILES = int(sys.argv[4])
     
-    TRAINING_IMAGES_FILENAME = TRAINING_IMAGES_FILENAME % (sys.argv[1], "%s")
-    TRAINING_LABELS_FILENAME = TRAINING_LABELS_FILENAME % (sys.argv[1], "%s")
+    IMAGES_FILENAME_TEMPLATE = IMAGES_FILENAME_TEMPLATE % (sys.argv[1], "%s")
+    LABELS_FILENAME_TEMPLATE = LABELS_FILENAME_TEMPLATE % (sys.argv[1], "%s")
     
     plotter = ImagePlotter(SUBPLOT_X_COUNT, SUBPLOT_Y_COUNT, sys.argv[1])
     for directory, batch_size, batches_per_file, _ in DATA_DIRECTORIES_INFO:
         plotter.reset(directory)
         for i in range(2):
-            images_file = np.load(f"{EQUATIONS_PATH}{directory}{TRAINING_IMAGES_FILENAME % i}", allow_pickle=True)
-            labels_file = np.load(f"{EQUATIONS_PATH}{directory}{TRAINING_LABELS_FILENAME % i}", allow_pickle=True)
+            images_file = np.load(f"{EQUATIONS_PATH}{directory}{IMAGES_FILENAME_TEMPLATE % i}", allow_pickle=True)
+            labels_file = np.load(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % i}", allow_pickle=True)
             for j in range(PLOTTED_WINDOWS_COUNT * SUBPLOT_X_COUNT * SUBPLOT_Y_COUNT):
                 plotter.plot(images_file, labels_file, j)

@@ -13,8 +13,8 @@ from const_config import BATCH_SIZE_VALIDATION
 from const_config import BATCHES_PER_FILE_VALIDATION
 from const_config import NUMBER_OF_FILES_VALIDATION
 from const_config import CUDA
-from const_config import YOLO_TRAINING_IMAGES_FILENAME
-from const_config import YOLO_TRAINING_LABELS_FILENAME
+from const_config import IMAGES_FILENAME_TEMPLATE
+from const_config import LABELS_FILENAME_TEMPLATE
 from const_config import MODEL_PATH
 from const_config import YOLO_V6_MODEL_FILENAME
 from const_config import YOLO_LABELS_PER_IMAGE
@@ -56,7 +56,7 @@ class YoloInspiredCNNv6(nn.Module):
         )
 
     def forward(self, x):
-        results = [None] * 13
+        results = [None] * YOLO_LABELS_PER_IMAGE
         x = self.conv_part(x)
         for i in range(YOLO_LABELS_PER_IMAGE):
             j = 2 * i
@@ -73,8 +73,8 @@ if __name__ == "__main__":
         model.to(device)
         print(f"Running on GPU")
     
-    training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME)
-    validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME)
+    training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, "228x38")
+    validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device, "228x38")
 
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)

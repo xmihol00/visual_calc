@@ -1,7 +1,7 @@
 import copy
 
 class EarlyStopping():
-  def __init__(self, patience=5, restore_best_weights=True):
+  def __init__(self, patience=3, restore_best_weights=True):
     self.patience = patience
     self.restore_best_weights = restore_best_weights
     self.best_weights = None

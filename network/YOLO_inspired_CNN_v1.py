@@ -9,8 +9,8 @@ from const_config import BATCH_SIZE_TRAINING
 from const_config import BATCHES_PER_FILE_TRAINING
 from const_config import NUMBER_OF_FILES_TRAINING
 from const_config import CUDA
-from const_config import YOLO_TRAINING_IMAGES_FILENAME
-from const_config import YOLO_TRAINING_LABELS_FILENAME
+from const_config import IMAGES_FILENAME_TEMPLATE
+from const_config import LABELS_FILENAME_TEMPLATE
 from const_config import MODEL_PATH
 from const_config import YOLO_V1_MODEL_FILENAME
 from const_config import YOLO_LABELS_PER_IMAGE
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
         for i in range(1, 101):
             j = 0
-            for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+            for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, "230x38"):
                 output = model(images)
                 loss = loss_function(output, labels)
 
@@ -108,9 +108,8 @@ if __name__ == "__main__":
         with open(f"{MODEL_PATH}{YOLO_V1_MODEL_FILENAME}", "rb") as file:
             model.load_state_dict(torch.load(file))
         
-        operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+        for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, "230x38"):
             labels = labels.to("cpu").numpy()
             for i in range(BATCH_SIZE_TRAINING):
                 prediction = model(images[i : i + 1])

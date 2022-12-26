@@ -143,7 +143,7 @@ def generate_equations(final_image_width, final_image_height, digits: DigitGener
         
             x_shift = rnd.randint(0, final_image_width - current_image_idx)
             images_file[j] = np.roll(images_file[j], shift=x_shift, axis=2) # shifting the image to right across x axis
-            images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=1)
+            images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 2))
             character_middle_idxs = (character_middle_idxs + x_shift) % final_image_width # the position of the midpoints of the characters must be shifted as well
 
             width_per_label_box = final_image_width / YOLO_LABELS_PER_IMAGE # wdth of a part of an image, which is labeled

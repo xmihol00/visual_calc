@@ -6,15 +6,17 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import BATCH_SIZE_TRAINING
 from const_config import BATCHES_PER_FILE_TRAINING
+from const_config import BATCH_SIZE_TRAINING
 from const_config import DATA_DIRECTORIES_INFO
 from const_config import IMAGES_FILENAME_TEMPLATE
 from const_config import LABELS_FILENAME_TEMPLATE
+from const_config import YOLO_LABELS_PER_IMAGE
 import label_extractors
 
 
 EQUATIONS_PATH = "./data/equations/"
 
-HELP_MSG = "Run as: python equation_plot.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
+HELP_MSG = "Run as: python equation_plot.py ['image type']"
 
 PLOTTED_WINDOWS_COUNT = 1
 SUBPLOT_X_COUNT = 4
@@ -39,9 +41,11 @@ class ImagePlotter():
     
     def plot(self, images, labels, idx):
         image = images[idx, 0]
+        for i in range(1, YOLO_LABELS_PER_IMAGE):
+            image[:, i * 16] = 0.5
         self.axes[self.row_idx, self.col_idx].imshow(image, cmap="gray")
         self.axes[self.row_idx, self.col_idx].set_title(self.label_extractor(labels, idx))
-        
+
         self.col_idx += 1
         if self.col_idx == self.subplot_y_cnt:
             self.col_idx = 0
@@ -65,11 +69,6 @@ if __name__ == "__main__":
         print("Not enough arguments.", file=sys.stderr)
         print(HELP_MSG, file=sys.stderr)
         exit(1)
-    
-    if len(sys.argv) >= 5:
-        BATCH_SIZE_TRAINING = int(sys.argv[2])
-        BATCHES_PER_FILE_TRAINING = int(sys.argv[3])
-        NUMBER_OF_FILES = int(sys.argv[4])
     
     IMAGES_FILENAME_TEMPLATE = IMAGES_FILENAME_TEMPLATE % (sys.argv[1], "%s")
     LABELS_FILENAME_TEMPLATE = LABELS_FILENAME_TEMPLATE % (sys.argv[1], "%s")

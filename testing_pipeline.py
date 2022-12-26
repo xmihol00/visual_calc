@@ -8,9 +8,10 @@ import sys
 IMAGE_PATH = "./data/equation_images/"
 sys.path.append(os.path.join(os.path.dirname(__file__), "network"))
 from network.custom_CNN_v1 import CustomCNNv1
+from network.custom_CNN_v3 import CustomCNNv3
 import label_extractors
 
-model = CustomCNNv1()
+model = CustomCNNv3("cpu", 1)
 model.load()
 model = model.eval()
 
@@ -19,13 +20,12 @@ for file_name in os.listdir(IMAGE_PATH):
     image = np.asarray(image)
     if image.sum() * 2 > image.shape[0] * image.shape[1] * 255:
         image = np.vectorize(lambda x: 0 if x >= 128 else 1)(image)
-        
     else:
         image = np.vectorize(lambda x: 1 if x >= 128 else 0)(image)
 
-    interresting_rows = image.sum(axis=1) > image.shape[0] * 0.005
+    interresting_rows = image.sum(axis=1) > image.shape[1] * 0.009
     row_areas = []
-    min_row_separator = image.shape[0] * 0.025
+    min_row_separator = 50
     area_start = 0
     area_end = 0
     ongoing_area = False
@@ -45,9 +45,14 @@ for file_name in os.listdir(IMAGE_PATH):
     
     if ongoing_area:
         row_areas.append((area_start, area_end + 1))
+    
+    #for row1, row2 in row_areas:
+    #    area = image[row1:row2, :]
+    #    plt.imshow(area, cmap='gray')
+    #    plt.show()
 
     areas = []
-    min_col_separator = image.shape[1] * 0.15
+    min_col_separator = image.shape[0] * 0.15
     area_start = 0
     area_end = 0
     ongoing_area = False
@@ -65,9 +70,9 @@ for file_name in os.listdir(IMAGE_PATH):
                 if separation_count == min_col_separator:
                     ongoing_area = False
                     areas.append((row1, row2, area_start, area_end + 1))
-    
-    if ongoing_area:
-        areas.append((row1, row2, area_start, area_end + 1))
+        
+        if ongoing_area:
+            areas.append((row1, row2, area_start, area_end + 1))
 
     for row1, row2, col1, col2 in areas:
         area = image[row1:row2, col1:col2]
@@ -75,13 +80,13 @@ for file_name in os.listdir(IMAGE_PATH):
         #plt.show()
         area_sum = area.sum()
         area_max = area.shape[0] * area.shape[1]
-        if area_sum > area_max * 0.025 and area_sum < area_max * 0.2:
+        if area_sum > area_max * 0.015 and area_sum < area_max * 0.2:
             resized_image = Image.fromarray((area * 255).astype(np.uint8), 'L')
-            resized_image.thumbnail((resized_image.width, 30), Image.NEAREST)
+            resized_image.thumbnail((resized_image.width, 34), Image.NEAREST)
             final_image = np.zeros((38, 288))
             width_shift = (288 - resized_image.width) // 2
             try:
-                final_image[4:34, width_shift:resized_image.width + width_shift] = np.asarray(resized_image)
+                final_image[2:36, width_shift:resized_image.width + width_shift] = np.asarray(resized_image)
             except:
                 continue
 
@@ -91,7 +96,10 @@ for file_name in os.listdir(IMAGE_PATH):
         
             classified = label_extractors.yolo_prediction_only_class(prediction)
 
-            plt.imshow(sample[0][0].numpy(), cmap='gray')
-            plt.title(f"{torch.argmax(prediction, 1).numpy()}\n{classified}.")
+            sample = sample[0][0].numpy()
+            for i in range(1, 18):
+                sample[:, i * 16] = 0.5
+            plt.imshow(sample, cmap='gray')
+            plt.title(f"{torch.argmax(prediction, 1).numpy()}\n{classified}")
             plt.show()
                 

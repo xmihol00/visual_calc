@@ -135,10 +135,10 @@ def generate_equations(final_image_width, final_image_height, digits: DigitGener
                 images_file[j, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character # place the character just behind the previous one
                 character_middle_idxs[k] = current_image_idx + character_width // 2 # store the index of the middle of the character
                 current_image_idx += character_width + padding # update the index, where next character will be place, add padding between characters
-                if label < 10:
-                    current_image_idx += rnd.randint(0, 2)
-                else:
-                    current_image_idx += rnd.randint(0, (IMAGE_WIDTH - character_width - 2 * padding))
+                current_image_idx += rnd.randint(0, 2)
+                #if label < 10:
+                #else:
+                #    current_image_idx += rnd.randint(0, (IMAGE_WIDTH - character_width - 2 * padding))
                 labels[k] = label # store the label for the character
         
             x_shift = rnd.randint(0, final_image_width - current_image_idx)

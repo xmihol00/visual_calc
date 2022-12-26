@@ -1,17 +1,14 @@
 from PIL import Image
+from PIL import ImageOps
 import os
 import sys
 import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from const_config import DIGIT_AND_OPERATORS_1_PATH
-from const_config import DIGIT_AND_OPERATORS_2_PATH
-from const_config import PREPROCESSED_PATH
+
 from const_config import TRAINING_PREPROCESSED_PATH
 from const_config import VALIDATION_PREPROCESSED_PATH
 from const_config import TESTING_PREPROCESSED_PATH
-from const_config import IMAGE_WIDTH
-from const_config import IMAGE_HEIGHT
 
 from const_config import ALL_MERGED_PREPROCESSED_PATH
 from const_config import ALL_IMAGES_FILENAME
@@ -25,12 +22,21 @@ for label, target_file_name in enumerate(["zeros", "ones", "twos", "threes", "fo
                                           "pluses", "minuses", "asterisks", "slashes"]):
     class_indices = np.where(all_labels == label)[0]
     sample_count = class_indices.shape[0]
-    target_file = np.empty((sample_count), dtype=object)
+    target_file = np.empty((sample_count * 3), dtype=object)
     
     for i, sample_index in enumerate(class_indices):
+        j = i * 3
         image = all_images[sample_index]
         coordinates = np.argwhere(image > 0)
-        target_file[i] = image[:, coordinates.min(axis=0)[1]:coordinates.max(axis=0)[1] + 1]
+        target_file[j] = image[:, coordinates.min(axis=0)[1]:coordinates.max(axis=0)[1] + 1]
+        pil_image = Image.fromarray((target_file[j] * 255).astype(np.uint8), 'L')
+        pil_image.thumbnail((pil_image.width, pil_image.height - 3), Image.BOX)
+        target_file[j + 1] = (np.asarray(pil_image) > 0).astype(np.float32)
+        pil_image = Image.fromarray((target_file[j] * 255).astype(np.uint8), 'L')
+        pil_image = ImageOps.contain(pil_image, (pil_image.width + 3, pil_image.height + 3), method=Image.NEAREST)
+        target_file[j + 2] = (np.asarray(pil_image) > 0).astype(np.float32)
+        #print(target_file[j].shape, target_file[j + 1].shape, target_file[j + 2].shape)
+        #exit()
     
     validation_idx = int(sample_count * 0.8)
     testing_idx = int(sample_count * 0.9)

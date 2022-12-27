@@ -52,11 +52,6 @@ for file_name in os.listdir(IMAGE_PATH):
     if ongoing_area:
         row_areas.append((area_start, area_end + 1))
     
-    #for row1, row2 in row_areas:
-    #    area = image[row1:row2, :]
-    #    plt.imshow(area, cmap='gray')
-    #    plt.show()
-
     areas = []
     min_col_separator = image.shape[0] * 0.15
     area_start = 0
@@ -126,7 +121,6 @@ for file_name in os.listdir(IMAGE_PATH):
                 classified = max(filtered_classifications, key=lambda x: sum([x == y for y in filtered_classifications]))
             except:
                 continue
-
 
             #sample = sample[0].numpy()
             #for i in range(1, 18):

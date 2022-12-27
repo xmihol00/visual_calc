@@ -4,14 +4,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import sys
+import re
 
 IMAGE_PATH = "./data/equation_images/"
+PREDICTION_SAMPLES = 16 * 4
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "network"))
 from network.custom_CNN_v1 import CustomCNNv1
 from network.custom_CNN_v3 import CustomCNNv3
 import label_extractors
+from const_config import EQUATION_IMAGE_WIDTH
+from const_config import EQUATION_IMAGE_HEIGHT
+from const_config import YOLO_LABELS_PER_IMAGE
 
-model = CustomCNNv3("cpu", 1)
+model = CustomCNNv3("cpu", PREDICTION_SAMPLES)
 model.load()
 model = model.eval()
 
@@ -82,24 +88,50 @@ for file_name in os.listdir(IMAGE_PATH):
         area_max = area.shape[0] * area.shape[1]
         if area_sum > area_max * 0.015 and area_sum < area_max * 0.2:
             resized_image = Image.fromarray((area * 255).astype(np.uint8), 'L')
-            resized_image.thumbnail((resized_image.width, 34), Image.NEAREST)
-            final_image = np.zeros((38, 288))
-            width_shift = (288 - resized_image.width) // 2
+            resized_image.thumbnail((resized_image.width, 36), Image.NEAREST)
+            if resized_image.width > EQUATION_IMAGE_WIDTH:
+                continue
+            final_images = np.zeros((PREDICTION_SAMPLES, 38, 288))
+
+            for i, (y1, y2) in enumerate([(0, 38), (1, 37), (2, 36), (3, 35)]):
+                resized_image = Image.fromarray((area * 255).astype(np.uint8), 'L')
+                resized_image.thumbnail((resized_image.width, y2 - y1), Image.NEAREST)
+                if resized_image.width > EQUATION_IMAGE_WIDTH:
+                    continue
+                width_shift = (EQUATION_IMAGE_WIDTH - resized_image.width) // 2
+                resized_image = np.asarray(resized_image)
+                for j, shift in enumerate(range(-8, 8)):
+                    augmented_width_shift = width_shift + shift
+                    if augmented_width_shift < 0:
+                        augmented_width_shift = 0
+                    elif augmented_width_shift + resized_image.shape[1] > EQUATION_IMAGE_WIDTH:
+                        augmented_width_shift = EQUATION_IMAGE_WIDTH - resized_image.shape[1]
+                    final_images[i*16 + j, y1:y2, augmented_width_shift:resized_image.shape[1] + augmented_width_shift] = resized_image
+
+            samples = torch.tensor((final_images > 0).astype(np.float32))
+            samples = samples.unsqueeze(1)
+            predictions = model(samples)
+
+            classifications = [None] * PREDICTION_SAMPLES
+            for i, sample in enumerate(samples):
+                j = i * YOLO_LABELS_PER_IMAGE
+                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + YOLO_LABELS_PER_IMAGE], sep='')
+
+            filtered_classifications = []
+            for classified in classifications:
+                if re.match(r"^(\d+[\+\-\*/])+\d+$", classified):
+                    filtered_classifications.append(classified)
+
             try:
-                final_image[2:36, width_shift:resized_image.width + width_shift] = np.asarray(resized_image)
+                classified = max(filtered_classifications, key=lambda x: sum([x == y for y in filtered_classifications]))
             except:
                 continue
 
-            sample = torch.tensor((final_image > 0).astype(np.float32))
-            sample = sample.unsqueeze(0).unsqueeze(0)
-            prediction = model(sample)
-        
-            classified = label_extractors.yolo_prediction_only_class(prediction)
 
-            sample = sample[0][0].numpy()
-            for i in range(1, 18):
-                sample[:, i * 16] = 0.5
-            plt.imshow(sample, cmap='gray')
-            plt.title(f"{torch.argmax(prediction, 1).numpy()}\n{classified}")
+            #sample = sample[0].numpy()
+            #for i in range(1, 18):
+            #    sample[:, i * 16] = 0.5
+            plt.imshow(area, cmap='gray')
+            plt.title(f"{classified}")
             plt.show()
                 

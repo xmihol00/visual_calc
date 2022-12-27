@@ -55,13 +55,13 @@ def yolo_only_class(labels, idx):
 
     return label_str
 
-def yolo_prediction_only_class(predictions):
+def yolo_prediction_only_class(predictions, sep=' '):
     label = ""
     for prediction in predictions:
         idx = torch.argmax(prediction)
         if idx < NUMBER_OF_DIGITS:
             label += f"{idx}"
         elif idx < NUMBER_OF_DIGITS + NUMBER_OF_OPERATORS:
-            label += f" {['+', '-', '*', '/', ''][idx - NUMBER_OF_DIGITS]} "
+            label += f"{sep}{['+', '-', '*', '/', ''][idx - NUMBER_OF_DIGITS]}{sep}"
     
     return label

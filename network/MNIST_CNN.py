@@ -63,7 +63,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(classifier.parameters(), lr=0.005)
 
         for i in range(1, 6):
-            for images, labels in DataLoader(TrainingDataset(), 1):
+            for images, labels in DataLoader("training/", TrainingDataset(), 1):
                 output = classifier(images)
                 loss = loss_function(output, labels)
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         with open(f"{MODEL_PATH}{MODEL_FILE_NAME}", "rb") as file:
             classifier.load_state_dict(torch.load(file))
         
-        for image, label in DataLoader(TestingDataset(), 1):
+        for image, label in DataLoader("training/", TestingDataset(), 1):
             output = classifier(image)
             classified = torch.argmax(output).item()
             labeled = label.item()

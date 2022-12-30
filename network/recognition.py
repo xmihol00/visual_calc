@@ -35,6 +35,17 @@ def evaluate(x):
     return label
 
 
+# Evaluates multiple images and returns the predicted labels with the highest probability
+def evaluate_all(imgs):
+    configGPU()
+    model = keras.models.load_model('../models/test_model')
+    label_encoder = preprocessing.LabelEncoder()
+    label_encoder.classes_ = np.load('../models/test_model/classes.npy')
+    prediction = model.predict(imgs)
+    highest_probability = np.argmax(prediction, axis=1)
+    return label_encoder.inverse_transform(highest_probability)
+
+
 # Checks if a rectangle is inside the test rectangle
 def is_inside_box(check_box, test_box):
     cx, cy, cw, ch = check_box
@@ -71,7 +82,7 @@ def resize_image(x, w, h):
 mser = cv2.MSER_create(delta=25, min_area=20, max_variation=0.4)
 
 # Load an equation image resize it if necessary
-img = cv2.imread("../testing/eq1.png")
+img = cv2.imread("../testing/eq4.png")
 if img.shape[1] > 400:
     img = imutils.resize(img, 400)
 orig = img.copy()
@@ -100,19 +111,30 @@ while True:
 
 print("#Valid boxes: " + str(potentially_valid_boxes.shape[0]))
 
+eval_boxes = None
+
 # For every valid region of interest we transform it to the desired shape (28, 28)
 # and format (binary black & white). Then we evaluate the region using our trained model
 for box in potentially_valid_boxes:
     x, y, w, h = box
-    color = (255, 125, 0)
-    cv2.rectangle(orig, (x, y), (x + w, y + h), color, 1)
     roi = gray[y:y+h, x:x+w]
     scaled = resize_image(roi, w, h)
     (thresh, black_white) = cv2.threshold(scaled, 127, 255, cv2.THRESH_BINARY_INV)
     int_bw = (black_white / 255).astype(int)
     reshaped = np.reshape(int_bw, (1, 28, 28))
-    result = evaluate(reshaped)
-    cv2.putText(orig, str(result), (x + 10, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, color, 1)
+    if eval_boxes is None:
+        eval_boxes = reshaped
+    else:
+        eval_boxes = np.concatenate((eval_boxes, reshaped))
+
+labels = evaluate_all(eval_boxes)
+
+# Draw bounding box and result
+for index, box in enumerate(potentially_valid_boxes):
+    x, y, w, h = box
+    color = (255, 125, 0)
+    cv2.rectangle(orig, (x, y), (x + w, y + h), color, 1)
+    cv2.putText(orig, str(labels[index]), (x + 10, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, color, 1)
 
 
 cv2.imshow('img', orig)

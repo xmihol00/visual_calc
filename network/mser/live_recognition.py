@@ -71,7 +71,7 @@ def evaluate_frame(img, use_adaptive_treshold=False):
         #blurred = cv2.medianBlur(gray, 3)
         #blurred = cv2.bilateralFilter(gray, 5, 11, 7)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        black_white = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 11)
+        black_white = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 11)
     else:
         blurred = cv2.GaussianBlur(gray, (3, 3), 0)
         (thresh, black_white) = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
@@ -91,8 +91,9 @@ def evaluate_frame(img, use_adaptive_treshold=False):
         x, y, w, h = box
         roi = gray[y:y + h, x:x + w]
         scaled = utils.resize_image(roi, w, h)
-        # TODO: Improve thresholding to deal with shadows
-        (thresh, black_white) = cv2.threshold(scaled, 127, 255, cv2.THRESH_BINARY_INV)
+        scaled = cv2.GaussianBlur(scaled, (3, 3), 0)
+        (res, black_white) = cv2.threshold(scaled, 127, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        utils.pad_to_size(black_white, 0)
         int_bw = (black_white / 255).astype(int)
         reshaped = np.reshape(int_bw, (1, 28, 28))
         if reshaped_boxes is None:
@@ -144,7 +145,7 @@ while True:
         continue
 
     frame = np.resize(frame, (frame_height, frame_width, 3))
-    vis = evaluate_frame(frame, True)
+    vis = evaluate_frame(frame, False)
     cv2.imshow('Result', vis)
 
     keycode = cv2.waitKey(5)

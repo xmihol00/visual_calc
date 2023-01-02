@@ -16,7 +16,7 @@ from const_config import LABELS_FILENAME_TEMPLATE
 from const_config import DATA_DIRECTORIES_INFO
 from const_config import IMAGE_WIDTH
 
-HELP_MSG = "Run as: python equation_generator.py ['image type'] ['batch size'] ['batches per file'] ['number of files']"
+HELP_MSG = "Run as: python equation_generator.py ['width'] ['height']"
 
 class DigitGenerator():
     def __init__(self, directory = "training/"):
@@ -131,19 +131,16 @@ def generate_equations(final_image_width, final_image_height, digits: DigitGener
                     padding = (MIN_CHARACTER_WIDTH - character_width + 1) // 2
 
                 current_image_idx += padding
-                y_idx = rnd.randint(2, final_image_height - character_height - 4) # randomly verticaly place the character
+                y_idx = rnd.randint(0, final_image_height - character_height) # randomly verticaly place the character
                 images_file[j, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character # place the character just behind the previous one
                 character_middle_idxs[k] = current_image_idx + character_width // 2 # store the index of the middle of the character
                 current_image_idx += character_width + padding # update the index, where next character will be place, add padding between characters
                 current_image_idx += rnd.randint(0, 2)
-                #if label < 10:
-                #else:
-                #    current_image_idx += rnd.randint(0, (IMAGE_WIDTH - character_width - 2 * padding))
                 labels[k] = label # store the label for the character
         
             x_shift = rnd.randint(0, final_image_width - current_image_idx)
             images_file[j] = np.roll(images_file[j], shift=x_shift, axis=2) # shifting the image to right across x axis
-            images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 2))
+            images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 4))
             character_middle_idxs = (character_middle_idxs + x_shift) % final_image_width # the position of the midpoints of the characters must be shifted as well
 
             width_per_label_box = final_image_width / YOLO_LABELS_PER_IMAGE # wdth of a part of an image, which is labeled

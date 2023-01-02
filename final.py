@@ -21,13 +21,13 @@ def extract_equations(model, image_filename):
     original_image = Image.open(image_filename).convert('L')
     image = np.asarray(original_image)
     if image.sum() * 2 > image.shape[0] * image.shape[1] * 255:
-        image = np.vectorize(lambda x: 0 if x >= 128 else 1)(image)
+        image = image < 128
     else:
-        image = np.vectorize(lambda x: 1 if x >= 128 else 0)(image)
+        image = image >= 128
 
     interresting_rows = image.sum(axis=1) > image.shape[1] * 0.009
     row_areas = []
-    min_row_separator = 50
+    min_row_separator = 40
     area_start = 0
     area_end = 0
     ongoing_area = False
@@ -76,20 +76,14 @@ def extract_equations(model, image_filename):
         area = image[row1:row2, col1:col2]
         area_sum = area.sum()
         area_max = area.shape[0] * area.shape[1]
-        if area_sum > area_max * 0.015 and area_sum < area_max * 0.2:
-            resized_image = Image.fromarray((area * 255).astype(np.uint8), 'L')
-            resized_image.thumbnail((resized_image.width, 36), Image.NEAREST)
-            if resized_image.width > EQUATION_IMAGE_WIDTH:
-                continue
+        if area_sum > area_max * 0.015 and area_sum < area_max * 0.25:
             final_images = np.zeros((PREDICTION_SAMPLES, 38, 288))
-
             for i, (y1, y2) in enumerate([(0, 38), (1, 37), (2, 36), (3, 35)]):
                 resized_image = Image.fromarray((area * 255).astype(np.uint8), 'L')
                 resized_image.thumbnail((resized_image.width, y2 - y1), Image.NEAREST)
-                if resized_image.width > EQUATION_IMAGE_WIDTH:
-                    continue
-                width_shift = (EQUATION_IMAGE_WIDTH - resized_image.width) // 2
                 resized_image = np.asarray(resized_image)
+                resized_image = resized_image[:, :288]
+                width_shift = (EQUATION_IMAGE_WIDTH - resized_image.shape[1]) // 2
                 for j, shift in enumerate(range(-8, 8)):
                     augmented_width_shift = width_shift + shift
                     if augmented_width_shift < 0:

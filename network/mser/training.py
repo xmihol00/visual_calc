@@ -4,8 +4,8 @@ import cv2
 from sklearn import preprocessing
 from matplotlib import pyplot
 
-DATA_PATH = "../data/digits_and_characters_1/"
-OWN_DATA_PATH = "../own_data/"
+DATA_PATH = "../../data/digits_and_characters_1/"
+OWN_DATA_PATH = "../../own_data/"
 
 
 def load_data(use_premade_dataset=True):
@@ -78,7 +78,7 @@ def load_data(use_premade_dataset=True):
 train_images, train_classes, test_images, test_classes, validation_images, validation_classes, label_encoder = load_data(True)
 
 # Save the encoder
-np.save('../models/test_model/classes.npy', label_encoder.classes_)
+np.save('../../models/test_model/classes.npy', label_encoder.classes_)
 
 # Ensure we only use a fixed amount of memory
 gpus = tf.config.list_physical_devices('GPU')
@@ -127,4 +127,4 @@ pyplot.legend()
 pyplot.show()
 
 # Store the trained model
-model.save('../models/test_model')
+model.save('../../models/test_model')

@@ -19,6 +19,12 @@ BATCH_SIZE = 2
 # cite: https://towardsdatascience.com/object-detection-with-neural-networks-a4e2c46b4491
 # cite: https://blog.paperspace.com/how-to-implement-a-yolo-v3-object-detector-from-scratch-in-pytorch-part-2/
 
+# data sets
+# cite: https://github.com/sueiras/handwritting_characters_database
+# cite: https://www.kaggle.com/datasets/michelheusser/handwritten-digits-and-operators
+# cite: http://yann.lecun.com/exdb/mnist/
+# cite: https://www.kaggle.com/datasets/xainano/handwrittenmathsymbols
+
 class TrainingDataset():
     def __init__(self):
         self.training_data = torch.from_numpy(np.expand_dims(np.load(f"{EQUATIONS_PATH}{TRAINING_IMAGES_FILENAME}", allow_pickle=True), axis=1))
@@ -92,7 +98,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(classifier.parameters(), lr=0.0001)
 
         for i in range(1, 8):
-            for images, labels in DataLoader(training_set, BATCH_SIZE):
+            for images, labels in DataLoader("training/", training_set, BATCH_SIZE):
                 output = classifier(images)
                 loss = loss_function(output, labels)
 
@@ -110,7 +116,7 @@ if __name__ == "__main__":
         
         operators = ["+", "-", "*", "/"]
         classifier = classifier.eval()
-        for image, label in DataLoader(TrainingDataset(), 1):
+        for image, label in DataLoader("training/", TrainingDataset(), 1):
             output = classifier(image)
             classified = [torch.argmax(output[0]).item(), operators[torch.argmax(output[1]).item()], torch.argmax(output[2]).item()]
             labeled = [label[0][0].item(), operators[label[0][1].item()], label[0][2].item()]

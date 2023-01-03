@@ -6,19 +6,19 @@ import matplotlib.pyplot as plt
 from torch import nn
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from const_config import BATCH_SIZE
-from const_config import BATCHES_PER_FILE
-from const_config import NUMBER_OF_FILES
+from const_config import BATCH_SIZE_TRAINING
+from const_config import BATCHES_PER_FILE_TRAINING
+from const_config import NUMBER_OF_FILES_TRAINING
 from const_config import CUDA
-from const_config import YOLO_TRAINING_IMAGES_FILENAME
-from const_config import YOLO_TRAINING_LABELS_FILENAME
+from const_config import IMAGES_FILENAME_TEMPLATE
+from const_config import LABELS_FILENAME_TEMPLATE
 from const_config import MODEL_PATH
 from const_config import YOLO_V2_MODEL_FILENAME
 from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import YOLO_OUTPUTS_PER_LABEL
 import label_extractors
 from utils.data_loaders import DataLoader
-from utils.loss_functions import YoloLoss
+from utils.loss_functions import YoloLossBias
 
 class YoloInspiredCNNv2(nn.Module):
     def __init__(self):
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     model = YoloInspiredCNNv2()
     model.to(device)
-    loss_function = YoloLoss()
+    loss_function = YoloLossBias()
     
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         for i in range(1, 101):
             j = 0
-            for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+            for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, "230x38"):
                 output = model(images)
                 loss = loss_function(output, labels)
 
@@ -110,11 +110,10 @@ if __name__ == "__main__":
         with open(f"{MODEL_PATH}{YOLO_V2_MODEL_FILENAME}", "rb") as file:
             model.load_state_dict(torch.load(file))
         
-        operators = ["+", "-", "*", "/"]
         model = model.eval()
-        for images, labels in DataLoader(BATCH_SIZE, BATCHES_PER_FILE, NUMBER_OF_FILES, device, YOLO_TRAINING_IMAGES_FILENAME, YOLO_TRAINING_LABELS_FILENAME):
+        for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, "230x38"):
             labels = labels.to("cpu").numpy()
-            for i in range(BATCH_SIZE):
+            for i in range(BATCH_SIZE_TRAINING):
                 prediction = model(images[i : i + 1])
                 
                 labeled = label_extractors.yolo(labels, i)

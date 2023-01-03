@@ -100,3 +100,11 @@ def pad_to_size(x, fill_value):
     else:
         square_img = x
     return square_img
+
+
+def try_eval_equation(eq):
+    try:
+        res = eval(eq)
+    except:
+        res = "ERROR"
+    return res

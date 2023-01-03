@@ -19,10 +19,12 @@ def load_data(use_premade_dataset=True):
     test_images = np.zeros(0)
     test_labels = np.zeros(0)
 
+    premade_data = np.load(f'{DATA_PATH}CompleteDataSet_testing_tuples.npy', allow_pickle=True)
+    fit_data = np.stack(premade_data[:, 1])
+
     if use_premade_dataset:
-        data = np.load(f'{DATA_PATH}CompleteDataSet_testing_tuples.npy', allow_pickle=True)
-        train_images = np.stack(data[:, 0])
-        train_labels = np.stack(data[:, 1])
+        train_images = np.stack(premade_data[:, 0])
+        train_labels = np.stack(premade_data[:, 1])
 
         validation_data = np.load(f'{DATA_PATH}CompleteDataSet_validation_tuples.npy', allow_pickle=True)
         validation_images = np.stack(validation_data[:, 0])
@@ -66,7 +68,7 @@ def load_data(use_premade_dataset=True):
         validation_images = own_validation_data_images
         validation_labels = own_validation_data_labels
 
-    label_encoder.fit(train_labels)
+    label_encoder.fit(fit_data)
     train_classes = label_encoder.transform(train_labels)
     test_classes = label_encoder.transform(test_labels)
     validation_classes = label_encoder.transform(validation_labels)
@@ -75,7 +77,7 @@ def load_data(use_premade_dataset=True):
 
 
 # Load data
-train_images, train_classes, test_images, test_classes, validation_images, validation_classes, label_encoder = load_data(True)
+train_images, train_classes, test_images, test_classes, validation_images, validation_classes, label_encoder = load_data(False)
 
 # Save the encoder
 np.save('../../models/test_model/classes.npy', label_encoder.classes_)

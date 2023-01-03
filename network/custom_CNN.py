@@ -18,7 +18,7 @@ from const_config import BATCHES_PER_FILE_VALIDATION
 from const_config import NUMBER_OF_FILES_VALIDATION
 from const_config import CUDA
 from const_config import MODEL_PATH
-from const_config import CUSTOM_CNN_V1
+from const_config import CUSTOM_CNN
 from const_config import YOLO_LABELS_PER_IMAGE
 from const_config import YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES
 from const_config import BATCH_SIZE_TESTING
@@ -67,11 +67,11 @@ class CustomCNNv1(nn.Module):
         return torch.cat(self.results, 1).reshape(-1, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
     
     def load(self):
-        with open(f"{MODEL_PATH}{CUSTOM_CNN_V1}", "rb") as file:
+        with open(f"{MODEL_PATH}{CUSTOM_CNN}", "rb") as file:
             self.load_state_dict(torch.load(file))
     
     def save(self):
-        with open(f"{MODEL_PATH}{CUSTOM_CNN_V1}", "wb") as file:
+        with open(f"{MODEL_PATH}{CUSTOM_CNN}", "wb") as file:
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import re
 PREDICTION_SAMPLES = 16 * 4
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "network"))
-from network.custom_CNN_v3 import CustomCNNv3
+from network.custom_recursive_CNN import CustomCNNv3
 import label_extractors
 from const_config import EQUATION_IMAGE_WIDTH
 from const_config import YOLO_LABELS_PER_IMAGE

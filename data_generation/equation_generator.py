@@ -43,55 +43,6 @@ class OperatorGenerator():
         operator = self.operators[operator_type][operator_idx] # find the operator
         return operator, operator_type + NUMBER_OF_DIGITS      # change the label for operators from 0-3 to 10-13
 
-def dod_90x30(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
-    CHARACTER_IMAGE_WIDTH = 28                    # width of a character image in pixels
-    CHARACTER_IMAGE_HEIGHT = 28                   # height of a character image in pixels
-    FINAL_IMAGE_WIDTH = 90                        # width of the generated image
-    FINAL_IMAGE_HEIGHT = 30                       # height of the generated image
-    WIDTH_FOR_CHARCTER = FINAL_IMAGE_WIDTH // 3   # space along the x axis for a single character
-
-    for i in range(files):
-        # allocate space for batches in a file
-        batches_of_images = np.zeros((batches_per_file), dtype=object)
-        batches_of_labels = np.zeros((batches_per_file), dtype=object)
-
-        for j in range(batches_per_file):
-            # allocate space for a batch
-            image_batch = np.zeros((batch_size, 1, FINAL_IMAGE_HEIGHT, FINAL_IMAGE_WIDTH), dtype=np.float32)
-            label_batch = np.zeros((batch_size, 3), dtype=np.uint8)
-
-            for k in range(batch_size):
-                # randomly select 2 digits and 1 operator
-                digit_1, label_1 = digits.get()
-                operator_1, label_2 = operators.get()
-                digit_2, label_3 = digits.get()
-
-                # random position of the characters across the x axes
-                x1, x2, x3 = np.random.randint(0, WIDTH_FOR_CHARCTER - CHARACTER_IMAGE_WIDTH, 3)
-                x2 += CHARACTER_IMAGE_WIDTH
-                x3 += 2 * CHARACTER_IMAGE_WIDTH
-
-                # random position of the characters across the y axes
-                y1, y2, y3 = np.random.randint(0, FINAL_IMAGE_HEIGHT - CHARACTER_IMAGE_HEIGHT, 3)
-
-                # composition of the final image from 2 randomly chosen digits and 1 randomly chosen character
-                image_batch[k, 0, y1 : y1 + CHARACTER_IMAGE_HEIGHT, x1 : x1 + CHARACTER_IMAGE_WIDTH] = digit_1
-                image_batch[k, 0, y2 : y2 + CHARACTER_IMAGE_HEIGHT, x2 : x2 + CHARACTER_IMAGE_WIDTH] = operator_1
-                image_batch[k, 0, y3 : y3 + CHARACTER_IMAGE_HEIGHT, x3 : x3 + CHARACTER_IMAGE_WIDTH] = digit_2
-
-                # labels for digits 0-9 and for operators 0-3
-                label_batch[k, 0] = label_1
-                label_batch[k, 1] = label_2
-                label_batch[k, 2] = label_3
-
-            # inser current batch in to the file
-            batches_of_images[j] = image_batch
-            batches_of_labels[j] = label_batch
-    
-        # save file of chosen number of batches
-        np.save(f"{EQUATIONS_PATH}{directory}{IMAGES_FILENAME_TEMPLATE % str(i)}", batches_of_images)
-        np.save(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", batches_of_labels)
-
 def generate_equations(final_image_width, final_image_height, digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
     MIN_CHARACTERS = 3          # minimum characters in an image
     MAX_CHARACTERS = 10         # maximum characters in an image
@@ -140,7 +91,7 @@ def generate_equations(final_image_width, final_image_height, digits: DigitGener
         
             x_shift = rnd.randint(0, final_image_width - current_image_idx)
             images_file[j] = np.roll(images_file[j], shift=x_shift, axis=2) # shifting the image to right across x axis
-            images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 4))
+            #images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 4))
             character_middle_idxs = (character_middle_idxs + x_shift) % final_image_width # the position of the midpoints of the characters must be shifted as well
 
             width_per_label_box = final_image_width / YOLO_LABELS_PER_IMAGE # wdth of a part of an image, which is labeled

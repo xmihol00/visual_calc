@@ -93,19 +93,18 @@ def extract_equations(model, image_filename):
                     final_images[i*16 + j, y1:y2, augmented_width_shift:resized_image.shape[1] + augmented_width_shift] = resized_image
 
             samples = torch.tensor((final_images > 0).astype(np.float32))
-            samples = samples.unsqueeze(1)
-            predictions = model(samples)
+            samples = samples.unsqueeze(1) # (64, 1, 288, 38) shape
+            predictions = model(samples)   # 64 predictions
+
+            # ---- take 'area' to do your prediction (you might need to resize it)
 
             classifications = [None] * PREDICTION_SAMPLES
             for i, _ in enumerate(samples):
                 j = i * YOLO_LABELS_PER_IMAGE
                 classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + YOLO_LABELS_PER_IMAGE], sep='')
 
-            filtered_classifications = []
-            for classified in classifications:
-                # filter out invalid equations
-                if re.match(r"^(\d+[\+\-\*/])+\d+$", classified):
-                    filtered_classifications.append(classified)
+            # ---- append results to 'classifications' 
+            filtered_classifications = [ classified for classified in classifications if re.match(r"^(\d+[\+\-\*/])+\d+$", classified) ] # strings with syntactically valid equations
 
             try:
                 # find the most same results
@@ -113,7 +112,7 @@ def extract_equations(model, image_filename):
             except:
                 continue
     
-    return equations, original_image
+    return equations, original_image # prediction of equations detected on the image, the original not processed image
 
 def select_file(model, objects):
     for tk_object in objects[0]:

@@ -1,9 +1,11 @@
+import os
+
 import cv2
 import numpy as np
 from tensorflow import keras
 import tensorflow as tf
 from sklearn import preprocessing
-import utils
+from network.mser import utils
 
 
 class Detector:
@@ -120,8 +122,11 @@ class Detector:
 
     def __init__(self):
         self.__configGPU()
-        self.__model = keras.models.load_model('../../models/test_model')
+        dirname = os.path.dirname(__file__)
+        model_filename = os.path.join(dirname, '../../models/test_model')
+        self.__model = keras.models.load_model(model_filename)
         self.__label_encoder = preprocessing.LabelEncoder()
-        self.__label_encoder.classes_ = np.load('../../models/test_model/classes.npy')
+        classes_filename = os.path.join(dirname, '../../models/test_model/classes.npy')
+        self.__label_encoder.classes_ = np.load(classes_filename)
         # MSER returns the areas of interest
         self.__mser = cv2.MSER_create(delta=25, min_area=20, max_variation=0.4)

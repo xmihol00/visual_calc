@@ -2,12 +2,17 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
+
+import cv2
+import imutils
 from PIL import Image, ImageTk
 import os
 import numpy as np
 import torch
 import sys
 import re
+
+from network.mser.Detector import Detector
 
 PREDICTION_SAMPLES = 16 * 4
 
@@ -17,7 +22,7 @@ import label_extractors
 from const_config import EQUATION_IMAGE_WIDTH
 from const_config import YOLO_LABELS_PER_IMAGE
 
-def extract_equations(model, image_filename):
+def extract_equations(model, image_filename, mser_detector=None):
     original_image = Image.open(image_filename).convert('L')
     image = np.asarray(original_image)
     if image.sum() * 2 > image.shape[0] * image.shape[1] * 255:
@@ -96,14 +101,23 @@ def extract_equations(model, image_filename):
             samples = samples.unsqueeze(1) # (64, 1, 288, 38) shape
             predictions = model(samples)   # 64 predictions
 
-            # ---- take 'area' to do your prediction (you might need to resize it)
-
             classifications = [None] * PREDICTION_SAMPLES
             for i, _ in enumerate(samples):
                 j = i * YOLO_LABELS_PER_IMAGE
                 classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + YOLO_LABELS_PER_IMAGE], sep='')
 
-            # ---- append results to 'classifications' 
+            weight = 4
+            if mser_detector is not None:
+                gray = (area * 255).astype(np.uint8)
+                img = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+                img = imutils.resize(img, width=320, inter=cv2.INTER_NEAREST)
+                valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
+                eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 4)
+                for equation_result in eq_results:
+                    for i in range(0, weight):
+                        classifications.append(equation_result)
+                    weight = weight - 1
+
             filtered_classifications = [ classified for classified in classifications if re.match(r"^(\d+[\+\-\*/])+\d+$", classified) ] # strings with syntactically valid equations
 
             try:
@@ -114,14 +128,14 @@ def extract_equations(model, image_filename):
     
     return equations, original_image # prediction of equations detected on the image, the original not processed image
 
-def select_file(model, objects):
+def select_file(model, objects, mser_detector=None):
     for tk_object in objects[0]:
         tk_object.destroy()
     objects[0] = []
 
     filetypes = [("images", "*.jpg"), ("images", "*.png")]
     filename = fd.askopenfilename(title="Choose an image", initialdir='~/', filetypes=filetypes)
-    equations, image = extract_equations(model, filename)
+    equations, image = extract_equations(model, filename, mser_detector)
 
     image.thumbnail((800, 500))
     image = ImageTk.PhotoImage(image)
@@ -174,6 +188,8 @@ if __name__ == "__main__":
     model.load()
     model = model.eval()
 
+    mser_detector = Detector()
+
     tk_objects = [[]]
     root = tk.Tk()
     root.title("Visual calculator")
@@ -190,7 +206,7 @@ if __name__ == "__main__":
         pass
 
     select_file_label = tk.Label(root, text="Select an image with an equation or equations.")
-    open_button = ttk.Button(root, text="select", command=lambda:select_file(model, tk_objects))
+    open_button = ttk.Button(root, text="select", command=lambda:select_file(model, tk_objects, mser_detector))
 
     select_file_label.grid(row=0, columnspan=4, pady=5)
     open_button.grid(row=1, columnspan=4, pady=5)

@@ -109,8 +109,10 @@ def extract_equations(model, image_filename, mser_detector=None):
             weight = 4
             if mser_detector is not None:
                 gray = (area * 255).astype(np.uint8)
-                img = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-                img = imutils.resize(img, width=320, inter=cv2.INTER_NEAREST)
+                gray = 255 - gray
+                padded_gray = cv2.copyMakeBorder(gray, 80, 80, 120, 120, cv2.BORDER_CONSTANT, value=255)
+                img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
+                img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
                 valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
                 eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 4)
                 for equation_result in eq_results:

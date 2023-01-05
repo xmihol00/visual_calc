@@ -14,19 +14,23 @@ class Detector:
     __label_encoder = None
     __mser = None
 
-    def __configGPU(self):
-        # Ensure we only use a fixed amount of memory
-        gpus = tf.config.list_physical_devices('GPU')
-        if gpus:
-            try:
-                for gpu in gpus:
-                    # Set memory limit to something lower than total GPU memory
-                    tf.config.set_logical_device_configuration(gpu, [tf.config.LogicalDeviceConfiguration(memory_limit=4096)])
-                logical_gpus = tf.config.list_logical_devices('GPU')
-                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-            except RuntimeError as e:
-                # Memory growth must be set before GPUs have been initialized
-                print(e)
+    def __configGPU(self, use_gpu=True):
+        if use_gpu:
+            # Ensure we only use a fixed amount of memory
+            gpus = tf.config.list_physical_devices('GPU')
+            if gpus:
+                try:
+                    for gpu in gpus:
+                        # Set memory limit to something lower than total GPU memory
+                        tf.config.set_logical_device_configuration(gpu, [
+                            tf.config.LogicalDeviceConfiguration(memory_limit=1024)])
+                    logical_gpus = tf.config.list_logical_devices('GPU')
+                    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+                except RuntimeError as e:
+                    # Memory growth must be set before GPUs have been initialized
+                    print(e)
+        else:
+            tf.config.set_visible_devices([], 'GPU')
 
     # Evaluates multiple images (up to 32) and returns the predicted labels and probabilities sorted by probabilities
     def __evaluate_all(self, imgs):
@@ -72,11 +76,13 @@ class Detector:
         for box in valid_boxes:
             x, y, w, h = box
             roi = gray[y:y + h, x:x + w]
-            scaled = utils.resize_image(roi, w, h)
-            scaled = cv2.GaussianBlur(scaled, (3, 3), 0)
+            scaled = utils.resize_image_no_padding(roi, w, h)
+            #scaled = cv2.GaussianBlur(scaled, (3, 3), 0)
+            kernel = np.ones((3, 3), np.uint8)
+            t = cv2.erode(scaled, kernel, iterations=1)
             (res, black_white) = cv2.threshold(scaled, 127, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-            utils.pad_to_size(black_white, 0)
-            int_bw = (black_white / 255).astype(int)
+            padded = utils.pad_to_size(black_white, 0)
+            int_bw = (padded / 255).astype(int)
             reshaped = np.reshape(int_bw, (1, 28, 28))
             if reshaped_boxes is None:
                 reshaped_boxes = reshaped
@@ -117,11 +123,12 @@ class Detector:
             equations.append(equation)
             sorted_tuples[lowest_probability_digit_index][0] = sorted_tuples[lowest_probability_digit_index][0][1::]
             sorted_tuples[lowest_probability_digit_index][1] = sorted_tuples[lowest_probability_digit_index][1][1::]
+            #sorted_tuples[lowest_probability_digit_index][1][0] = sorted_tuples[lowest_probability_digit_index][1][0] + lowest_probability
 
         return equations
 
-    def __init__(self):
-        self.__configGPU()
+    def __init__(self, use_gpu=True):
+        self.__configGPU(use_gpu)
         dirname = os.path.dirname(__file__)
         model_filename = os.path.join(dirname, '../../models/test_model')
         self.__model = keras.models.load_model(model_filename)

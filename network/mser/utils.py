@@ -55,8 +55,8 @@ def filter_boxes(boxes, search_area):
 
 
 # Resizes a grayscale image with arbitrary size to (28, 28) while preserving the original aspect ratio
-def resize_image(x, w, h):
-    square_img = np.full((28, 28), 255, x.dtype)
+def resize_image(x, w, h, fill_value=255):
+    square_img = np.full((28, 28), fill_value, x.dtype)
     interpolation_mode = cv2.INTER_CUBIC
     if w > h:
         resized = imutils.resize(x, width=28, inter=interpolation_mode)

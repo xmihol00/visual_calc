@@ -77,7 +77,7 @@ def load_data(use_premade_dataset=True):
 
 
 # Load data
-train_images, train_classes, test_images, test_classes, validation_images, validation_classes, label_encoder = load_data(False)
+train_images, train_classes, test_images, test_classes, validation_images, validation_classes, label_encoder = load_data(True)
 
 # Save the encoder
 np.save('../../models/test_model/classes.npy', label_encoder.classes_)

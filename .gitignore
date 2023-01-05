@@ -6,7 +6,7 @@ network/__pycache__/
 
 .idea/
 
-*.pt
+models/hidden_models/
 
 __pycache__/
 /annotation/dataset/

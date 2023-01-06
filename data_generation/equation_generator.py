@@ -110,6 +110,7 @@ def generate_equations(final_image_width, final_image_height, digits: DigitGener
                 current_label_box += width_per_label_box # next label box
     
         # save file of chosen number of batches
+        os.makedirs(f"{EQUATIONS_PATH}{directory}", exist_ok=True)
         np.save(f"{EQUATIONS_PATH}{directory}{IMAGES_FILENAME_TEMPLATE % str(i)}", images_file)
         np.save(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", labels_file)
 

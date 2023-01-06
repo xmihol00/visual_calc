@@ -15,18 +15,7 @@ class Detector:
     __mser = None
 
     def __configGPU(self):
-        # Ensure we only use a fixed amount of memory
-        gpus = tf.config.list_physical_devices('GPU')
-        if gpus:
-            try:
-                for gpu in gpus:
-                    # Set memory limit to something lower than total GPU memory
-                    tf.config.set_logical_device_configuration(gpu, [tf.config.LogicalDeviceConfiguration(memory_limit=4096)])
-                logical_gpus = tf.config.list_logical_devices('GPU')
-                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-            except RuntimeError as e:
-                # Memory growth must be set before GPUs have been initialized
-                print(e)
+        tf.config.set_visible_devices([], 'GPU')
 
     # Evaluates multiple images (up to 32) and returns the predicted labels and probabilities sorted by probabilities
     def __evaluate_all(self, imgs):

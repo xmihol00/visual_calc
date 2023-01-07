@@ -33,8 +33,28 @@ class Detector:
             tf.config.set_visible_devices([], 'GPU')
 
     # Evaluates multiple images (up to 32) and returns the predicted labels and probabilities sorted by probabilities
-    def __evaluate_all(self, imgs):
+    def __evaluate_all(self, imgs, multi_prediction=True):
         predictions = self.__model(imgs, training=False)
+        kernel = np.ones((3, 3), np.uint8)
+        eroded_imgs = None
+        dilated_imgs = None
+        if multi_prediction:
+            for img in imgs:
+                eroded = cv2.erode(img.astype(np.uint8), kernel, iterations=1)
+                dilated = cv2.dilate(img.astype(np.uint8), kernel, iterations=1)
+                eroded = np.reshape(eroded, (1, 28, 28))
+                dilated = np.reshape(dilated, (1, 28, 28))
+                if eroded_imgs is None:
+                    eroded_imgs = eroded
+                else:
+                    eroded_imgs = np.concatenate((eroded_imgs, eroded))
+                if dilated_imgs is None:
+                    dilated_imgs = dilated
+                else:
+                    dilated_imgs = np.concatenate((dilated_imgs, dilated))
+            eroded_predictions = self.__model(eroded_imgs, training=False)
+            dilated_predictions = self.__model(dilated_imgs, training=False)
+            predictions = predictions + eroded_predictions * 0.25 + dilated_predictions * 0.25
         predicted_labels = []
         probabilities = []
         for digit_prediction in predictions:

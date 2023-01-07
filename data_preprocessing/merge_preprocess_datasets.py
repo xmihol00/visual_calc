@@ -10,8 +10,8 @@ from const_config import DIGIT_AND_OPERATORS_2_PATH
 from const_config import ALL_MERGED_PREPROCESSED_PATH
 from const_config import IMAGE_WIDTH
 from const_config import IMAGE_HEIGHT
-from const_config import ALL_IMAGES_FILENAME
-from const_config import ALL_LABELS_FILENAME
+from const_config import IMAGES_FILENAME
+from const_config import LABELS_FILENAME
 
 MAX_IMAGE_PIXEL_SUM = IMAGE_WIDTH * IMAGE_HEIGHT * 255
 
@@ -56,9 +56,9 @@ for directory, label in [("0/", 0), ("1/", 1), ("2/", 2), ("3/", 3), ("4/", 4), 
         labels[indices[index]] = label
         index += 1
     
-np.save(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_IMAGES_FILENAME}", images)
-np.save(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_LABELS_FILENAME}", labels)
+np.save(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", images)
+np.save(f"{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}", labels)
 
 print(f"Number of samples: {sample_count}")
-print(f"Images file size: {os.stat(f'{ALL_MERGED_PREPROCESSED_PATH}{ALL_IMAGES_FILENAME}').st_size / (1024 * 1024)} MB")
-print(f"Labels file size: {os.stat(f'{ALL_MERGED_PREPROCESSED_PATH}{ALL_LABELS_FILENAME}').st_size / (1024 * 1024)} MB")
+print(f"Images file size: {os.stat(f'{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}').st_size / (1024 * 1024)} MB")
+print(f"Labels file size: {os.stat(f'{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}').st_size / (1024 * 1024)} MB")

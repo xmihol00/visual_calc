@@ -7,12 +7,12 @@ from torch import nn
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from const_config import EQUATIONS_PATH
-from const_config import YOLO_LABEL_DIMENSIONS
+from const_config import LABEL_DIMENSIONS
 from const_config import IMAGES_FILENAME_TEMPLATE
 from const_config import LABELS_FILENAME_TEMPLATE
 
 class DataLoader():
-    def __init__(self, directory, batch_size, batches_per_file, number_of_files, device, file_id):
+    def __init__(self, directory, batch_size, batches_per_file, number_of_files, device):
         self.BATCH_SIZE = batch_size
         self.SAMPLES_PER_FILE = batches_per_file * batch_size
         self.NUMBER_OF_FILES = number_of_files
@@ -24,8 +24,8 @@ class DataLoader():
         self.sample_idx = self.SAMPLES_PER_FILE # point behind the last index of a file
         self.indices = np.random.choice(self.SAMPLES_PER_FILE, self.SAMPLES_PER_FILE, replace=False) # randomly place images and labels in a batch from a file
         
-        self.images_file_template = IMAGES_FILENAME_TEMPLATE % (file_id, "%s")
-        self.labels_file_template = LABELS_FILENAME_TEMPLATE % (file_id, "%s")
+        self.images_file_template = IMAGES_FILENAME_TEMPLATE
+        self.labels_file_template = LABELS_FILENAME_TEMPLATE
         self.image_file = None
         self.label_file = None
         pass
@@ -49,4 +49,4 @@ class DataLoader():
         old_idx = self.sample_idx
         self.sample_idx += self.BATCH_SIZE # move to the next batch index
         return (torch.from_numpy(self.image_file[self.indices[old_idx:self.sample_idx]]).to(self.device), 
-                torch.from_numpy(self.label_file[self.indices[old_idx:self.sample_idx]].reshape(-1, YOLO_LABEL_DIMENSIONS)).to(self.device))
+                torch.from_numpy(self.label_file[self.indices[old_idx:self.sample_idx]].reshape(-1, LABEL_DIMENSIONS)).to(self.device))

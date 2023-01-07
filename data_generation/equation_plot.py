@@ -4,13 +4,10 @@ import matplotlib.pyplot as plt
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from const_config import BATCH_SIZE_TRAINING
-from const_config import BATCHES_PER_FILE_TRAINING
-from const_config import BATCH_SIZE_TRAINING
 from const_config import DATA_DIRECTORIES_INFO
 from const_config import IMAGES_FILENAME_TEMPLATE
 from const_config import LABELS_FILENAME_TEMPLATE
-from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import LABELS_PER_IMAGE
 import label_extractors
 
 
@@ -41,7 +38,7 @@ class ImagePlotter():
     
     def plot(self, images, labels, idx):
         image = images[idx, 0]
-        for i in range(1, YOLO_LABELS_PER_IMAGE):
+        for i in range(1, LABELS_PER_IMAGE):
             image[:, i * 16] = 0.5
         self.axes[self.row_idx, self.col_idx].imshow(image, cmap="gray")
         self.axes[self.row_idx, self.col_idx].set_title(self.label_extractor(labels, idx))

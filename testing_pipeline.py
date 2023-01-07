@@ -15,7 +15,7 @@ from network.custom_recursive_CNN import CustomCNNv3
 import label_extractors
 from const_config import EQUATION_IMAGE_WIDTH
 from const_config import EQUATION_IMAGE_HEIGHT
-from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import LABELS_PER_IMAGE
 
 model = CustomCNNv3("cpu", PREDICTION_SAMPLES)
 model.load()
@@ -97,8 +97,8 @@ for file_name in os.listdir(IMAGE_PATH):
 
             classifications = [None] * PREDICTION_SAMPLES
             for i, sample in enumerate(samples):
-                j = i * YOLO_LABELS_PER_IMAGE
-                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + YOLO_LABELS_PER_IMAGE], sep='')
+                j = i * LABELS_PER_IMAGE
+                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
             filtered_classifications = []
             for classified in classifications:

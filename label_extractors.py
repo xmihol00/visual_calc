@@ -1,6 +1,6 @@
 import torch
 
-from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import LABELS_PER_IMAGE
 from const_config import NUMBER_OF_DIGITS
 from const_config import NUMBER_OF_OPERATORS
 
@@ -47,7 +47,7 @@ def yolo_prediction(predictions):
 def yolo_only_class(labels, idx):
     label_str = ""
     #print(idx, labels[idx * YOLO_LABELS_PER_IMAGE:idx * YOLO_LABELS_PER_IMAGE + YOLO_LABELS_PER_IMAGE, 1])
-    for label in labels[idx * YOLO_LABELS_PER_IMAGE:idx * YOLO_LABELS_PER_IMAGE + YOLO_LABELS_PER_IMAGE, 1]:
+    for label in labels[idx * LABELS_PER_IMAGE:idx * LABELS_PER_IMAGE + LABELS_PER_IMAGE, 1]:
         if label < NUMBER_OF_DIGITS:
             label_str += f"{label}"
         elif label < NUMBER_OF_DIGITS + NUMBER_OF_OPERATORS: # label contains operator

@@ -9,14 +9,13 @@ from const_config import NUMBER_OF_DIGITS
 from const_config import NUMBER_OF_OPERATORS
 from const_config import CHARACTERS_PATH
 from const_config import EQUATIONS_PATH
-from const_config import YOLO_LABELS_PER_IMAGE
-from const_config import YOLO_LABEL_DIMENSIONS
+from const_config import LABELS_PER_IMAGE
+from const_config import LABEL_DIMENSIONS
 from const_config import IMAGES_FILENAME_TEMPLATE
 from const_config import LABELS_FILENAME_TEMPLATE
 from const_config import DATA_DIRECTORIES_INFO
-from const_config import IMAGE_WIDTH
-
-HELP_MSG = "Run as: python equation_generator.py ['width'] ['height']"
+from const_config import EQUATION_IMAGE_WIDTH
+from const_config import EQUATION_IMAGE_HEIGHT
 
 class DigitGenerator():
     def __init__(self, directory = "training/"):
@@ -43,17 +42,17 @@ class OperatorGenerator():
         operator = self.operators[operator_type][operator_idx] # find the operator
         return operator, operator_type + NUMBER_OF_DIGITS      # change the label for operators from 0-3 to 10-13
 
-def generate_equations(final_image_width, final_image_height, digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
+def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
     MIN_CHARACTERS = 3          # minimum characters in an image
     MAX_CHARACTERS = 10         # maximum characters in an image
-    MIN_CHARACTER_WIDTH = (final_image_width + YOLO_LABELS_PER_IMAGE - 1) // YOLO_LABELS_PER_IMAGE
+    MIN_CHARACTER_WIDTH = (EQUATION_IMAGE_WIDTH + LABELS_PER_IMAGE - 1) // LABELS_PER_IMAGE
     SAMPLES_PER_FILE = batches_per_file * batch_size
     dilate_kernel = np.ones((2, 2), np.uint8)
 
     for i in range(files):
         # allocate space for samples in a file
-        images_file = np.zeros((SAMPLES_PER_FILE, 1, final_image_height, final_image_width), dtype=np.float32)
-        labels_file = np.zeros((SAMPLES_PER_FILE, YOLO_LABELS_PER_IMAGE, YOLO_LABEL_DIMENSIONS), dtype=np.uint8)
+        images_file = np.zeros((SAMPLES_PER_FILE, 1, EQUATION_IMAGE_HEIGHT, EQUATION_IMAGE_WIDTH), dtype=np.float32)
+        labels_file = np.zeros((SAMPLES_PER_FILE, LABELS_PER_IMAGE, LABEL_DIMENSIONS), dtype=np.uint8)
 
         for j in range(SAMPLES_PER_FILE):
             number_of_characters = rnd.randint(MIN_CHARACTERS, MAX_CHARACTERS) # randomly pick number of generated character for this image
@@ -82,22 +81,22 @@ def generate_equations(final_image_width, final_image_height, digits: DigitGener
                     padding = (MIN_CHARACTER_WIDTH - character_width + 1) // 2
 
                 current_image_idx += padding
-                y_idx = rnd.randint(0, final_image_height - character_height) # randomly verticaly place the character
+                y_idx = rnd.randint(0, EQUATION_IMAGE_HEIGHT - character_height) # randomly verticaly place the character
                 images_file[j, 0, y_idx : y_idx + character_height, current_image_idx : current_image_idx + character_width] = character # place the character just behind the previous one
                 character_middle_idxs[k] = current_image_idx + character_width // 2 # store the index of the middle of the character
                 current_image_idx += character_width + padding # update the index, where next character will be place, add padding between characters
                 current_image_idx += rnd.randint(0, 2)
                 labels[k] = label # store the label for the character
         
-            x_shift = rnd.randint(0, final_image_width - current_image_idx)
+            x_shift = rnd.randint(0, EQUATION_IMAGE_WIDTH - current_image_idx)
             images_file[j] = np.roll(images_file[j], shift=x_shift, axis=2) # shifting the image to right across x axis
-            #images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 4))
-            character_middle_idxs = (character_middle_idxs + x_shift) % final_image_width # the position of the midpoints of the characters must be shifted as well
+            images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 4))
+            character_middle_idxs = (character_middle_idxs + x_shift) % EQUATION_IMAGE_WIDTH # the position of the midpoints of the characters must be shifted as well
 
-            width_per_label_box = final_image_width / YOLO_LABELS_PER_IMAGE # wdth of a part of an image, which is labeled
+            width_per_label_box = EQUATION_IMAGE_WIDTH / LABELS_PER_IMAGE # wdth of a part of an image, which is labeled
             current_label_box = 0.0
             character_idx = 0
-            for k in range(YOLO_LABELS_PER_IMAGE):
+            for k in range(LABELS_PER_IMAGE):
                 if (character_idx < number_of_characters and character_middle_idxs[character_idx] >= current_label_box - 0.001 and 
                     character_middle_idxs[character_idx] <= current_label_box + width_per_label_box + 0.001): # if the center of a character is in a label box
                     labels_file[j, k, 0] = 1 # this part of an image contains a character
@@ -115,16 +114,7 @@ def generate_equations(final_image_width, final_image_height, digits: DigitGener
         np.save(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", labels_file)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Not enough arguments.", file=sys.stderr)
-        print(HELP_MSG, file=sys.stderr)
-        exit(1)
-
-    type = sys.argv[1]
-
-    IMAGES_FILENAME_TEMPLATE = IMAGES_FILENAME_TEMPLATE % (f"{sys.argv[1]}x{sys.argv[2]}", "%s")
-    LABELS_FILENAME_TEMPLATE = LABELS_FILENAME_TEMPLATE % (f"{sys.argv[1]}x{sys.argv[2]}", "%s")
     for directory, batch_size, batches_per_file, number_of_files in DATA_DIRECTORIES_INFO:
         digits = DigitGenerator(directory)
         operators = OperatorGenerator(directory)
-        generate_equations(int(sys.argv[1]), int(sys.argv[2]), digits, operators, directory, batch_size, batches_per_file, number_of_files)
+        generate_equations(digits, operators, directory, batch_size, batches_per_file, number_of_files)

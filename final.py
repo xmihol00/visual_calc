@@ -20,7 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "network"))
 from network.custom_recursive_CNN import CustomCNNv3
 import label_extractors
 from const_config import EQUATION_IMAGE_WIDTH
-from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import LABELS_PER_IMAGE
 
 def extract_equations(model, image_filename, mser_detector=None):
     original_image = Image.open(image_filename).convert('L')
@@ -103,8 +103,8 @@ def extract_equations(model, image_filename, mser_detector=None):
 
             classifications = [None] * PREDICTION_SAMPLES
             for i, _ in enumerate(samples):
-                j = i * YOLO_LABELS_PER_IMAGE
-                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + YOLO_LABELS_PER_IMAGE], sep='')
+                j = i * LABELS_PER_IMAGE
+                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
             weight = 4
             if mser_detector is not None:
@@ -190,7 +190,8 @@ if __name__ == "__main__":
     model.load()
     model = model.eval()
 
-    mser_detector = Detector()
+    use_gpu = False
+    mser_detector = Detector(use_gpu)
 
     tk_objects = [[]]
     root = tk.Tk()

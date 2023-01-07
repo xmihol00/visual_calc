@@ -6,12 +6,12 @@ import random as rnd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import ALL_MERGED_PREPROCESSED_PATH
-from const_config import ALL_IMAGES_FILENAME
-from const_config import ALL_LABELS_FILENAME
+from const_config import IMAGES_FILENAME
+from const_config import LABELS_FILENAME
 PLOT_WIDTH_HEIGHT = 4
 
-images = np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_IMAGES_FILENAME}", allow_pickle=True)
-labels = np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_LABELS_FILENAME}", allow_pickle=True)
+images = np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", allow_pickle=True)
+labels = np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}", allow_pickle=True)
 
 for _ in range(10):
     sample_count = images.shape[0]

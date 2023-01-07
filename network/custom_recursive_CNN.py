@@ -7,9 +7,10 @@ from torch.optim import lr_scheduler as sdl
 import Levenshtein as lv
 
 from utils.data_loaders import DataLoader
-from utils.loss_functions import YoloLossOnlyClasses
+from utils.loss_functions import CustomCrossEntropyLoss
 from utils.evaluation import EarlyStopping
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+import label_extractors
 from const_config import BATCH_SIZE_TRAINING
 from const_config import BATCHES_PER_FILE_TRAINING
 from const_config import NUMBER_OF_FILES_TRAINING
@@ -17,22 +18,24 @@ from const_config import BATCH_SIZE_VALIDATION
 from const_config import BATCHES_PER_FILE_VALIDATION
 from const_config import NUMBER_OF_FILES_VALIDATION
 from const_config import CUDA
-from const_config import MODEL_PATH
-from const_config import CUSTOM_RECURSIVE_CNN
-from const_config import YOLO_LABELS_PER_IMAGE
-from const_config import YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES
+from const_config import MODELS_PATH
+from const_config import CUSTOM_RECURSIVE_CNN_FILENAME
+from const_config import LABELS_PER_IMAGE
+from const_config import OUTPUTS_PER_LABEL
 from const_config import BATCH_SIZE_TESTING
 from const_config import BATCHES_PER_FILE_TESTING
 from const_config import NUMBER_OF_FILES_TESTING
 from const_config import NUMBER_OF_FILES_TESTING
-import label_extractors
+from const_config import SEED
+
+torch.manual_seed(SEED)
 
 class CustomCNNv3(nn.Module):
     def __init__(self, device, batch_size=BATCH_SIZE_TRAINING):
         super().__init__()
-        self.results = [None] * (YOLO_LABELS_PER_IMAGE + 1)
-        self.results[0] = torch.zeros((batch_size, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)).to(device)
-        self.results[0][:, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES - 1] = 1
+        self.results = [None] * (LABELS_PER_IMAGE + 1)
+        self.results[0] = torch.zeros((batch_size, OUTPUTS_PER_LABEL)).to(device)
+        self.results[0][:, OUTPUTS_PER_LABEL - 1] = 1
 
         self.whole_image = nn.Sequential(
             nn.Conv2d(1, 32, (3, 3), padding=(0, 1)),
@@ -57,28 +60,28 @@ class CustomCNNv3(nn.Module):
 
         self.image_part_fc = nn.Sequential(
             nn.Dropout(0.5),
-            nn.Linear(256 * 4 + YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES, 128),
+            nn.Linear(256 * 4 + OUTPUTS_PER_LABEL, 128),
             nn.BatchNorm1d(128),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.5),
-            nn.Linear(128, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES),
+            nn.Linear(128, OUTPUTS_PER_LABEL),
         )
 
     def forward(self, x):
         x = self.whole_image(x)
-        for i in range(1, YOLO_LABELS_PER_IMAGE + 1):
+        for i in range(1, LABELS_PER_IMAGE + 1):
             j = 4 * (i - 1)
             intermidiate = self.image_part_conv(x[:, :, :, j:j+4])
             self.results[i] = self.image_part_fc(torch.cat([self.results[i - 1], intermidiate], 1))
 
-        return torch.cat(self.results[1:], 1).reshape(-1, YOLO_OUTPUTS_PER_LABEL_ONLY_CLASSES)
+        return torch.cat(self.results[1:], 1).reshape(-1, OUTPUTS_PER_LABEL)
     
     def load(self):
-        with open(f"{MODEL_PATH}{CUSTOM_RECURSIVE_CNN}", "rb") as file:
+        with open(f"{MODELS_PATH}{CUSTOM_RECURSIVE_CNN_FILENAME}", "rb") as file:
             self.load_state_dict(torch.load(file))
     
     def save(self):
-        with open(f"{MODEL_PATH}{CUSTOM_RECURSIVE_CNN}", "wb") as file:
+        with open(f"{MODELS_PATH}{CUSTOM_RECURSIVE_CNN_FILENAME}", "wb") as file:
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":
@@ -91,11 +94,11 @@ if __name__ == "__main__":
 
     model = CustomCNNv3(device)
     model.to(device)
-    loss_function = YoloLossOnlyClasses()
+    loss_function = CustomCrossEntropyLoss()
     
     if exe_type == "train":
-        training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device, "288x38")
-        validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device, "288x38")
+        training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
+        validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         scheduler = sdl.StepLR(optimizer, 10, 0.25)
@@ -131,7 +134,7 @@ if __name__ == "__main__":
     elif exe_type == "eval":
         model.load()
         model = model.eval()
-        test_dataloader = validation_loader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device, "288x38")
+        test_dataloader = validation_loader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         distances = [0] * 9
         for images, labels in validation_loader:
@@ -139,9 +142,9 @@ if __name__ == "__main__":
             predictions = model(images).to("cpu")
             
             for i in range(BATCH_SIZE_TESTING):
-                j = i * YOLO_LABELS_PER_IMAGE
+                j = i * LABELS_PER_IMAGE
                 labeled = label_extractors.yolo_only_class(labels, i).replace(' ', '')
-                classified = label_extractors.yolo_prediction_only_class(predictions[j:j+YOLO_LABELS_PER_IMAGE]).replace(' ', '')
+                classified = label_extractors.yolo_prediction_only_class(predictions[j:j+LABELS_PER_IMAGE]).replace(' ', '')
                 print(labeled, "x" , classified)
                 distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
         
@@ -152,7 +155,7 @@ if __name__ == "__main__":
     else:
         model.load()
         model = model.eval()
-        test_dataloader = validation_loader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device, "288x38")
+        test_dataloader = validation_loader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         for images, labels in validation_loader:
             labels = labels.numpy()

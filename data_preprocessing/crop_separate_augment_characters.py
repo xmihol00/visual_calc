@@ -3,7 +3,6 @@ from PIL import ImageOps
 import os
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -11,13 +10,16 @@ from const_config import TRAINING_PREPROCESSED_PATH
 from const_config import VALIDATION_PREPROCESSED_PATH
 from const_config import TESTING_PREPROCESSED_PATH
 
-from const_config import ALL_MERGED_PREPROCESSED_PATH
-from const_config import ALL_IMAGES_FILENAME
-from const_config import ALL_LABELS_FILENAME
+from const_config import CLEANED_PREPROCESSED_PATH
+from const_config import IMAGES_FILENAME
+from const_config import LABELS_FILENAME
 
-all_images = np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_IMAGES_FILENAME}", allow_pickle=True)
-all_labels = np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_LABELS_FILENAME}", allow_pickle=True)
+os.makedirs(TRAINING_PREPROCESSED_PATH, exist_ok=True)
+os.makedirs(VALIDATION_PREPROCESSED_PATH, exist_ok=True)
+os.makedirs(TESTING_PREPROCESSED_PATH, exist_ok=True)
 
+all_images = np.load(f"{CLEANED_PREPROCESSED_PATH}{IMAGES_FILENAME}", allow_pickle=True)
+all_labels = np.load(f"{CLEANED_PREPROCESSED_PATH}{LABELS_FILENAME}", allow_pickle=True)
 
 for label, target_file_name in enumerate(["zeros", "ones", "twos", "threes", "fours", "fives", "sixes", "sevens", "eights", "nines", 
                                           "pluses", "minuses", "asterisks", "slashes"]):

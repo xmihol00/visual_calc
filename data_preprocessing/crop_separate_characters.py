@@ -10,6 +10,9 @@ from const_config import TESTING_PREPROCESSED_PATH
 from const_config import ALL_MERGED_PREPROCESSED_PATH
 from const_config import IMAGES_FILENAME
 from const_config import LABELS_FILENAME
+from const_config import SEED
+
+np.random.seed(SEED)
 
 os.makedirs(TRAINING_PREPROCESSED_PATH, exist_ok=True)
 os.makedirs(VALIDATION_PREPROCESSED_PATH, exist_ok=True)

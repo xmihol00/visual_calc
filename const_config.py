@@ -4,16 +4,23 @@ SEED = 42
 
 CUDA = torch.cuda.is_available()
 
-DIGIT_AND_OPERATORS_1_PATH = "./data/digits_and_operators_1/"
-DIGIT_AND_OPERATORS_2_PATH = "./data/digits_and_operators_2/"
-PREPROCESSED_PATH = "./data/prerocessed_separated_characters/"
+DATA_DIR = "data"
+DOWNLOADS_DIR = "downloads"
+
+DIGIT_AND_OPERATORS_1_PATH = f"{DATA_DIR}/digits_and_operators_1/"
+DIGIT_AND_OPERATORS_1_TRAIN = f"{DIGIT_AND_OPERATORS_1_PATH}CompleteDataSet_training_tuples.npy"
+DIGIT_AND_OPERATORS_1_VALIDATION = f"{DIGIT_AND_OPERATORS_1_PATH}CompleteDataSet_testing_tuples.npy"
+DIGIT_AND_OPERATORS_1_TEST = f"{DIGIT_AND_OPERATORS_1_PATH}CompleteDataSet_validation_tuples.npy"
+DIGIT_AND_OPERATORS_2_PATH = f"{DATA_DIR}/digits_and_operators_2/"
+
+PREPROCESSED_PATH = f"{DATA_DIR}/prerocessed_separated_characters/"
 TRAINING_PREPROCESSED_PATH = PREPROCESSED_PATH + "training/"
 VALIDATION_PREPROCESSED_PATH = PREPROCESSED_PATH + "validation/"
 TESTING_PREPROCESSED_PATH = PREPROCESSED_PATH + "testing/"
 ALL_MERGED_PREPROCESSED_PATH = PREPROCESSED_PATH + "all/"
 CLEANED_PREPROCESSED_PATH = PREPROCESSED_PATH + "cleaned/"
-CHARACTERS_PATH = "./data/prerocessed_separated_characters/"
-EQUATIONS_PATH = "./data/equations/"
+CHARACTERS_PATH = f"{DATA_DIR}/prerocessed_separated_characters/"
+EQUATIONS_PATH = f"{DATA_DIR}/equations/"
 MODELS_PATH = "./models/"
 
 IMAGES_FILENAME = "images.npy"
@@ -57,3 +64,11 @@ CUSTOM_CNN_FILENAME = "custom_CNN.pt"
 CUSTOM_RECURSIVE_CNN_FILENAME = "custom_recursive_CNN.pt"
 
 LOSS_BIAS = 5
+
+COMPRESSED_DATA_SET_1_PATH = f"{DOWNLOADS_DIR}/handwritten-digits-and-operators.zip"
+DATA_SET_1_EXTRACTED = "CompleteDataSet_training_tuples.npy CompleteDataSet_testing_tuples.npy CompleteDataSet_validation_tuples.npy"
+
+COMPRESSED_DATA_SET_2_PATH = f"{DOWNLOADS_DIR}/handwrittenmathsymbols.zip"
+DATA_SET_2_EXTRACTED = "data.rar"
+
+COMPRESSED_DATA_SET_3_PATH = f"{DOWNLOADS_DIR}/handwritting_characters_database.tar.gz"

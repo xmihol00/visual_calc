@@ -1,5 +1,7 @@
 data/
 
+data_old/
+
 network/__pycache__/
 
 .idea/
@@ -10,3 +12,5 @@ __pycache__/
 /annotation/dataset/
 
 out.txt
+
+downloads/

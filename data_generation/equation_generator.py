@@ -16,6 +16,10 @@ from const_config import LABELS_FILENAME_TEMPLATE
 from const_config import DATA_DIRECTORIES_INFO
 from const_config import EQUATION_IMAGE_WIDTH
 from const_config import EQUATION_IMAGE_HEIGHT
+from const_config import SEED
+
+np.random.seed(SEED)
+rnd.seed(SEED)
 
 class DigitGenerator():
     def __init__(self, directory = "training/"):

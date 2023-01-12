@@ -94,7 +94,7 @@ if __name__ == "__main__":
         validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 10, 0.25)
+        scheduler = sdl.StepLR(optimizer, 4, 0.25)
         early_stopper = EarlyStopping()
 
         for i in range(1, 125):

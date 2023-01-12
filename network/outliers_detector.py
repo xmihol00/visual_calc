@@ -94,7 +94,7 @@ if __name__ == "__main__":
                 average_loss += loss.item() / nmber_of_batches
                 j += 1
                 if j % 100 == 0:
-                    print(f"Loss in epoch {i} batch {j}: {loss.item()}")        
+                    print(f"Loss in epoch {i}, batch {j}: {loss.item()}")        
 
             print(f"Average loss in epoch {i}: {average_loss}")
             with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "wb") as file:
@@ -135,10 +135,6 @@ if __name__ == "__main__":
         correct_indices = correct_indices.to(torch.int32).numpy()
 
         os.makedirs(CLEANED_PREPROCESSED_PATH, exist_ok=True)
-        #all_images = np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", allow_pickle=True)
-        #print(all_images.shape)
-        #all_images = all_images[correct_indices].squeeze(1)
-        #print(all_images.shape)
         np.save(f"{CLEANED_PREPROCESSED_PATH}{IMAGES_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", allow_pickle=True)[correct_indices].squeeze(1))
         np.save(f"{CLEANED_PREPROCESSED_PATH}{LABELS_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}", allow_pickle=True)[correct_indices].squeeze(1))
 

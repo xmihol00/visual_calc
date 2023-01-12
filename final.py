@@ -17,7 +17,7 @@ from network.mser.Detector import Detector
 PREDICTION_SAMPLES = 16 * 4
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "network"))
-from network.custom_recursive_CNN import CustomCNNv3
+from network.custom_recursive_CNN import CustomRecursiveCNN
 import label_extractors
 from const_config import EQUATION_IMAGE_WIDTH
 from const_config import LABELS_PER_IMAGE
@@ -104,7 +104,7 @@ def extract_equations(model, image_filename, mser_detector=None):
             classifications = [None] * PREDICTION_SAMPLES
             for i, _ in enumerate(samples):
                 j = i * LABELS_PER_IMAGE
-                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
+                classifications[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
             weight = 4
             if mser_detector is not None:
@@ -186,7 +186,7 @@ def recalculate_cell(equation_entry, equation_label):
     equation_label.config(text=result)
 
 if __name__ == "__main__":
-    model = CustomCNNv3(batch_size=PREDICTION_SAMPLES, device="cpu")
+    model = CustomRecursiveCNN(batch_size=PREDICTION_SAMPLES, device="cpu")
     model.load()
     model = model.eval()
 

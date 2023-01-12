@@ -30,7 +30,7 @@ from const_config import SEED
 
 torch.manual_seed(SEED)
 
-class CustomCNNv3(nn.Module):
+class CustomRecursiveCNN(nn.Module):
     def __init__(self, device, batch_size=BATCH_SIZE_TRAINING):
         super().__init__()
         self.results = [None] * (LABELS_PER_IMAGE + 1)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         device = torch.device("cuda")
         print("Running on GPU")
 
-    model = CustomCNNv3(device)
+    model = CustomRecursiveCNN(device)
     model.to(device)
     loss_function = CustomCrossEntropyLoss()
     
@@ -143,8 +143,8 @@ if __name__ == "__main__":
             
             for i in range(BATCH_SIZE_TESTING):
                 j = i * LABELS_PER_IMAGE
-                labeled = label_extractors.yolo_only_class(labels, i).replace(' ', '')
-                classified = label_extractors.yolo_prediction_only_class(predictions[j:j+LABELS_PER_IMAGE]).replace(' ', '')
+                labeled = label_extractors.labels_only_class(labels, i).replace(' ', '')
+                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE]).replace(' ', '')
                 print(labeled, "x" , classified)
                 distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
         
@@ -162,8 +162,8 @@ if __name__ == "__main__":
             for i in range(BATCH_SIZE_TESTING):
                 prediction = model(images[i : i + 1])
                 
-                labeled = label_extractors.yolo_only_class(labels, i)
-                classified = label_extractors.yolo_prediction_only_class(prediction)
+                labeled = label_extractors.labels_only_class(labels, i)
+                classified = label_extractors.prediction_only_class(prediction)
 
                 plt.imshow(images[i][0].numpy(), cmap='gray')
                 plt.title(f"Image classified as {classified} and labeled as {labeled}.")

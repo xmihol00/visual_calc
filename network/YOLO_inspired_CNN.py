@@ -112,8 +112,8 @@ if __name__ == "__main__":
             for i in range(BATCH_SIZE_TRAINING):
                 prediction = model(images[i : i + 1])
                 
-                labeled = label_extractors.yolo(labels, i)
-                classified = label_extractors.yolo_prediction(prediction)
+                labeled = label_extractors.labels(labels, i)
+                classified = label_extractors.prediction(prediction)
 
                 plt.imshow(images[i][0].numpy(), cmap='gray')
                 plt.title(f"Image classified as {classified} and labeled as {labeled}.")

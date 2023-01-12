@@ -46,7 +46,7 @@ class OperatorGenerator():
         operator = self.operators[operator_type][operator_idx] # find the operator
         return operator, operator_type + NUMBER_OF_DIGITS      # change the label for operators from 0-3 to 10-13
 
-def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files):
+def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files, dilatate=True):
     MIN_CHARACTERS = 3          # minimum characters in an image
     MAX_CHARACTERS = 10         # maximum characters in an image
     MIN_CHARACTER_WIDTH = (EQUATION_IMAGE_WIDTH + LABELS_PER_IMAGE - 1) // LABELS_PER_IMAGE
@@ -118,7 +118,8 @@ def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, dir
         np.save(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", labels_file)
 
 if __name__ == "__main__":
+    DILATATE = False     # set to false to generate equations without preprocessing of the input digits and operators
     for directory, batch_size, batches_per_file, number_of_files in DATA_DIRECTORIES_INFO:
         digits = DigitGenerator(directory)
         operators = OperatorGenerator(directory)
-        generate_equations(digits, operators, directory, batch_size, batches_per_file, number_of_files)
+        generate_equations(digits, operators, directory, batch_size, batches_per_file, number_of_files, dilatate=DILATATE)

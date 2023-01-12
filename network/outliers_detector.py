@@ -2,27 +2,30 @@ import os
 import sys
 import numpy as np
 import torch
-import idx2numpy
 import matplotlib.pyplot as plt
 from torch import nn
 from torch.utils.data import DataLoader
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import ALL_MERGED_PREPROCESSED_PATH
-from const_config import ALL_IMAGES_FILENAME
-from const_config import ALL_LABELS_FILENAME
+from const_config import IMAGES_FILENAME
+from const_config import LABELS_FILENAME
 from const_config import IMAGE_HEIGHT
 from const_config import IMAGE_WIDTH
-from const_config import MODEL_PATH
+from const_config import MODELS_PATH
 from const_config import OUTLIERS_DETECTOR_FILENAME
 from const_config import CLEANED_PREPROCESSED_PATH
-from const_config import CLEANED_IMAGES_FILENAME
-from const_config import CLEANED_LABELS_FILENAME
+from const_config import IMAGES_FILENAME
+from const_config import LABELS_FILENAME
+from const_config import SEED
+
+np.random.seed(SEED)
+torch.manual_seed(SEED)
 
 class MergedDataset():
     def __init__(self):
-        self.images = torch.from_numpy(np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_IMAGES_FILENAME}", allow_pickle=True))
-        self.labels = torch.from_numpy(np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_LABELS_FILENAME}", allow_pickle=True))
+        self.images = torch.from_numpy(np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", allow_pickle=True))
+        self.labels = torch.from_numpy(np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}", allow_pickle=True))
         self.len = self.labels.shape[0]
         self.index = 0
 
@@ -61,7 +64,7 @@ class OutliersDetector(nn.Module):
 def model_accuracy(classifier, data_set, batch_size):
     classifier = classifier.eval()
     correct = 0
-    for images, labels in DataLoader("training/", data_set, batch_size):
+    for images, labels in DataLoader(data_set, batch_size):
         output = classifier(images)
         correct += (torch.argmax(output, dim=1) == labels.to(torch.int64)).sum()
         
@@ -73,12 +76,6 @@ if __name__ == "__main__":
     data_set = MergedDataset()
     batch_size = 128
 
-    try:
-        with open(f"{MODEL_PATH}{OUTLIERS_DETECTOR_FILENAME}", "rb") as file:
-            classifier.load_state_dict(torch.load(file))
-    except:
-        pass
-
     if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
         optimizer = torch.optim.Adam(classifier.parameters(), lr=0.005)
         nmber_of_batches = data_set.__len__() / batch_size
@@ -87,7 +84,7 @@ if __name__ == "__main__":
         for i in range(1, 16):
             j = 0
             classifier = classifier.train()
-            for images, labels in DataLoader("training/", data_set, batch_size):
+            for images, labels in DataLoader(data_set, batch_size):
                 output = classifier(images)
                 loss = loss_function(output, labels)
 
@@ -97,10 +94,10 @@ if __name__ == "__main__":
                 average_loss += loss.item() / nmber_of_batches
                 j += 1
                 if j % 100 == 0:
-                    print(f"Loss in epoch {i} batch {j}: {loss.item()}")        
+                    print(f"Loss in epoch {i}, batch {j}: {loss.item()}")        
 
             print(f"Average loss in epoch {i}: {average_loss}")
-            with open(f"{MODEL_PATH}{OUTLIERS_DETECTOR_FILENAME}", "wb") as file:
+            with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "wb") as file:
                 torch.save(classifier.state_dict(), file)
 
             accuracy = model_accuracy(classifier, data_set, batch_size)
@@ -113,9 +110,13 @@ if __name__ == "__main__":
         print(f"Model accuracy: {accuracy * 100}%")
 
     elif len(sys.argv) > 1 and sys.argv[1].lower() == "clean":
+        with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "rb") as file:
+            classifier.load_state_dict(torch.load(file))
+
         correct_indices = torch.empty((0))
         classifier = classifier.eval()
         softmax = nn.Softmax(dim=1)
+
         while True:
             batch = data_set.get_batch(batch_size)
             if batch == None:
@@ -132,15 +133,17 @@ if __name__ == "__main__":
         
         del data_set
         correct_indices = correct_indices.to(torch.int32).numpy()
-        np.save(f"{CLEANED_PREPROCESSED_PATH}{CLEANED_IMAGES_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_IMAGES_FILENAME}", allow_pickle=True)[correct_indices])
-        np.save(f"{CLEANED_PREPROCESSED_PATH}{CLEANED_LABELS_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{ALL_LABELS_FILENAME}", allow_pickle=True)[correct_indices])
 
-        print("Images file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{CLEANED_IMAGES_FILENAME}').st_size / (1024 * 1024)))
-        print("Labels file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{CLEANED_LABELS_FILENAME}').st_size / (1024 * 1024)))
+        os.makedirs(CLEANED_PREPROCESSED_PATH, exist_ok=True)
+        np.save(f"{CLEANED_PREPROCESSED_PATH}{IMAGES_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", allow_pickle=True)[correct_indices].squeeze(1))
+        np.save(f"{CLEANED_PREPROCESSED_PATH}{LABELS_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}", allow_pickle=True)[correct_indices].squeeze(1))
+
+        print("Images file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{IMAGES_FILENAME}').st_size / (1024 * 1024)))
+        print("Labels file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{LABELS_FILENAME}').st_size / (1024 * 1024)))
 
     else:
         classifier = classifier.eval()
-        for image, label in DataLoader("training/", data_set, 1):
+        for image, label in DataLoader(data_set, 1):
             output = classifier(image)
             classified = torch.argmax(output).item()
             labeled = label.item()

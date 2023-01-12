@@ -10,14 +10,14 @@ IMAGE_PATH = "./data/equation_images/"
 PREDICTION_SAMPLES = 16 * 4
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "network"))
-from network.custom_CNN_v1 import CustomCNNv1
-from network.custom_CNN_v3 import CustomCNNv3
+from network.custom_CNN import CustomCNN
+from network.custom_recursive_CNN import CustomRecursiveCNN
 import label_extractors
 from const_config import EQUATION_IMAGE_WIDTH
 from const_config import EQUATION_IMAGE_HEIGHT
-from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import LABELS_PER_IMAGE
 
-model = CustomCNNv3("cpu", PREDICTION_SAMPLES)
+model = CustomRecursiveCNN("cpu", PREDICTION_SAMPLES)
 model.load()
 model = model.eval()
 
@@ -97,8 +97,8 @@ for file_name in os.listdir(IMAGE_PATH):
 
             classifications = [None] * PREDICTION_SAMPLES
             for i, sample in enumerate(samples):
-                j = i * YOLO_LABELS_PER_IMAGE
-                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + YOLO_LABELS_PER_IMAGE], sep='')
+                j = i * LABELS_PER_IMAGE
+                classifications[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
             filtered_classifications = []
             for classified in classifications:

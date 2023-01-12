@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
+
+import cv2
+import imutils
 from PIL import Image, ImageTk
 import os
 import numpy as np
@@ -9,15 +12,17 @@ import torch
 import sys
 import re
 
+from network.mser.Detector import Detector
+
 PREDICTION_SAMPLES = 16 * 4
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "network"))
-from network.custom_CNN_v3 import CustomCNNv3
+from network.custom_recursive_CNN import CustomRecursiveCNN
 import label_extractors
 from const_config import EQUATION_IMAGE_WIDTH
-from const_config import YOLO_LABELS_PER_IMAGE
+from const_config import LABELS_PER_IMAGE
 
-def extract_equations(model, image_filename):
+def extract_equations(model, image_filename, mser_detector=None):
     original_image = Image.open(image_filename).convert('L')
     image = np.asarray(original_image)
     if image.sum() * 2 > image.shape[0] * image.shape[1] * 255:
@@ -93,19 +98,29 @@ def extract_equations(model, image_filename):
                     final_images[i*16 + j, y1:y2, augmented_width_shift:resized_image.shape[1] + augmented_width_shift] = resized_image
 
             samples = torch.tensor((final_images > 0).astype(np.float32))
-            samples = samples.unsqueeze(1)
-            predictions = model(samples)
+            samples = samples.unsqueeze(1) # (64, 1, 288, 38) shape
+            predictions = model(samples)   # 64 predictions
 
             classifications = [None] * PREDICTION_SAMPLES
             for i, _ in enumerate(samples):
-                j = i * YOLO_LABELS_PER_IMAGE
-                classifications[i] = label_extractors.yolo_prediction_only_class(predictions[j:j + YOLO_LABELS_PER_IMAGE], sep='')
+                j = i * LABELS_PER_IMAGE
+                classifications[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
-            filtered_classifications = []
-            for classified in classifications:
-                # filter out invalid equations
-                if re.match(r"^(\d+[\+\-\*/])+\d+$", classified):
-                    filtered_classifications.append(classified)
+            weight = 4
+            if mser_detector is not None:
+                gray = (area * 255).astype(np.uint8)
+                gray = 255 - gray
+                padded_gray = cv2.copyMakeBorder(gray, 80, 80, 120, 120, cv2.BORDER_CONSTANT, value=255)
+                img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
+                img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
+                valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
+                eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 4)
+                for equation_result in eq_results:
+                    for i in range(0, weight):
+                        classifications.append(equation_result)
+                    weight = weight - 1
+
+            filtered_classifications = [ classified for classified in classifications if re.match(r"^(\d+[\+\-\*/])+\d+$", classified) ] # strings with syntactically valid equations
 
             try:
                 # find the most same results
@@ -113,16 +128,16 @@ def extract_equations(model, image_filename):
             except:
                 continue
     
-    return equations, original_image
+    return equations, original_image # prediction of equations detected on the image, the original not processed image
 
-def select_file(model, objects):
+def select_file(model, objects, mser_detector=None):
     for tk_object in objects[0]:
         tk_object.destroy()
     objects[0] = []
 
     filetypes = [("images", "*.jpg"), ("images", "*.png")]
     filename = fd.askopenfilename(title="Choose an image", initialdir='~/', filetypes=filetypes)
-    equations, image = extract_equations(model, filename)
+    equations, image = extract_equations(model, filename, mser_detector)
 
     image.thumbnail((800, 500))
     image = ImageTk.PhotoImage(image)
@@ -171,9 +186,12 @@ def recalculate_cell(equation_entry, equation_label):
     equation_label.config(text=result)
 
 if __name__ == "__main__":
-    model = CustomCNNv3(batch_size=PREDICTION_SAMPLES, device="cpu")
+    model = CustomRecursiveCNN(batch_size=PREDICTION_SAMPLES, device="cpu")
     model.load()
     model = model.eval()
+
+    use_gpu = False
+    mser_detector = Detector(use_gpu)
 
     tk_objects = [[]]
     root = tk.Tk()
@@ -191,7 +209,7 @@ if __name__ == "__main__":
         pass
 
     select_file_label = tk.Label(root, text="Select an image with an equation or equations.")
-    open_button = ttk.Button(root, text="select", command=lambda:select_file(model, tk_objects))
+    open_button = ttk.Button(root, text="select", command=lambda:select_file(model, tk_objects, mser_detector))
 
     select_file_label.grid(row=0, columnspan=4, pady=5)
     open_button.grid(row=1, columnspan=4, pady=5)

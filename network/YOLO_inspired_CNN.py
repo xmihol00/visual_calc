@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         scheduler = sdl.StepLR(optimizer, 10, 0.5)
-        early_stopper = EarlyStopping(patience=5)
+        early_stopper = EarlyStopping()
 
         for i in range(1, 125):
             model.train()
@@ -82,6 +82,8 @@ if __name__ == "__main__":
                 loss.backward()
                 optimizer.step()
                 total_loss += loss.item()
+                
+                del images, labels
             
             scheduler.step()
             print(f"Training loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_TRAINING * NUMBER_OF_FILES_TRAINING)}")
@@ -92,6 +94,8 @@ if __name__ == "__main__":
                 output = model(images)
                 loss = loss_function(output, labels)
                 total_loss += loss.item()
+
+                del images, labels
             
             print(f"  Validation loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
             if early_stopper(model, total_loss):

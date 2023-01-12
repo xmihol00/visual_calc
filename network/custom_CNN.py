@@ -78,11 +78,15 @@ class CustomCNN(nn.Module):
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":
+    exe_type = sys.argv[1].lower() if len(sys.argv) > 1 else ""
+
+    device = torch.device("cpu")
+    if CUDA and exe_type == "train": # move to GPU, if available
+        device = torch.device("cuda")
+        print("Running on GPU")
+
     model = CustomCNN()
     loss_function = CustomCrossEntropyLoss()
-    
-    device = torch.device("cpu")
-    exe_type = sys.argv[1].lower() if len(sys.argv) > 1 else ""
 
     if exe_type == "train":
         if CUDA: # move to GPU, if available
@@ -125,25 +129,19 @@ if __name__ == "__main__":
 
         model.save()
     elif exe_type == "eval":
-        if CUDA: # move to GPU, if available
-            device = torch.device("cuda")
-            model.to(device)
-            print(f"Running on GPU")
-
         model.load()
         model = model.eval()
         test_dataloader = validation_loader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         distances = [0] * 9
         for images, labels in validation_loader:
-            labels = labels.to("cpu").numpy()
-            predictions = model(images).to("cpu")
+            predictions = model(images)
+            labels = labels.reshape(-1, LABELS_PER_IMAGE, 2).numpy()
             
             for i in range(BATCH_SIZE_TESTING):
                 j = i * LABELS_PER_IMAGE
-                labeled = label_extractors.labels_only_class(labels, i).replace(' ', '')
-                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE]).replace(' ', '')
-                print(labeled, "x" , classified)
+                labeled = label_extractors.labels_only_class(labels, i, sep="")
+                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE], sep="")
                 distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
         
         print(distances)

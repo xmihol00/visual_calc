@@ -138,14 +138,13 @@ if __name__ == "__main__":
 
         distances = [0] * 9
         for images, labels in validation_loader:
-            labels = labels.to("cpu").numpy()
-            predictions = model(images).to("cpu")
+            predictions = model(images)
+            labels = labels.reshape(-1, LABELS_PER_IMAGE, 2).numpy()
             
             for i in range(BATCH_SIZE_TESTING):
                 j = i * LABELS_PER_IMAGE
-                labeled = label_extractors.labels_only_class(labels, i).replace(' ', '')
-                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE]).replace(' ', '')
-                print(labeled, "x" , classified)
+                labeled = label_extractors.labels_only_class(labels, i, sep="")
+                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE], sep="")
                 distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
         
         print(distances)

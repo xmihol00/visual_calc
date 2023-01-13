@@ -2,14 +2,16 @@ import os
 import sys
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-from torch import nn
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from const_config import EQUATIONS_PATH
 from const_config import LABEL_DIMENSIONS
 from const_config import IMAGES_FILENAME_TEMPLATE
 from const_config import LABELS_FILENAME_TEMPLATE
+from const_config import SEED
+
+np.random.seed(SEED)
+torch.manual_seed(SEED)
 
 class DataLoader():
     def __init__(self, directory, batch_size, batches_per_file, number_of_files, device):

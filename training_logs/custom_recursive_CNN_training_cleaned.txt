@@ -1,0 +1,39 @@
+Running on GPU
+Training loss in epoch 1: 0.2904448787793517
+  Validation loss in epoch 1: 0.15618398700840772
+Training loss in epoch 2: 0.1902208662368357
+  Validation loss in epoch 2: 0.1320576921850443
+Training loss in epoch 3: 0.168504397848621
+  Validation loss in epoch 3: 0.11602341424208135
+Training loss in epoch 4: 0.1559852896053344
+  Validation loss in epoch 4: 0.11344678860623389
+Training loss in epoch 5: 0.14878954210877418
+  Validation loss in epoch 5: 0.1089872388029471
+Training loss in epoch 6: 0.12533731659129263
+  Validation loss in epoch 6: 0.0947492905240506
+Training loss in epoch 7: 0.12014626366086305
+  Validation loss in epoch 7: 0.09274252983741463
+Training loss in epoch 8: 0.1176866874685511
+  Validation loss in epoch 8: 0.09087235986720771
+Training loss in epoch 9: 0.11574420664645732
+  Validation loss in epoch 9: 0.09174211488105356
+Training loss in epoch 10: 0.11375894166901708
+  Validation loss in epoch 10: 0.0896705965558067
+Training loss in epoch 11: 0.10865918773040176
+  Validation loss in epoch 11: 0.08730367807205766
+Training loss in epoch 12: 0.10675768591742962
+  Validation loss in epoch 12: 0.08832411176525057
+Training loss in epoch 13: 0.10610032481420785
+  Validation loss in epoch 13: 0.08639579949434846
+Training loss in epoch 14: 0.10560037629399449
+  Validation loss in epoch 14: 0.08595539537724108
+Training loss in epoch 15: 0.10521956491284072
+  Validation loss in epoch 15: 0.0870083029428497
+Training loss in epoch 16: 0.10357940122671426
+  Validation loss in epoch 16: 0.08591881018597633
+Training loss in epoch 17: 0.10350646100472659
+  Validation loss in epoch 17: 0.08647916700225323
+Training loss in epoch 18: 0.10329454657435418
+  Validation loss in epoch 18: 0.08639528417494148
+Training loss in epoch 19: 0.10332390050683171
+  Validation loss in epoch 19: 0.08612841197289527

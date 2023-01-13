@@ -1,73 +1,53 @@
 Running on GPU
-Training loss in epoch 1: 0.3788210933469236
-  Validation loss in epoch 1: 0.19844548391799133
-Training loss in epoch 2: 0.2471209973593553
-  Validation loss in epoch 2: 0.16698999870568515
-Training loss in epoch 3: 0.2208818216000994
-  Validation loss in epoch 3: 0.159216888450707
-Training loss in epoch 4: 0.20692480861519774
-  Validation loss in epoch 4: 0.14740799876550834
-Training loss in epoch 5: 0.19662174391560255
-  Validation loss in epoch 5: 0.13984484473864237
-Training loss in epoch 6: 0.1893970773772647
-  Validation loss in epoch 6: 0.14063003373642763
-Training loss in epoch 7: 0.18417522621961932
-  Validation loss in epoch 7: 0.13280718467819194
-Training loss in epoch 8: 0.17928496153714757
-  Validation loss in epoch 8: 0.13413335576963922
-Training loss in epoch 9: 0.17633487285735708
-  Validation loss in epoch 9: 0.13020535384615262
-Training loss in epoch 10: 0.17241985452982286
-  Validation loss in epoch 10: 0.12780358041636647
-Training loss in epoch 11: 0.15518266760433713
-  Validation loss in epoch 11: 0.11929495674557984
-Training loss in epoch 12: 0.15042922656672697
-  Validation loss in epoch 12: 0.11638545848739644
-Training loss in epoch 13: 0.14865188924906156
-  Validation loss in epoch 13: 0.11518561406992375
-Training loss in epoch 14: 0.14729688573939104
-  Validation loss in epoch 14: 0.11468600033937643
-Training loss in epoch 15: 0.1463252346093456
-  Validation loss in epoch 15: 0.11482902825810015
-Training loss in epoch 16: 0.14515796988581617
-  Validation loss in epoch 16: 0.11425663529274364
-Training loss in epoch 17: 0.14432944285993773
-  Validation loss in epoch 17: 0.11453251123117904
-Training loss in epoch 18: 0.14309329479001462
-  Validation loss in epoch 18: 0.11269808493865033
-Training loss in epoch 19: 0.1425376268134763
-  Validation loss in epoch 19: 0.11275839374866337
-Training loss in epoch 20: 0.141875696623077
-  Validation loss in epoch 20: 0.11260747262276709
-Training loss in epoch 21: 0.1374648459473004
-  Validation loss in epoch 21: 0.11053406166223188
-Training loss in epoch 22: 0.13618592855830988
-  Validation loss in epoch 22: 0.11109852467974027
-Training loss in epoch 23: 0.13583279230011006
-  Validation loss in epoch 23: 0.11036177502634624
-Training loss in epoch 24: 0.13573832703133423
-  Validation loss in epoch 24: 0.10994209985559185
-Training loss in epoch 25: 0.13498970720296105
-  Validation loss in epoch 25: 0.10998323217500001
-Training loss in epoch 26: 0.13469291642308234
-  Validation loss in epoch 26: 0.11097697752217452
-Training loss in epoch 27: 0.1344789349163572
-  Validation loss in epoch 27: 0.10927248957256476
-Training loss in epoch 28: 0.13430436497554182
-  Validation loss in epoch 28: 0.10910337820338706
-Training loss in epoch 29: 0.13435184817450743
-  Validation loss in epoch 29: 0.10939923897385598
-Training loss in epoch 30: 0.13359058722232778
-  Validation loss in epoch 30: 0.10930635845288635
-Training loss in epoch 31: 0.13292659746172528
-  Validation loss in epoch 31: 0.10834124147271117
-Training loss in epoch 32: 0.13273766681551932
-  Validation loss in epoch 32: 0.1084160228803133
-Training loss in epoch 33: 0.13250374933083853
-  Validation loss in epoch 33: 0.10820686095394194
-Training loss in epoch 34: 0.13203448350230854
-  Validation loss in epoch 34: 0.1086805468580375
-Training loss in epoch 35: 0.13222620292256276
-  Validation loss in epoch 35: 0.10857093532880148
-Training loss in epoch 36: 0.1317609826878955
-  Validation loss in epoch 36: 0.10828983831840257
+Training loss in epoch 1: 0.34958280059322716
+  Validation loss in epoch 1: 0.19157660917378963
+Training loss in epoch 2: 0.23726994673907756
+  Validation loss in epoch 2: 0.15749561572447418
+Training loss in epoch 3: 0.21212881930544972
+  Validation loss in epoch 3: 0.14723771383985876
+Training loss in epoch 4: 0.19884481246583163
+  Validation loss in epoch 4: 0.14091411634348333
+Training loss in epoch 5: 0.18977584515325724
+  Validation loss in epoch 5: 0.130968256322667
+Training loss in epoch 6: 0.18327869582362474
+  Validation loss in epoch 6: 0.12845747323706747
+Training loss in epoch 7: 0.17785702514089644
+  Validation loss in epoch 7: 0.1259681695420295
+Training loss in epoch 8: 0.17367591085843742
+  Validation loss in epoch 8: 0.12591395690105855
+Training loss in epoch 9: 0.17133698199130595
+  Validation loss in epoch 9: 0.12177192618139088
+Training loss in epoch 10: 0.16702740145288408
+  Validation loss in epoch 10: 0.12248562516644597
+Training loss in epoch 11: 0.1487290550004691
+  Validation loss in epoch 11: 0.11030359073076397
+Training loss in epoch 12: 0.14470644315518438
+  Validation loss in epoch 12: 0.10853947737719864
+Training loss in epoch 13: 0.14282231110706925
+  Validation loss in epoch 13: 0.10775324425660074
+Training loss in epoch 14: 0.14176453687809407
+  Validation loss in epoch 14: 0.10632769014686345
+Training loss in epoch 15: 0.14048197573889046
+  Validation loss in epoch 15: 0.10829020267352461
+Training loss in epoch 16: 0.13973846674337984
+  Validation loss in epoch 16: 0.1057849299069494
+Training loss in epoch 17: 0.13917289105709643
+  Validation loss in epoch 17: 0.10610892470460385
+Training loss in epoch 18: 0.13779356237407775
+  Validation loss in epoch 18: 0.1067608050769195
+Training loss in epoch 19: 0.13701421046070755
+  Validation loss in epoch 19: 0.10477907607331872
+Training loss in epoch 20: 0.13655698516685516
+  Validation loss in epoch 20: 0.10503599310759455
+Training loss in epoch 21: 0.1323081995630637
+  Validation loss in epoch 21: 0.102776772598736
+Training loss in epoch 22: 0.13102534905541688
+  Validation loss in epoch 22: 0.1022814249387011
+Training loss in epoch 23: 0.13052875525783747
+  Validation loss in epoch 23: 0.10225448583252728
+Training loss in epoch 24: 0.1302106570582837
+  Validation loss in epoch 24: 0.10373991323169321
+Training loss in epoch 25: 0.1298850270546973
+  Validation loss in epoch 25: 0.10276312337722629
+Training loss in epoch 26: 0.12937906654831022
+  Validation loss in epoch 26: 0.1031976676825434

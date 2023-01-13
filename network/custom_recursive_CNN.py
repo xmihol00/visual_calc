@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from torch import nn
 from torch.optim import lr_scheduler as sdl
 import Levenshtein as lv
+import numpy as np
 
 from utils.data_loaders import DataLoader
 from utils.loss_functions import CustomCrossEntropyLoss
@@ -29,6 +30,7 @@ from const_config import NUMBER_OF_FILES_TESTING
 from const_config import SEED
 
 torch.manual_seed(SEED)
+np.random.seed(SEED)
 
 class CustomRecursiveCNN(nn.Module):
     def __init__(self, device, batch_size=BATCH_SIZE_TRAINING):
@@ -42,7 +44,7 @@ class CustomRecursiveCNN(nn.Module):
             nn.BatchNorm2d(32),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, (3, 1), padding=0),
+            nn.Conv2d(32, 64, (3, 2), padding=(0, 1)),
             nn.BatchNorm2d(64),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2),
@@ -101,7 +103,7 @@ if __name__ == "__main__":
         validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 10, 0.25)
+        scheduler = sdl.StepLR(optimizer, 5, 0.25)
         early_stopper = EarlyStopping()
 
         for i in range(1, 125):
@@ -134,10 +136,10 @@ if __name__ == "__main__":
     elif exe_type == "eval":
         model.load()
         model = model.eval()
-        test_dataloader = validation_loader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
+        test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         distances = [0] * 9
-        for images, labels in validation_loader:
+        for images, labels in test_dataloader:
             predictions = model(images)
             labels = labels.reshape(-1, LABELS_PER_IMAGE, 2).numpy()
             
@@ -154,9 +156,9 @@ if __name__ == "__main__":
     else:
         model.load()
         model = model.eval()
-        test_dataloader = validation_loader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
+        test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
-        for images, labels in validation_loader:
+        for images, labels in test_dataloader:
             labels = labels.numpy()
             for i in range(BATCH_SIZE_TESTING):
                 prediction = model(images[i : i + 1])

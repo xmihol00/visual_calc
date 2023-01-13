@@ -94,7 +94,8 @@ def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, dir
         
             x_shift = rnd.randint(0, EQUATION_IMAGE_WIDTH - current_image_idx)
             images_file[j] = np.roll(images_file[j], shift=x_shift, axis=2) # shifting the image to right across x axis
-            images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 4))
+            if dilatate:
+                images_file[j] = cv.dilate(images_file[j], dilate_kernel, iterations=rnd.randint(1, 4))
             character_middle_idxs = (character_middle_idxs + x_shift) % EQUATION_IMAGE_WIDTH # the position of the midpoints of the characters must be shifted as well
 
             width_per_label_box = EQUATION_IMAGE_WIDTH / LABELS_PER_IMAGE # wdth of a part of an image, which is labeled
@@ -118,7 +119,7 @@ def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, dir
         np.save(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", labels_file)
 
 if __name__ == "__main__":
-    DILATATE = False     # set to false to generate equations without preprocessing of the input digits and operators
+    DILATATE = True     # set to false to generate equations without preprocessing of the input digits and operators
     for directory, batch_size, batches_per_file, number_of_files in DATA_DIRECTORIES_INFO:
         digits = DigitGenerator(directory)
         operators = OperatorGenerator(directory)

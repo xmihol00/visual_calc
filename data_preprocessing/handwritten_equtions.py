@@ -93,18 +93,35 @@ def samples_from_area(image, areas):
         yield samples
 
 def parse_perdictions(predictions):
-    classifications = [None] * PREDICTION_SAMPLES
+    string_labels = [None] * PREDICTION_SAMPLES
     for i in range(PREDICTION_SAMPLES):
         j = i * LABELS_PER_IMAGE
-        classifications[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
+        string_labels[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
     # strings with syntactically valid equations
-    filtered_classifications = [ classified for classified in classifications if re.match(r"^(\d+[\+\-\*/])+\d+$", classified) ]
+    filtered_string_labels = [ string_label for string_label in string_labels if re.match(r"^(\d+[\+\-\*/])+\d+$", string_label) ]
 
     try:
-        classified = max(filtered_classifications, key=lambda x: sum([x == y for y in filtered_classifications]))
+        final_prediction = max(filtered_string_labels, key=lambda x: sum([x == y for y in filtered_string_labels]))
     except:
-        classified = "error"
+        final_prediction = "error"
 
-    return classified
-        
+    return final_prediction
+
+def extract_string_labels(predictions):
+    string_labels = [None] * PREDICTION_SAMPLES
+    for i in range(PREDICTION_SAMPLES):
+        j = i * LABELS_PER_IMAGE
+        string_labels[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
+    
+    return string_labels
+
+def parse_string_labels(string_labels):
+    filtered_string_labels = [ string_label for string_label in string_labels if re.match(r"^(\d+[\+\-\*/])+\d+$", string_label) ]
+
+    try:
+        final_prediction = max(filtered_string_labels, key=lambda x: sum([x == y for y in filtered_string_labels]))
+    except:
+        final_prediction = "error"
+
+    return final_prediction

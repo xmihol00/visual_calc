@@ -100,7 +100,9 @@ if __name__ == "__main__":
     parser.add_argument("-pd", "--plot_dataset", action="store_true", help="Plot separate symbols and whole equations.")
     parser.add_argument("-t", "--train", choices=["custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Train specified model.")
     parser.add_argument("-e", "--evaluate", choices=["custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Evaluate specified model.")
-    parser.add_argument("-pr", "--plot_results", action="store_true", help="Plot separate symbols and whole equations.")
+    parser.add_argument("-prMC", "--plot_results_MC", action="store_true", help="Plot results of the multi-classifier (custom_recursive_CNN).")
+    parser.add_argument("-prMSER", "--plot_results_MSER", action="store_true", help="Plot results of the MSER based classifier.")
+    parser.add_argument("-pr", "--plot_results", action="store_true", help="Plot results of an ensemble of the multi-classifier and the MSER based classifier.")
     args = parser.parse_args()
 
     if args.unzip or args.dataset:
@@ -147,7 +149,7 @@ if __name__ == "__main__":
     if args.evaluate:
         os.system(f"python3 networks/{args.evaluate}.py --eval --augmentation")
 
-    if args.plot_results:
+    if args.plot_results_MC:
         bins = [i * 10 for i in range(10)]
         anotations_x = [i * 10 + 5 for i in range(10)]
 
@@ -190,3 +192,10 @@ if __name__ == "__main__":
 
         plt.savefig("results/multi_classifier_results", dpi=400)
         plt.show()
+
+    if args.plot_results_MC:
+        pass # TODO
+
+    if args.plot_results:
+        pass # TODO
+    

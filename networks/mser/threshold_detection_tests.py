@@ -7,7 +7,7 @@ from tensorflow import keras
 import tensorflow as tf
 from sklearn import preprocessing
 
-from network.mser.utils import filter_boxes
+from networks.mser.utils import filter_boxes
 
 img_size = (320, 160)
 

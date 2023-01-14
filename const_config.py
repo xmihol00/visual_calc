@@ -20,10 +20,11 @@ TESTING_PREPROCESSED_PATH = PREPROCESSED_PATH + "testing/"
 ALL_MERGED_PREPROCESSED_PATH = PREPROCESSED_PATH + "all/"
 CLEANED_PREPROCESSED_PATH = PREPROCESSED_PATH + "cleaned/"
 CHARACTERS_PATH = f"{DATA_DIR}/prerocessed_separated_characters/"
+AUGMENTED_EQUATIONS_PATH = f"{DATA_DIR}/augmented_equations/"
 EQUATIONS_PATH = f"{DATA_DIR}/equations/"
 MODELS_PATH = "models/"
-
-EQUATIONS_PATH = "data/equations/"
+AUGMENTED_MODELS_PATH = f"{MODELS_PATH}cleaned_dilatation_size_augmentation/"
+NOT_AUGMENTED_MODELS_PATH = f"{MODELS_PATH}cleaned_no_augmentation/"
 
 IMAGES_FILENAME = "images.npy"
 LABELS_FILENAME = "labels.npy"
@@ -74,3 +75,8 @@ COMPRESSED_DATA_SET_2_PATH = f"{DOWNLOADS_DIR}/handwrittenmathsymbols.zip"
 DATA_SET_2_EXTRACTED = "data.rar"
 
 COMPRESSED_DATA_SET_3_PATH = f"{DOWNLOADS_DIR}/handwritting_characters_database.tar.gz"
+
+WRITERS_PATH = "testing/writers/"
+WRITERS_LABELS = f"{WRITERS_PATH}labels.pickle"
+
+PREDICTION_SAMPLES = 16 * 4

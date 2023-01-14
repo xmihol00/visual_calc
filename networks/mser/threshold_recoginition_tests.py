@@ -2,8 +2,8 @@ import cv2
 import cv2 as cv
 from matplotlib import pyplot as plt
 
-from network.mser.utils import filter_boxes, pad_to_size
-from network.mser.utils import resize_image, resize_image_no_padding
+from networks.mser.utils import filter_boxes, pad_to_size
+from networks.mser.utils import resize_image, resize_image_no_padding
 
 img_size = (320, 160)
 

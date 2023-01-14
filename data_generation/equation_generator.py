@@ -8,6 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import NUMBER_OF_DIGITS 
 from const_config import NUMBER_OF_OPERATORS
 from const_config import CHARACTERS_PATH
+from const_config import AUGMENTED_EQUATIONS_PATH
 from const_config import EQUATIONS_PATH
 from const_config import LABELS_PER_IMAGE
 from const_config import LABEL_DIMENSIONS
@@ -46,7 +47,8 @@ class OperatorGenerator():
         operator = self.operators[operator_type][operator_idx] # find the operator
         return operator, operator_type + NUMBER_OF_DIGITS      # change the label for operators from 0-3 to 10-13
 
-def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, directory, batch_size, batches_per_file, files, dilatate=True):
+def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, main_directory, directory, 
+                       batch_size, batches_per_file, files, dilatate=True):
     MIN_CHARACTERS = 3          # minimum characters in an image
     MAX_CHARACTERS = 10         # maximum characters in an image
     MIN_CHARACTER_WIDTH = (EQUATION_IMAGE_WIDTH + LABELS_PER_IMAGE - 1) // LABELS_PER_IMAGE
@@ -114,13 +116,15 @@ def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, dir
                 current_label_box += width_per_label_box # next label box
     
         # save file of chosen number of batches
-        os.makedirs(f"{EQUATIONS_PATH}{directory}", exist_ok=True)
-        np.save(f"{EQUATIONS_PATH}{directory}{IMAGES_FILENAME_TEMPLATE % str(i)}", images_file)
-        np.save(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", labels_file)
+        os.makedirs(f"{main_directory}{directory}", exist_ok=True)
+        np.save(f"{main_directory}{directory}{IMAGES_FILENAME_TEMPLATE % str(i)}", images_file)
+        np.save(f"{main_directory}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", labels_file)
 
 if __name__ == "__main__":
-    DILATATE = True     # set to false to generate equations without preprocessing of the input digits and operators
+    DILATATE = len(sys.argv) > 1 and sys.argv[1].lower() == "augment"
+    main_directory = AUGMENTED_EQUATIONS_PATH if DILATATE else EQUATIONS_PATH
+
     for directory, batch_size, batches_per_file, number_of_files in DATA_DIRECTORIES_INFO:
         digits = DigitGenerator(directory)
         operators = OperatorGenerator(directory)
-        generate_equations(digits, operators, directory, batch_size, batches_per_file, number_of_files, dilatate=DILATATE)
+        generate_equations(digits, operators, main_directory, directory, batch_size, batches_per_file, number_of_files, dilatate=DILATATE)

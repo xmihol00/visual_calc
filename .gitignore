@@ -2,7 +2,7 @@ data/
 
 data_old/
 
-network/__pycache__/
+networks/__pycache__/
 
 .idea/
 

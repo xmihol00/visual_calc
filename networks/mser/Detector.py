@@ -5,7 +5,7 @@ import numpy as np
 from tensorflow import keras
 import tensorflow as tf
 from sklearn import preprocessing
-from network.mser import utils
+from networks.mser import utils
 
 
 class Detector:

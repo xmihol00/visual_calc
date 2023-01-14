@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from const_config import DATA_DIRECTORIES_INFO
 from const_config import IMAGES_FILENAME_TEMPLATE
 from const_config import LABELS_FILENAME_TEMPLATE
-from const_config import EQUATIONS_PATH
+from const_config import AUGMENTED_EQUATIONS_PATH
 import label_extractors
 
 PLOTTED_WINDOWS_COUNT = 1
@@ -58,9 +58,9 @@ class ImagePlotter():
 if __name__ == "__main__":
     plotter = ImagePlotter(SUBPLOT_X_COUNT, SUBPLOT_Y_COUNT)
     for directory, batch_size, batches_per_file, _ in DATA_DIRECTORIES_INFO:
-        plotter.reset(f"{EQUATIONS_PATH}{directory}")
+        plotter.reset(f"{AUGMENTED_EQUATIONS_PATH}{directory}")
         for i in range(1):
-            images_file = np.load(f"{EQUATIONS_PATH}{directory}{IMAGES_FILENAME_TEMPLATE % i}", allow_pickle=True)
-            labels_file = np.load(f"{EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % i}", allow_pickle=True)
+            images_file = np.load(f"{AUGMENTED_EQUATIONS_PATH}{directory}{IMAGES_FILENAME_TEMPLATE % i}", allow_pickle=True)
+            labels_file = np.load(f"{AUGMENTED_EQUATIONS_PATH}{directory}{LABELS_FILENAME_TEMPLATE % i}", allow_pickle=True)
             for j in range(PLOTTED_WINDOWS_COUNT * SUBPLOT_X_COUNT * SUBPLOT_Y_COUNT):
                 plotter.plot(images_file, labels_file, j)

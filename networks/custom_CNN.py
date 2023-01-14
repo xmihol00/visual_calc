@@ -1,11 +1,11 @@
 import os
 import sys
 import torch
+import argparse
 import matplotlib.pyplot as plt
 from torch import nn
 from torch.optim import lr_scheduler as sdl
 import Levenshtein as lv
-import numpy as np
 
 from utils.data_loaders import DataLoader
 from utils.loss_functions import CustomCrossEntropyLoss
@@ -20,24 +20,24 @@ from const_config import BATCHES_PER_FILE_VALIDATION
 from const_config import NUMBER_OF_FILES_VALIDATION
 from const_config import CUDA
 from const_config import MODELS_PATH
-from const_config import CUSTOM_RECURSIVE_CNN_FILENAME
+from const_config import CUSTOM_CNN_FILENAME
 from const_config import LABELS_PER_IMAGE
 from const_config import OUTPUTS_PER_LABEL
 from const_config import BATCH_SIZE_TESTING
 from const_config import BATCHES_PER_FILE_TESTING
 from const_config import NUMBER_OF_FILES_TESTING
 from const_config import NUMBER_OF_FILES_TESTING
+from const_config import AUGMENTED_MODELS_PATH
+from const_config import NOT_AUGMENTED_MODELS_PATH
 from const_config import SEED
 
 torch.manual_seed(SEED)
-np.random.seed(SEED)
 
-class CustomRecursiveCNN(nn.Module):
-    def __init__(self, device, batch_size=BATCH_SIZE_TRAINING):
+class CustomCNN(nn.Module):
+    def __init__(self, augmentation):
         super().__init__()
-        self.results = [None] * (LABELS_PER_IMAGE + 1)
-        self.results[0] = torch.zeros((batch_size, OUTPUTS_PER_LABEL)).to(device)
-        self.results[0][:, OUTPUTS_PER_LABEL - 1] = 1
+        self.model_path = AUGMENTED_MODELS_PATH if augmentation else NOT_AUGMENTED_MODELS_PATH
+        self.results = [None] * LABELS_PER_IMAGE
 
         self.whole_image = nn.Sequential(
             nn.Conv2d(1, 32, (3, 3), padding=(0, 1)),
@@ -53,16 +53,13 @@ class CustomRecursiveCNN(nn.Module):
             nn.LeakyReLU(0.1)
         )
 
-        self.image_part_conv = nn.Sequential(
+        self.image_part = nn.Sequential(
             nn.Conv2d(128, 256, (3, 3), padding=0),
             nn.BatchNorm2d(256),
             nn.LeakyReLU(0.1),
             nn.Flatten(),
-        )
-
-        self.image_part_fc = nn.Sequential(
             nn.Dropout(0.5),
-            nn.Linear(256 * 4 + OUTPUTS_PER_LABEL, 128),
+            nn.Linear(256 * 4, 128),
             nn.BatchNorm1d(128),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.5),
@@ -71,34 +68,35 @@ class CustomRecursiveCNN(nn.Module):
 
     def forward(self, x):
         x = self.whole_image(x)
-        for i in range(1, LABELS_PER_IMAGE + 1):
-            j = 4 * (i - 1)
-            intermidiate = self.image_part_conv(x[:, :, :, j:j+4])
-            self.results[i] = self.image_part_fc(torch.cat([self.results[i - 1], intermidiate], 1))
-
-        return torch.cat(self.results[1:], 1).reshape(-1, OUTPUTS_PER_LABEL)
+        for i in range(LABELS_PER_IMAGE):
+            j = 4 * i
+            self.results[i] = self.image_part(x[:, :, :, j:j+4])
+        return torch.cat(self.results, 1).reshape(-1, OUTPUTS_PER_LABEL)
     
     def load(self):
-        with open(f"{MODELS_PATH}{CUSTOM_RECURSIVE_CNN_FILENAME}", "rb") as file:
+        with open(f"{MODELS_PATH}{CUSTOM_CNN_FILENAME}", "rb") as file:
             self.load_state_dict(torch.load(file))
     
     def save(self):
-        with open(f"{MODELS_PATH}{CUSTOM_RECURSIVE_CNN_FILENAME}", "wb") as file:
+        with open(f"{MODELS_PATH}{CUSTOM_CNN_FILENAME}", "wb") as file:
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":
-    exe_type = sys.argv[1].lower() if len(sys.argv) > 1 else ""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--train", action="store_true", help="Train the neural network.")
+    parser.add_argument("-e", "--evaluate", action="store_true", help="Evaluate the neural network.")
+    parser.add_argument("-a", "--augmentation", action="store_true", help="Use augmented data set.")
+    args = parser.parse_args()
 
     device = torch.device("cpu")
-    if CUDA and exe_type == "train": # move to GPU, if available
+    if CUDA and args.train: # move to GPU, if available
         device = torch.device("cuda")
         print("Running on GPU")
 
-    model = CustomRecursiveCNN(device)
-    model.to(device)
+    model = CustomCNN(args.augmentation)
     loss_function = CustomCrossEntropyLoss()
-    
-    if exe_type == "train":
+
+    if args.train:       
         training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
         validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
@@ -133,7 +131,7 @@ if __name__ == "__main__":
                 break
 
         model.save()
-    elif exe_type == "eval":
+    elif args.eval:
         model.load()
         model = model.eval()
         test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
@@ -149,14 +147,14 @@ if __name__ == "__main__":
                 classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE], sep="")
                 distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
         
-        print(distances)
+        print(f"distances: {distances}")
         plt.hist([i for i in range(9)], [i for i in range(10)], weights=distances)
         plt.show()
             
     else:
         model.load()
         model = model.eval()
-        test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
+        test_dataloader =  DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         for images, labels in test_dataloader:
             labels = labels.numpy()

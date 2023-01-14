@@ -7,19 +7,14 @@ import sys
 import re
 import glob
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "networks"))
-from networks.custom_recursive_CNN import CustomRecursiveCNN
-import label_extractors
-from const_config import WRITERS_PATH
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 from const_config import EQUATION_IMAGE_WIDTH
 from const_config import LABELS_PER_IMAGE
 from const_config import PREDICTION_SAMPLES
+import label_extractors
 
-model = CustomRecursiveCNN("cpu", True, PREDICTION_SAMPLES)
-model.load()
-model = model.eval()
-
-for file_name in sorted(glob.glob(f"{WRITERS_PATH}/*.jpg")):
+def equation_areas(file_name):
     image = Image.open(file_name).convert('L')
     image = np.asarray(image)
     if image.sum() * 2 > image.shape[0] * image.shape[1] * 255:
@@ -67,6 +62,9 @@ for file_name in sorted(glob.glob(f"{WRITERS_PATH}/*.jpg")):
         if ongoing_area:
             areas.append((row1, row2, area_start, area_end + 1))
 
+    return image, areas
+
+def samples_from_area(image, areas):
     for row1, row2, col1, col2 in areas:
         area = image[row1:row2, col1:col2]
         if area.shape[0] < 38:
@@ -91,25 +89,22 @@ for file_name in sorted(glob.glob(f"{WRITERS_PATH}/*.jpg")):
 
             samples = torch.tensor((final_images > 0).astype(np.float32))
             samples = samples.unsqueeze(1)
-            predictions = model(samples)
 
-            classifications = [None] * PREDICTION_SAMPLES
-            for i, sample in enumerate(samples):
-                j = i * LABELS_PER_IMAGE
-                classifications[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
+        yield samples
 
-            filtered_classifications = []
-            for classified in classifications:
-                if re.match(r"^(\d+[\+\-\*/])+\d+$", classified):
-                    filtered_classifications.append(classified)
+def parse_perdictions(predictions):
+    classifications = [None] * PREDICTION_SAMPLES
+    for i in range(PREDICTION_SAMPLES):
+        j = i * LABELS_PER_IMAGE
+        classifications[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
-            try:
-                classified = max(filtered_classifications, key=lambda x: sum([x == y for y in filtered_classifications]))
-            except:
-                classified = "error"
+    # strings with syntactically valid equations
+    filtered_classifications = [ classified for classified in classifications if re.match(r"^(\d+[\+\-\*/])+\d+$", classified) ]
 
-            for i in range(1):
-                plt.imshow(final_images[i * 16] > 0, cmap='gray')
-                plt.title(f"{classified}")
-                plt.show()
-                
+    try:
+        classified = max(filtered_classifications, key=lambda x: sum([x == y for y in filtered_classifications]))
+    except:
+        classified = "error"
+
+    return classified
+        

@@ -4,7 +4,6 @@ import numpy as np
 import torch
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from const_config import AUGMENTED_EQUATIONS_PATH
 from const_config import LABEL_DIMENSIONS
 from const_config import IMAGES_FILENAME_TEMPLATE
 from const_config import LABELS_FILENAME_TEMPLATE
@@ -14,12 +13,13 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 class DataLoader():
-    def __init__(self, directory, batch_size, batches_per_file, number_of_files, device):
+    def __init__(self, directory, main_directory, batch_size, batches_per_file, number_of_files, device):
         self.BATCH_SIZE = batch_size
         self.SAMPLES_PER_FILE = batches_per_file * batch_size
         self.NUMBER_OF_FILES = number_of_files
 
         self.device = device
+        self.main_directory = main_directory
         self.directory = directory
 
         self.file_idx = -1
@@ -45,8 +45,8 @@ class DataLoader():
                 raise StopIteration
 
             self.sample_idx = 0 # new file is loaded
-            self.image_file = np.load(f"{AUGMENTED_EQUATIONS_PATH}{self.directory}{self.images_file_template % self.file_idx}", allow_pickle=True)
-            self.label_file = np.load(f"{AUGMENTED_EQUATIONS_PATH}{self.directory}{self.labels_file_template % self.file_idx}", allow_pickle=True)
+            self.image_file = np.load(f"{self.main_directory}{self.directory}{self.images_file_template % self.file_idx}", allow_pickle=True)
+            self.label_file = np.load(f"{self.main_directory}{self.directory}{self.labels_file_template % self.file_idx}", allow_pickle=True)
         
         old_idx = self.sample_idx
         self.sample_idx += self.BATCH_SIZE # move to the next batch index

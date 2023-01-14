@@ -27,6 +27,8 @@ from const_config import NUMBER_OF_FILES_TESTING
 from const_config import BATCH_SIZE_TESTING
 from const_config import LABELS_PER_IMAGE
 from const_config import WRITERS_PATH
+from const_config import AUGMENTED_EQUATIONS_PATH
+from const_config import EQUATIONS_PATH
 
 # https://www.kaggle.com/datasets/xainano/handwrittenmathsymbols
 # https://www.kaggle.com/datasets/michelheusser/handwritten-digits-and-operators
@@ -48,11 +50,12 @@ def clean_axis(axis):
     axis.set_yticks([], [])
     axis.set_frame_on(False)
 
-def evaluate_model_on_test_set(model):
+def evaluate_model_on_test_set(model, augmented):
     model.load()
     model.change_batch_size(BATCH_SIZE_TESTING)
     model = model.eval()
-    test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, "cpu")
+    test_dataloader = DataLoader("testing/", AUGMENTED_EQUATIONS_PATH if augmented else EQUATIONS_PATH,
+                                 BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, "cpu")
 
     distances = [0] * 9
     for images, labels in test_dataloader:
@@ -127,8 +130,10 @@ if __name__ == "__main__":
         os.system("python3 data_preprocessing/merge_preprocess_datasets.py")
         os.system("python3 networks/outliers_detector.py clean")
         os.system("python3 data_preprocessing/crop_separate_augment_characters.py")
+        os.system("python3 data_preprocessing/crop_separate_characters.py")
 
     if args.equation_generation or args.dataset:
+        os.system("python3 data_generation/equation_generator.py --augment")
         os.system("python3 data_generation/equation_generator.py")
 
     if args.plot_dataset:
@@ -149,34 +154,39 @@ if __name__ == "__main__":
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)
         augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
 
-        not_augmented_test_distances = evaluate_model_on_test_set(not_augmented_model)
-        augmented_test_distances = evaluate_model_on_test_set(augmented_model)
+        not_augmented_test_distances = evaluate_model_on_test_set(not_augmented_model, False)
+        augmented_test_distances = evaluate_model_on_test_set(augmented_model, True)
 
         not_augmented_handwritten_distances = evaluate_model_on_handwritten_set(not_augmented_model)
         augmented_handwritten_distances = evaluate_model_on_handwritten_set(augmented_model)
 
         figure, axis = plt.subplots(2, 2)
-        figure.set_size_inches(16, 16)
-        plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95, hspace=0.15, wspace=0.15)
+        figure.set_size_inches(10, 7)
+        plt.subplots_adjust(left=0.02, bottom=0.05, right=0.98, top=0.95, hspace=0.2, wspace=0.05)
         
         *_, patches = axis[0, 0].hist(bins[:-1], bins, weights=not_augmented_test_distances)
         color_patches(patches)
         annotate_bins(axis[0, 0], not_augmented_test_distances, anotations_x)
         clean_axis(axis[0, 0])
+        axis[0, 0].set_title("Results without augmentation on test data set")
 
         *_, patches = axis[0, 1].hist(bins[:-1], bins, weights=augmented_test_distances)
         color_patches(patches)
         annotate_bins(axis[0, 1], augmented_test_distances, anotations_x)
         clean_axis(axis[0, 1])
+        axis[0, 1].set_title("Results with augmentation on test data set")
 
         *_, patches = axis[1, 0].hist(bins[:-1], bins, weights=not_augmented_handwritten_distances)
         color_patches(patches)
         annotate_bins(axis[1, 0], not_augmented_handwritten_distances, anotations_x)
         clean_axis(axis[1, 0])
+        axis[1, 0].set_title("Results without augmentation on handwritten data set")
 
         *_, patches = axis[1, 1].hist(bins[:-1], bins, weights=augmented_handwritten_distances)
         color_patches(patches)
         annotate_bins(axis[1, 1], augmented_handwritten_distances, anotations_x)
         clean_axis(axis[1, 1])
+        axis[1, 1].set_title("Results with augmentation on handwritten data set")
 
+        plt.savefig("results/multi_classifier_results", dpi=400)
         plt.show()

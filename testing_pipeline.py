@@ -19,7 +19,7 @@ model = CustomRecursiveCNN("cpu", True, PREDICTION_SAMPLES)
 model.load()
 model = model.eval()
 
-for file_name in sorted(glob.glob(f"{WRITERS_PATH}/*.jpg")):
+for file_name in sorted(glob.glob(f"{WRITERS_PATH}*.jpg")):
     image = Image.open(file_name).convert('L')
     image = np.asarray(image)
     if image.sum() * 2 > image.shape[0] * image.shape[1] * 255:
@@ -98,10 +98,8 @@ for file_name in sorted(glob.glob(f"{WRITERS_PATH}/*.jpg")):
                 j = i * LABELS_PER_IMAGE
                 classifications[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
-            filtered_classifications = []
-            for classified in classifications:
-                if re.match(r"^(\d+[\+\-\*/])+\d+$", classified):
-                    filtered_classifications.append(classified)
+            # strings with syntactically valid equations
+            filtered_classifications = [ classified for classified in classifications if re.match(r"^(\d+[\+\-\*/])+\d+$", classified) ]
 
             try:
                 classified = max(filtered_classifications, key=lambda x: sum([x == y for y in filtered_classifications]))

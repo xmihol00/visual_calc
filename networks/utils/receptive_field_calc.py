@@ -8,4 +8,4 @@ def calculate(layers):
     
     return receptive_field
 
-print(calculate([[3, 1], [2, 2], [2, 1], [2, 2], [1, 1]]))
+print(calculate([[3, 5], [2, 2], [2, 1], [2, 2], [1, 1]]))

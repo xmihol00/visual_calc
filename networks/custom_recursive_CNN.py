@@ -7,10 +7,18 @@ from torch.optim import lr_scheduler as sdl
 import Levenshtein as lv
 import numpy as np
 import argparse
+import random
 
-from utils.data_loaders import DataLoader
-from utils.loss_functions import CustomCrossEntropyLoss
-from utils.evaluation import EarlyStopping
+sys.path.append(os.path.join(os.path.dirname(__file__), "utils"))
+try:
+    from utils.data_loaders import DataLoader
+    from utils.loss_functions import CustomCrossEntropyLoss
+    from utils.evaluation import EarlyStopping
+except:
+    from data_loaders import DataLoader
+    from loss_functions import CustomCrossEntropyLoss
+    from evaluation import EarlyStopping
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import label_extractors
 from const_config import BATCH_SIZE_TRAINING
@@ -29,10 +37,9 @@ from const_config import NUMBER_OF_FILES_TESTING
 from const_config import NUMBER_OF_FILES_TESTING
 from const_config import AUGMENTED_MODELS_PATH
 from const_config import NOT_AUGMENTED_MODELS_PATH
+from const_config import AUGMENTED_EQUATIONS_PATH
+from const_config import EQUATIONS_PATH
 from const_config import SEED
-
-torch.manual_seed(SEED)
-np.random.seed(SEED)
 
 class CustomRecursiveCNN(nn.Module):
     def __init__(self, device, augmentation, batch_size=0):
@@ -96,12 +103,19 @@ class CustomRecursiveCNN(nn.Module):
         self.results[0][:, OUTPUTS_PER_LABEL - 1] = 1
 
 if __name__ == "__main__":
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
+    random.seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    torch.backends.cudnn.deterministic = True
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--train", action="store_true", help="Train the neural network.")
     parser.add_argument("-e", "--evaluate", action="store_true", help="Evaluate the neural network.")
     parser.add_argument("-a", "--augmentation", action="store_true", help="Use augmented data set.")
     args = parser.parse_args()
 
+    equations_path = AUGMENTED_EQUATIONS_PATH if args.augmentation else EQUATIONS_PATH
     device = torch.device("cpu")
     if CUDA and args.train: # move to GPU, if available
         device = torch.device("cuda")
@@ -113,8 +127,8 @@ if __name__ == "__main__":
     
     if args.train:
         model.change_batch_size(BATCH_SIZE_TRAINING)
-        training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
-        validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
+        training_loader = DataLoader("training/", equations_path, BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
+        validation_loader = DataLoader("validation/", equations_path, BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         scheduler = sdl.StepLR(optimizer, 5, 0.25)
@@ -151,7 +165,7 @@ if __name__ == "__main__":
         model.load()
         model.change_batch_size(BATCH_SIZE_TESTING)
         model = model.eval()
-        test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
+        test_dataloader = DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         distances = [0] * 9
         for images, labels in test_dataloader:
@@ -172,7 +186,7 @@ if __name__ == "__main__":
         model.load()
         model.change_batch_size(BATCH_SIZE_TESTING)
         model = model.eval()
-        test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
+        test_dataloader = DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         for images, labels in test_dataloader:
             labels = labels.numpy()

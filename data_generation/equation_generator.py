@@ -1,3 +1,4 @@
+import argparse
 import os
 import numpy as np
 import random as rnd
@@ -121,10 +122,12 @@ def generate_equations(digits: DigitGenerator, operators: OperatorGenerator, mai
         np.save(f"{main_directory}{directory}{LABELS_FILENAME_TEMPLATE % str(i)}", labels_file)
 
 if __name__ == "__main__":
-    DILATATE = len(sys.argv) > 1 and sys.argv[1].lower() == "augment"
-    main_directory = AUGMENTED_EQUATIONS_PATH if DILATATE else EQUATIONS_PATH
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--augment", action="store_true", help="Augment generated equations.")
+    args = parser.parse_args()
+    main_directory = AUGMENTED_EQUATIONS_PATH if args.augment else EQUATIONS_PATH
 
     for directory, batch_size, batches_per_file, number_of_files in DATA_DIRECTORIES_INFO:
         digits = DigitGenerator(directory)
         operators = OperatorGenerator(directory)
-        generate_equations(digits, operators, main_directory, directory, batch_size, batches_per_file, number_of_files, dilatate=DILATATE)
+        generate_equations(digits, operators, main_directory, directory, batch_size, batches_per_file, number_of_files, dilatate=args.augment)

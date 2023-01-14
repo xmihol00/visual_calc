@@ -1,5 +1,7 @@
 import os
+import random
 import sys
+import numpy as np
 import torch
 import argparse
 import matplotlib.pyplot as plt
@@ -29,9 +31,9 @@ from const_config import NUMBER_OF_FILES_TESTING
 from const_config import NUMBER_OF_FILES_TESTING
 from const_config import AUGMENTED_MODELS_PATH
 from const_config import NOT_AUGMENTED_MODELS_PATH
+from const_config import AUGMENTED_EQUATIONS_PATH
+from const_config import EQUATIONS_PATH
 from const_config import SEED
-
-torch.manual_seed(SEED)
 
 class CustomCNN(nn.Module):
     def __init__(self, augmentation):
@@ -82,12 +84,19 @@ class CustomCNN(nn.Module):
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
+    random.seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    torch.backends.cudnn.deterministic = True
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--train", action="store_true", help="Train the neural network.")
     parser.add_argument("-e", "--evaluate", action="store_true", help="Evaluate the neural network.")
     parser.add_argument("-a", "--augmentation", action="store_true", help="Use augmented data set.")
     args = parser.parse_args()
 
+    equations_path = AUGMENTED_EQUATIONS_PATH if args.augmentation else EQUATIONS_PATH
     device = torch.device("cpu")
     if CUDA and args.train: # move to GPU, if available
         device = torch.device("cuda")
@@ -97,8 +106,8 @@ if __name__ == "__main__":
     loss_function = CustomCrossEntropyLoss()
 
     if args.train:       
-        training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
-        validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
+        training_loader = DataLoader("training/", equations_path, BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
+        validation_loader = DataLoader("validation/", equations_path, BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         scheduler = sdl.StepLR(optimizer, 5, 0.25)
@@ -134,7 +143,7 @@ if __name__ == "__main__":
     elif args.eval:
         model.load()
         model = model.eval()
-        test_dataloader = DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
+        test_dataloader = DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         distances = [0] * 9
         for images, labels in test_dataloader:
@@ -154,7 +163,7 @@ if __name__ == "__main__":
     else:
         model.load()
         model = model.eval()
-        test_dataloader =  DataLoader("testing/", BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
+        test_dataloader =  DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         for images, labels in test_dataloader:
             labels = labels.numpy()

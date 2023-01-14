@@ -1,5 +1,7 @@
 import os
+import random
 import sys
+import numpy as np
 import torch
 import matplotlib.pyplot as plt
 from torch import nn
@@ -23,8 +25,6 @@ from const_config import YOLO_INSPIRED_MODEL_FILENAME
 from const_config import LABELS_PER_IMAGE
 from const_config import OUTPUTS_PER_LABEL
 from const_config import SEED
-
-torch.manual_seed(SEED)
 
 class YOLOInspiredCNN(nn.Module):
     def __init__(self):
@@ -51,6 +51,12 @@ class YOLOInspiredCNN(nn.Module):
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
+    random.seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    torch.backends.cudnn.deterministic = True
+    
     exe_type = sys.argv[1].lower() if len(sys.argv) > 1 else ""
 
     device = torch.device("cpu")

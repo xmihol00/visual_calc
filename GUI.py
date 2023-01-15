@@ -10,7 +10,7 @@ import os
 import numpy as np
 import sys
 
-from networks.mser.Detector import Detector
+from networks.mser.detector import Detector
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "networks"))
 from networks.custom_recursive_CNN import CustomRecursiveCNN

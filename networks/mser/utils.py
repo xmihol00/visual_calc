@@ -5,7 +5,7 @@ import math
 
 # Checks if a rectangle is inside the test rectangle
 def is_inside_box(check_box, test_box):
-    cx, cy, cw, ch = check_box
+    cx, cy, *_ = check_box
     tx, ty, tw, th = test_box
     min_x = tx
     max_x = tx + tw

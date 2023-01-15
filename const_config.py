@@ -6,6 +6,10 @@ CUDA = torch.cuda.is_available()
 
 DATA_DIR = "data"
 DOWNLOADS_DIR = "downloads"
+OWN_DATA_PATH = "own_data/"
+DATA_PREPROCESSING_PATH = "data_preprocessing/"
+DATA_GENERATION_PATH = "data_generation/"
+NETWORKS_PATH = "networks"
 
 DIGIT_AND_OPERATORS_1_PATH = f"{DATA_DIR}/digits_and_operators_1/"
 DIGIT_AND_OPERATORS_1_TRAIN = f"{DIGIT_AND_OPERATORS_1_PATH}CompleteDataSet_training_tuples.npy"
@@ -78,5 +82,6 @@ COMPRESSED_DATA_SET_3_PATH = f"{DOWNLOADS_DIR}/handwritting_characters_database.
 
 WRITERS_PATH = "testing/writers/"
 WRITERS_LABELS = f"{WRITERS_PATH}labels.pickle"
+RESULTS_PATH = "results/"
 
 PREDICTION_SAMPLES = 16 * 4

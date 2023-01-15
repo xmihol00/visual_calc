@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import sys
@@ -13,7 +14,11 @@ import utils.NN_blocks as blocks
 from utils.evaluation import EarlyStopping
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import label_extractors
+from const_config import BATCH_SIZE_TESTING
 from const_config import BATCH_SIZE_TRAINING
+from const_config import BATCHES_PER_FILE_TESTING
+from const_config import EQUATIONS_PATH
+from const_config import NUMBER_OF_FILES_TESTING
 from const_config import BATCHES_PER_FILE_TRAINING
 from const_config import NUMBER_OF_FILES_TRAINING
 from const_config import BATCH_SIZE_VALIDATION
@@ -57,10 +62,15 @@ if __name__ == "__main__":
     torch.cuda.manual_seed_all(SEED)
     torch.backends.cudnn.deterministic = True
     
-    exe_type = sys.argv[1].lower() if len(sys.argv) > 1 else ""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--train", action="store_true", help="Train the neural network.")
+    parser.add_argument("-e", "--evaluate", action="store_true", help="Evaluate the neural network.")
+    parser.add_argument("-a", "--augmentation", action="store_true", help="Use augmented data set.")
+    args = parser.parse_args()
 
+    equations_path = EQUATIONS_PATH
     device = torch.device("cpu")
-    if CUDA and exe_type == "train": # move to GPU, if available
+    if CUDA and args.train: # move to GPU, if available
         device = torch.device("cuda")
         print("Running on GPU")
 
@@ -68,18 +78,18 @@ if __name__ == "__main__":
     loss_function = BCEBiasedFollowedByCELoss()
     model.to(device)
     
-    if exe_type == "train":
-        training_loader = DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
-        validation_loader = DataLoader("validation/", BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
+    if args.train:
+        training_loader = DataLoader("training/", equations_path, BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
+        validation_loader = DataLoader("validation/", equations_path, BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 10, 0.5)
+        scheduler = sdl.StepLR(optimizer, 5, 0.25)
         early_stopper = EarlyStopping()
 
         for i in range(1, 125):
             model.train()
             total_loss = 0
-            for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device):
+            for images, labels in training_loader:
                 
                 output = model(images)
                 loss = loss_function(output, labels)
@@ -109,11 +119,10 @@ if __name__ == "__main__":
         
         model.save()
 
-    else:
+    elif args.evaluate:
         model.load()
-        
         model.eval()
-        for images, labels in DataLoader("training/", BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, torch.device("cpu")):
+        for images, labels in DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device):
             labels = labels.numpy()
             for i in range(BATCH_SIZE_TRAINING):
                 prediction = model(images[i : i + 1])

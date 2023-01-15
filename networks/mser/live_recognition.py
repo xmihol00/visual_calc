@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from Detector import Detector
+from networks.mser.detector import Detector
 from utils import try_eval_equation
 
 def evaluate_frame(detector, img, use_adaptive_treshold=False):

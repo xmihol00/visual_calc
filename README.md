@@ -1,11 +1,32 @@
 # Visual Calculator
+The core idea of this project is to calculate hand written equations from images. The images may for example look like:  
+* Equation made by concatenating separate digits and operators.  
+![example1](testing/proposal_images/eq_concat.png)
+* Equation written digitally.  
+![example2](testing/proposal_images/eq_computer_gen.png)
+* Handwritten equation.  
+![example3](testing/proposal_images/eq_handwritten.png)  
+
+
+## Authors
+David Mihola, david.mihola@student.tugraz.at  
+Robert Stojanovic, robert.stojanovic@student.tugraz.at  
+
+## Requirements
+TODO
 
 ## Training, Validating and Testing Data
-upload and download the data using this link, do not puth them on GitHub:
-https://drive.google.com/drive/folders/1yFQTQFaheAh_cH8AzxKYhjMwJ06dxA9t?usp=sharing
+Download these data sets:
+* https://www.kaggle.com/datasets/xainano/handwrittenmathsymbols,
+* https://www.kaggle.com/datasets/michelheusser/handwritten-digits-and-operators,
+* https://github.com/sueiras/handwritting_characters_database,
 
-### Usage
-* Download the dataset from https://www.kaggle.com/datasets/michelheusser/handwritten-digits-and-operators and extract it in the data/ folder
-* Run training.py to train and save the model
-* Run recognition.py to test the trained model on a static image of a simple equation
-* Run live_recognition.py to run the trained model on a live camera feed (The camera index needs to bet set as cv2.VideoCapture(x). This is usually 0 but can be different depending on setup)
+rename them respectively to:
+* ``handwrittenmathsymbols.zip``,
+* ``handwritten-digits-and-operators.zip``,
+* ``handwritting_characters_database.tar.gz``
+
+and put the to downloads directory in the root directory of the project.
+
+## Result reproduction
+TODO

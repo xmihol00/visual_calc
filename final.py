@@ -14,7 +14,7 @@ from networks.custom_recursive_CNN import CustomRecursiveCNN
 from networks.utils.data_loaders import DataLoader
 import label_extractors
 import data_preprocessing.handwritten_equtions as hwe
-from networks.mser.Detector import Detector
+from networks.mser.detector import Detector
 
 from const_config import DATA_DIR
 from const_config import COMPRESSED_DATA_SET_1_PATH
@@ -33,10 +33,10 @@ from const_config import LABELS_PER_IMAGE
 from const_config import WRITERS_PATH
 from const_config import AUGMENTED_EQUATIONS_PATH
 from const_config import EQUATIONS_PATH
-
-# https://www.kaggle.com/datasets/xainano/handwrittenmathsymbols
-# https://www.kaggle.com/datasets/michelheusser/handwritten-digits-and-operators
-# https://github.com/sueiras/handwritting_characters_database 
+from const_config import RESULTS_PATH
+from const_config import DATA_PREPROCESSING_PATH
+from const_config import DATA_GENERATION_PATH
+from const_config import NETWORKS_PATH
 
 def color_patches(patches):
     patches[0].set_facecolor("green")
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--equation_generation", action="store_true", help="Perform equation generation from preproccesed data sets.")
     parser.add_argument("-d", "--dataset", action="store_true", help="Perform all data set related tasks.")
     parser.add_argument("-pd", "--plot_dataset", action="store_true", help="Plot separate symbols and whole equations.")
-    parser.add_argument("-t", "--train", choices=["custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Train specified model.")
-    parser.add_argument("-e", "--evaluate", choices=["custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Evaluate specified model.")
+    parser.add_argument("-t", "--train", choices=["MSER_classifier", "custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Train specified model.")
+    parser.add_argument("-e", "--evaluate", choices=["MSER_classifier", "custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Evaluate specified model.")
     parser.add_argument("-prMC", "--plot_results_MC", action="store_true", help="Plot results of the multi-classifier (custom_recursive_CNN).")
     parser.add_argument("-prMSER", "--plot_results_MSER", action="store_true", help="Plot results of the MSER based classifier.")
     parser.add_argument("-pr", "--plot_results", action="store_true", help="Plot results of an ensemble of the multi-classifier and the MSER based classifier.")
@@ -202,25 +202,28 @@ if __name__ == "__main__":
             os.system(f"tar -zxvf {COMPRESSED_DATA_SET_3_PATH} -C {DIGIT_AND_OPERATORS_2_PATH}{output_folder_name} --strip-components 2 curated/{input_folder_name} ")
 
     if args.preprocessing or args.dataset:
-        os.system("python3 data_preprocessing/merge_preprocess_datasets.py")
-        os.system("python3 networks/outliers_detector.py clean")
-        os.system("python3 data_preprocessing/crop_separate_augment_characters.py")
-        os.system("python3 data_preprocessing/crop_separate_characters.py")
+        os.system(f"python3 {DATA_PREPROCESSING_PATH}merge_preprocess_datasets.py")
+        os.system(f"python3 {NETWORKS_PATH}outliers_detector.py clean")
+        os.system(f"python3 {DATA_PREPROCESSING_PATH}crop_separate_augment_characters.py")
+        os.system(f"python3 {DATA_PREPROCESSING_PATH}crop_separate_characters.py")
 
     if args.equation_generation or args.dataset:
-        os.system("python3 data_generation/equation_generator.py --augment")
-        os.system("python3 data_generation/equation_generator.py")
+        os.system(f"python3 {DATA_GENERATION_PATH}equation_generator.py --augment")
+        os.system(f"python3 {DATA_GENERATION_PATH}equation_generator.py")
 
     if args.plot_dataset:
-        os.system(f"python3 data_preprocessing/merged_plot.py")
-        os.system(f"python3 data_preprocessing/separated_plot.py")
-        os.system(f"python3 data_generation/equation_plot.py")
+        os.system(f"python3 {DATA_PREPROCESSING_PATH}merged_plot.py")
+        os.system(f"python3 {DATA_PREPROCESSING_PATH}separated_plot.py")
+        os.system(f"python3 {DATA_GENERATION_PATH}equation_plot.py")
+
+    if args.train == "MSER_classifier":
+        args.train = "mser/classifier"
 
     if args.train:
-        os.system(f"python3 networks/{args.train}.py --train --augmentation")
+        os.system(f"python3 {NETWORKS_PATH}{args.train}.py --train --augmentation")
 
     if args.evaluate:
-        os.system(f"python3 networks/{args.evaluate}.py --eval --augmentation")
+        os.system(f"python3 {NETWORKS_PATH}{args.evaluate}.py --evaluate --augmentation")
 
     if args.plot_results_MC:
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)
@@ -260,7 +263,7 @@ if __name__ == "__main__":
         clean_axis(axis[1, 1], annotations_x, distances)
         axis[1, 1].set_title("Results with augmentation on handwritten data set")
 
-        plt.savefig("results/multi_classifier_results", dpi=400)
+        plt.savefig(f"{RESULTS_PATH}multi_classifier_results", dpi=400)
         plt.show()
 
     if args.plot_results_MSER:
@@ -275,7 +278,7 @@ if __name__ == "__main__":
         annotate_bins(axis, MSER_distances, annotations_x)
         clean_axis(axis, annotations_x, distances)
 
-        plt.savefig("results/MSER_results", dpi=400)
+        plt.savefig(f"{RESULTS_PATH}MSER_results", dpi=400)
         plt.show()
 
     if args.plot_results:
@@ -291,6 +294,6 @@ if __name__ == "__main__":
         annotate_bins(axis, ensemble_distances, annotations_x)
         clean_axis(axis, annotations_x, distances)
 
-        plt.savefig("results/ensemble_results", dpi=400)
+        plt.savefig(f"{RESULTS_PATH}ensemble_results", dpi=400)
         plt.show()
         

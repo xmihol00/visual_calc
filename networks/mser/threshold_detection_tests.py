@@ -1,11 +1,7 @@
+import os
 import cv2
 import cv2 as cv
-import numpy as np
 from matplotlib import pyplot as plt
-import imutils
-from tensorflow import keras
-import tensorflow as tf
-from sklearn import preprocessing
 
 from networks.mser.utils import filter_boxes
 
@@ -13,12 +9,13 @@ img_size = (320, 160)
 
 mser = cv2.MSER_create(delta=25, min_area=20, max_variation=0.4)
 
-img1 = cv2.resize(cv.imread('../../testing/easy1.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
-img2 = cv2.resize(cv.imread('../../testing/easy2.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
-img3 = cv2.resize(cv.imread('../../testing/med1.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
-img4 = cv2.resize(cv.imread('../../testing/med2.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
-img5 = cv2.resize(cv.imread('../../testing/hard1.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
-img6 = cv2.resize(cv.imread('../../testing/hard2.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
+dirname = os.path.dirname(__file__)
+img1 = cv2.resize(cv.imread(f'{dirname}/../../testing/easy1.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
+img2 = cv2.resize(cv.imread(f'{dirname}/../../testing/easy2.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
+img3 = cv2.resize(cv.imread(f'{dirname}/../../testing/med1.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
+img4 = cv2.resize(cv.imread(f'{dirname}/../../testing/med2.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
+img5 = cv2.resize(cv.imread(f'{dirname}/../../testing/hard1.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
+img6 = cv2.resize(cv.imread(f'{dirname}/../../testing/hard2.JPG', cv2.IMREAD_GRAYSCALE), img_size, interpolation=cv2.INTER_LINEAR)
 
 orig_images = [img1, img2, img3, img4, img5, img6]
 images = [img1, img2, img3, img4, img5, img6]

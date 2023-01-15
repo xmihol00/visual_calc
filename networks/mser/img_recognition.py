@@ -1,9 +1,10 @@
+import os
 import cv2
 import imutils
 import numpy as np
 from utils import try_eval_equation
 
-from Detector import Detector
+from detector import Detector
 
 if __name__ == '__main__':
     frame_width = 320
@@ -11,7 +12,8 @@ if __name__ == '__main__':
 
     detector = Detector()
 
-    img = cv2.imread("../../testing/med2.JPG")
+    dirname = os.path.dirname(__file__)
+    img = cv2.imread(f"{dirname}/../../testing/med2.JPG")
     img = cv2.resize(img, (frame_width, frame_height))
     vis_img = img.copy()
 

@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import sys
@@ -74,13 +75,19 @@ if __name__ == "__main__":
     random.seed(SEED)
     torch.cuda.manual_seed_all(SEED)
     torch.backends.cudnn.deterministic = True
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--train", action="store_true", help="Train the neural network.")
+    parser.add_argument("-e", "--evaluate", action="store_true", help="Evaluate the neural network.")
+    parser.add_argument("-c", "--clean", action="store_true", help="Clean data sets using the traind neural network.")
+    args = parser.parse_args()
     
     classifier = OutliersDetector()
     loss_function = nn.CrossEntropyLoss()
     data_set = MergedDataset()
     batch_size = 128
 
-    if len(sys.argv) > 1 and sys.argv[1].lower() == "train":
+    if args.train:
         optimizer = torch.optim.Adam(classifier.parameters(), lr=0.005)
         nmber_of_batches = data_set.__len__() / batch_size
         average_loss = 0
@@ -109,11 +116,11 @@ if __name__ == "__main__":
             if accuracy > 0.9:
                 break
 
-    elif len(sys.argv) > 1 and sys.argv[1].lower() == "accuracy":
+    elif args.evaluate:
         accuracy = model_accuracy(classifier, data_set, batch_size)
-        print(f"Model accuracy: {accuracy * 100}%")
+        print(f"Model accuracy: {accuracy * 100:.2f}%")
 
-    elif len(sys.argv) > 1 and sys.argv[1].lower() == "clean":
+    elif args.clean:
         with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "rb") as file:
             classifier.load_state_dict(torch.load(file))
 

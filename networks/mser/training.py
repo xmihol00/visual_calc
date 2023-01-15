@@ -24,20 +24,40 @@ def load_data(use_premade_dataset=True):
     test_images = np.zeros(0)
     test_labels = np.zeros(0)
 
-    premade_data = np.load(f'{DATA_PATH}CompleteDataSet_testing_tuples.npy', allow_pickle=True)
-    fit_data = np.stack(premade_data[:, 1])
+    premade_data = np.load(f'{DATA_PATH}CompleteDataSet_training_tuples.npy', allow_pickle=True)
+    fit_labels = np.stack(premade_data[:, 1])
+    indices_left = np.where(fit_labels == "[")
+    fit_labels = np.delete(fit_labels, indices_left[0])
+    indices_right = np.where(fit_labels == "]")
+    fit_labels = np.delete(fit_labels, indices_right[0])
 
     if use_premade_dataset:
         train_images = np.stack(premade_data[:, 0])
-        train_labels = np.stack(premade_data[:, 1])
+        train_images = np.delete(train_images, indices_left[0], axis=0)
+        train_images = np.delete(train_images, indices_right[0], axis=0)
+        train_labels = fit_labels
 
         validation_data = np.load(f'{DATA_PATH}CompleteDataSet_validation_tuples.npy', allow_pickle=True)
-        validation_images = np.stack(validation_data[:, 0])
         validation_labels = np.stack(validation_data[:, 1])
+        val_indices_left = np.where(validation_labels == "[")
+        validation_labels = np.delete(validation_labels, val_indices_left[0])
+        val_indices_right = np.where(validation_labels == "]")
+        validation_labels = np.delete(validation_labels, val_indices_right[0])
+        validation_images = np.stack(validation_data[:, 0])
+        validation_images = np.delete(validation_images, val_indices_left[0], axis=0)
+        validation_images = np.delete(validation_images, val_indices_right[0], axis=0)
+
 
         test_data = np.load(f'{DATA_PATH}CompleteDataSet_testing_tuples.npy', allow_pickle=True)
-        test_images = np.stack(test_data[:, 0])
         test_labels = np.stack(test_data[:, 1])
+        test_indices_left = np.where(test_labels == "[")
+        test_labels = np.delete(test_labels, test_indices_left[0])
+        test_indices_right = np.where(test_labels == "]")
+        test_labels = np.delete(test_labels, test_indices_right[0])
+        test_images = np.stack(test_data[:, 0])
+        test_images = np.delete(test_images, test_indices_left[0], axis=0)
+        test_images = np.delete(test_images, test_indices_right[0], axis=0)
+
 
     # TODO: Add other datasets
     own_data_labels = np.load(f'{OWN_DATA_PATH}robert_handwritten_dataset_labels.npy', allow_pickle=True)
@@ -73,7 +93,7 @@ def load_data(use_premade_dataset=True):
         validation_images = own_validation_data_images
         validation_labels = own_validation_data_labels
 
-    label_encoder.fit(fit_data)
+    label_encoder.fit(fit_labels)
     train_classes = label_encoder.transform(train_labels)
     test_classes = label_encoder.transform(test_labels)
     validation_classes = label_encoder.transform(validation_labels)
@@ -106,7 +126,7 @@ model = tf.keras.Sequential([
     tf.keras.layers.MaxPool2D((2, 2)),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dense(16, activation='softmax')
+    tf.keras.layers.Dense(14, activation='softmax')
 ])
 
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
@@ -117,7 +137,8 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=
 # Train and evaluate model
 history = model.fit(train_images, train_classes,
                     validation_data=(validation_images, validation_classes),
-                    epochs=10)
+                    callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=3, mode="max", restore_best_weights=True)],
+                    epochs=6)
 test_loss, test_acc = model.evaluate(test_images, test_classes, verbose=2)
 
 labels = label_encoder.classes_
@@ -133,13 +154,13 @@ print('Test loss: %.3f, Test acc: %.3f' % (test_loss, test_acc))
 pyplot.subplot(211)
 pyplot.title('Loss')
 pyplot.plot(history.history['loss'], label='train')
-pyplot.plot(history.history['val_loss'], label='test')
+pyplot.plot(history.history['val_loss'], label='validation')
 pyplot.legend()
 
 pyplot.subplot(212)
 pyplot.title('Accuracy')
 pyplot.plot(history.history['accuracy'], label='train')
-pyplot.plot(history.history['val_accuracy'], label='test')
+pyplot.plot(history.history['val_accuracy'], label='validation')
 pyplot.legend()
 pyplot.show()
 

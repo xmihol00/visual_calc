@@ -76,11 +76,11 @@ class CustomCNN(nn.Module):
         return torch.cat(self.results, 1).reshape(-1, OUTPUTS_PER_LABEL)
     
     def load(self):
-        with open(f"{MODELS_PATH}{CUSTOM_CNN_FILENAME}", "rb") as file:
+        with open(f"{self.model_path}{CUSTOM_CNN_FILENAME}", "rb") as file:
             self.load_state_dict(torch.load(file))
     
     def save(self):
-        with open(f"{MODELS_PATH}{CUSTOM_CNN_FILENAME}", "wb") as file:
+        with open(f"{self.model_path}{CUSTOM_CNN_FILENAME}", "wb") as file:
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from sklearn import metrics
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from const_config import DIGIT_AND_OPERATORS_1_TRAIN
 from const_config import DIGIT_AND_OPERATORS_1_VALIDATION
 from const_config import DIGIT_AND_OPERATORS_1_TEST
@@ -103,7 +103,7 @@ def load_data(use_premade_dataset=True):
     return train_images, train_classes, test_images, test_classes, validation_images, validation_classes, label_encoder
 
 if __name__ == "__main__":
-    np.seed(SEED)
+    np.random.seed(SEED)
     tf.keras.utils.set_random_seed(SEED)
     
     parser = argparse.ArgumentParser()
@@ -119,8 +119,8 @@ if __name__ == "__main__":
     np.save(f'{MODELS_PATH}test_model/classes.npy', label_encoder.classes_)
 
     # Recognition model
-    model = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(16, (3, 3), activation="relu", input_shape=(28, 28, 1)),
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(28, 28, 1)),
         tf.keras.layers.MaxPool2D((2, 2)),
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(128, activation='relu'),
@@ -146,16 +146,14 @@ if __name__ == "__main__":
                             validation_data=(validation_images, validation_classes),
                             callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=3, mode="max", restore_best_weights=True)],
                             epochs=100)
-        test_loss, test_acc = model.evaluate(test_images, test_classes, verbose=2)
 
         # Store the trained model
         model.save(f'{MODELS_PATH}test_model')
 
         # Plot the results of training
-        print('Test loss: %.3f, Test acc: %.3f' % (test_loss, test_acc))
-        figure, axis = plt.subplots(1, 1)
+        figure, axis = plt.subplots(2, 1)
         figure.set_size_inches(6, 6)
-        plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95, hspace=0.2, wspace=0.02)
+        plt.subplots_adjust(left=0.1, bottom=0.05, right=0.95, top=0.95, hspace=0.2, wspace=0.02)
 
         axis[0].set_title('Loss')
         axis[0].plot(history.history['loss'], label='train')
@@ -170,7 +168,7 @@ if __name__ == "__main__":
         plt.savefig(f"{RESULTS_PATH}classifier_training_progress", dpi=400)
         plt.close()
 
-    elif args.eval: # Evaluate the model
+    elif args.evaluate: # Evaluate the model
         model.load_weights(f'{MODELS_PATH}test_model').expect_partial()
         labels = label_encoder.classes_
         total_predictions = model.predict(test_images)
@@ -179,8 +177,8 @@ if __name__ == "__main__":
 
         # plot confusion matrix
         figure, axis = plt.subplots(1, 1)
-        figure.set_size_inches(6, 6)
-        plt.subplots_adjust(left=0.05, bottom=0.05, right=0.9, top=0.95, hspace=0.1, wspace=0.02)
+        figure.set_size_inches(10, 8.5)
+        plt.subplots_adjust(left=0.08, bottom=0.05, right=0.97, top=0.95, hspace=0.1, wspace=0.02)
         confusion_matrix = tf.math.confusion_matrix(test_classes, highest_probability).numpy()
         cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
         cm_display.plot(cmap="Blues", ax=axis)

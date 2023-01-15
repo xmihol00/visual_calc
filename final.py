@@ -161,7 +161,8 @@ def predict_MSER(mser_detector, area):
     return string_labels
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-h', "--help", action="help", default=argparse.SUPPRESS, help="Show this help message and exit.")
     parser.add_argument("-u", "--unzip", action="store_true", help="Perform extraction of relevant files from the downloaded data sets.")
     parser.add_argument("-p", "--preprocessing", action="store_true", help="Perform file preproccessing of extracted data sets.")
     parser.add_argument("-g", "--equation_generation", action="store_true", help="Perform equation generation from preproccesed data sets.")
@@ -202,28 +203,29 @@ if __name__ == "__main__":
             os.system(f"tar -zxvf {COMPRESSED_DATA_SET_3_PATH} -C {DIGIT_AND_OPERATORS_2_PATH}{output_folder_name} --strip-components 2 curated/{input_folder_name} ")
 
     if args.preprocessing or args.dataset:
-        os.system(f"python3 {DATA_PREPROCESSING_PATH}merge_preprocess_datasets.py")
-        os.system(f"python3 {NETWORKS_PATH}outliers_detector.py clean")
-        os.system(f"python3 {DATA_PREPROCESSING_PATH}crop_separate_augment_characters.py")
-        os.system(f"python3 {DATA_PREPROCESSING_PATH}crop_separate_characters.py")
+        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}merge_preprocess_datasets.py")
+        os.system(f"python3 -u {NETWORKS_PATH}outliers_detector.py clean")
+        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_augment_characters.py")
+        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_characters.py")
 
     if args.equation_generation or args.dataset:
-        os.system(f"python3 {DATA_GENERATION_PATH}equation_generator.py --augment")
-        os.system(f"python3 {DATA_GENERATION_PATH}equation_generator.py")
+        os.system(f"python3 -u {DATA_GENERATION_PATH}equation_generator.py --augment")
+        os.system(f"python3 -u {DATA_GENERATION_PATH}equation_generator.py")
 
     if args.plot_dataset:
-        os.system(f"python3 {DATA_PREPROCESSING_PATH}merged_plot.py")
-        os.system(f"python3 {DATA_PREPROCESSING_PATH}separated_plot.py")
-        os.system(f"python3 {DATA_GENERATION_PATH}equation_plot.py")
-
-    if args.train == "MSER_classifier":
-        args.train = "mser/classifier"
+        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}merged_plot.py")
+        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}separated_plot.py")
+        os.system(f"python3 -u {DATA_GENERATION_PATH}equation_plot.py")
 
     if args.train:
-        os.system(f"python3 {NETWORKS_PATH}{args.train}.py --train --augmentation")
+        if args.train == "MSER_classifier":
+            args.train = "mser/classifier"
+        os.system(f"python3 -u {NETWORKS_PATH}{args.train}.py --train --augmentation")
 
     if args.evaluate:
-        os.system(f"python3 {NETWORKS_PATH}{args.evaluate}.py --evaluate --augmentation")
+        if args.evaluate == "MSER_classifier":
+            args.evaluate = "mser/classifier"
+        os.system(f"python3 -u {NETWORKS_PATH}{args.evaluate}.py --evaluate --augmentation")
 
     if args.plot_results_MC:
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)

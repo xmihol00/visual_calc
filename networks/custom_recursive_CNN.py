@@ -27,7 +27,6 @@ from const_config import NUMBER_OF_FILES_TRAINING
 from const_config import BATCH_SIZE_VALIDATION
 from const_config import BATCHES_PER_FILE_VALIDATION
 from const_config import NUMBER_OF_FILES_VALIDATION
-from const_config import CUDA
 from const_config import CUSTOM_RECURSIVE_CNN_FILENAME
 from const_config import LABELS_PER_IMAGE
 from const_config import OUTPUTS_PER_LABEL
@@ -117,7 +116,7 @@ if __name__ == "__main__":
 
     equations_path = AUGMENTED_EQUATIONS_PATH if args.augmentation else EQUATIONS_PATH
     device = torch.device("cpu")
-    if CUDA and args.train: # move to GPU, if available
+    if torch.cuda.is_available() and args.train: # move to GPU, if available
         device = torch.device("cuda")
         print("Running on GPU")
 
@@ -161,7 +160,7 @@ if __name__ == "__main__":
                 break
 
         model.save()
-    elif args.eval:
+    elif args.evaluate:
         model.load()
         model.change_batch_size(BATCH_SIZE_TESTING)
         model = model.eval()

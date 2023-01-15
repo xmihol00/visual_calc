@@ -1,4 +1,5 @@
 import cv2
+import imutils
 import numpy as np
 from utils import try_eval_equation
 
@@ -10,11 +11,11 @@ if __name__ == '__main__':
 
     detector = Detector()
 
-    img = cv2.imread("../../testing/easy1.JPG")
-    img = np.resize(img, (frame_height, frame_width, 3))
+    img = cv2.imread("../../testing/med2.JPG")
+    img = cv2.resize(img, (frame_width, frame_height))
     vis_img = img.copy()
 
-    valid_boxes, labels, probabilities = detector.detect_digits_in_img(img, False, False)
+    valid_boxes, labels, probabilities = detector.detect_digits_in_img(img, True, False)
 
     # Draw bounding box and result
     for index, box in enumerate(valid_boxes):

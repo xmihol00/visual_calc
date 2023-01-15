@@ -1,12 +1,17 @@
 import numpy as np
+import sklearn
 import tensorflow as tf
 import cv2
 from sklearn import preprocessing
-from matplotlib import pyplot
+from matplotlib import pyplot, pyplot as plt
+from numpy.random import seed
+from sklearn import metrics
 
 DATA_PATH = "../../data/digits_and_characters_1/"
 OWN_DATA_PATH = "../../own_data/"
 
+seed(1)
+tf.keras.utils.set_random_seed(2)
 
 def load_data(use_premade_dataset=True):
     # Encode string labels to integers
@@ -97,8 +102,10 @@ if gpus:
 
 # Recognition model
 model = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape=(28, 28)),
-    tf.keras.layers.Dense(128, activation='sigmoid'),
+    tf.keras.layers.Conv2D(16, (3, 3), activation="relu", input_shape=(28, 28, 1)),
+    tf.keras.layers.MaxPool2D((2, 2)),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(128, activation='relu'),
     tf.keras.layers.Dense(16, activation='softmax')
 ])
 
@@ -110,8 +117,16 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=
 # Train and evaluate model
 history = model.fit(train_images, train_classes,
                     validation_data=(validation_images, validation_classes),
-                    epochs=12)
+                    epochs=10)
 test_loss, test_acc = model.evaluate(test_images, test_classes, verbose=2)
+
+labels = label_encoder.classes_
+total_predictions = model.predict(test_images)
+highest_probability = np.argmax(total_predictions, axis=1)
+confusion_matrix = tf.math.confusion_matrix(test_classes, highest_probability).numpy()
+cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
+cm_display.plot()
+plt.show()
 
 # Plot the results of training
 print('Test loss: %.3f, Test acc: %.3f' % (test_loss, test_acc))

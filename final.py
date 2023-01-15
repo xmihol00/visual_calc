@@ -2,15 +2,19 @@ import os
 import sys
 import itertools as it
 import argparse
+import cv2
 import matplotlib.pyplot as plt
 import pickle
 import Levenshtein as lv
 import glob
+import imutils
+import numpy as np
 
 from networks.custom_recursive_CNN import CustomRecursiveCNN
 from networks.utils.data_loaders import DataLoader
 import label_extractors
 import data_preprocessing.handwritten_equtions as hwe
+from networks.mser.Detector import Detector
 
 from const_config import DATA_DIR
 from const_config import COMPRESSED_DATA_SET_1_PATH
@@ -41,12 +45,12 @@ def color_patches(patches):
     for patch in patches[3:]:
         patch.set_facecolor("red")
 
-def annotate_bins(axis, counts, anotations_x):
-    for count, x_pos in zip(counts, anotations_x):
+def annotate_bins(axis, counts, annotations_x):
+    for count, x_pos in zip(counts, annotations_x):
         axis.annotate(str(count), (x_pos, count), ha="center", va="bottom", fontweight="bold")
 
-def clean_axis(axis):
-    axis.set_xticks([i * 10 + 5 for i in range(9)], [i for i in range(9)])
+def clean_axis(axis, annotations_x, distances):
+    axis.set_xticks(annotations_x[:-1], distances)
     axis.set_yticks([], [])
     axis.set_frame_on(False)
 
@@ -91,6 +95,71 @@ def evaluate_model_on_handwritten_set(model):
 
     return distances
 
+
+def evaluate_ensemble_on_handrwritten(model, mser_detector):
+    model.load()
+    model.change_batch_size(PREDICTION_SAMPLES)
+    model = model.eval()
+
+    predicted_equations = []
+    for file_name in sorted(glob.glob(f"{WRITERS_PATH}*.jpg")):
+        image, areas = hwe.equation_areas(file_name)
+        for sample, (row1, row2, col1, col2) in zip(hwe.samples_from_area(image, areas), areas):
+            predictions = model(sample)
+            string_labels = hwe.extract_string_labels(predictions)
+
+            area = image[row1:row2, col1:col2]
+            string_labels += predict_MSER(mser_detector, area)
+
+            final_prediction = hwe.parse_string_labels(string_labels)
+            predicted_equations.append(final_prediction)
+
+    with open(WRITERS_LABELS, "rb") as labels_file:
+        labels = pickle.load(labels_file)
+    
+    distances = [0] * 9
+    for label, prediction in zip(labels, predicted_equations):
+        distances[lv.distance(label, prediction, score_cutoff=7)] += 1
+
+    return distances
+
+def evaluate_MSER_on_handrwritten(mser_detector):
+    predicted_equations = []
+    for file_name in sorted(glob.glob(f"{WRITERS_PATH}*.jpg")):
+        image, areas = hwe.equation_areas(file_name)
+        for row1, row2, col1, col2 in areas:
+            area = image[row1:row2, col1:col2]
+            string_labels = predict_MSER(mser_detector, area)
+
+            final_prediction = hwe.parse_string_labels(string_labels)
+            predicted_equations.append(final_prediction)
+
+    with open(WRITERS_LABELS, "rb") as labels_file:
+        labels = pickle.load(labels_file)
+    
+    distances = [0] * 9
+    for label, prediction in zip(labels, predicted_equations):
+        distances[lv.distance(label, prediction, score_cutoff=7)] += 1
+
+    return distances
+
+def predict_MSER(mser_detector, area):
+    string_labels = []
+    weight = 4
+    gray = (area * 255).astype(np.uint8)
+    gray = 255 - gray
+    padded_gray = cv2.copyMakeBorder(gray, 80, 80, 120, 120, cv2.BORDER_CONSTANT, value=255)
+    img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
+    img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
+    valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
+    eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 4)
+    for equation_result in eq_results:
+        for _ in range(0, weight):
+            string_labels.append(equation_result)
+        weight = weight - 1
+    
+    return string_labels
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--unzip", action="store_true", help="Perform extraction of relevant files from the downloaded data sets.")
@@ -104,6 +173,10 @@ if __name__ == "__main__":
     parser.add_argument("-prMSER", "--plot_results_MSER", action="store_true", help="Plot results of the MSER based classifier.")
     parser.add_argument("-pr", "--plot_results", action="store_true", help="Plot results of an ensemble of the multi-classifier and the MSER based classifier.")
     args = parser.parse_args()
+
+    bins = [i * 10 for i in range(10)]
+    annotations_x = [i * 10 + 5 for i in range(10)]
+    distances = [i for i in range(9)]
 
     if args.unzip or args.dataset:
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -150,9 +223,6 @@ if __name__ == "__main__":
         os.system(f"python3 networks/{args.evaluate}.py --eval --augmentation")
 
     if args.plot_results_MC:
-        bins = [i * 10 for i in range(10)]
-        anotations_x = [i * 10 + 5 for i in range(10)]
-
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)
         augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
 
@@ -168,34 +238,59 @@ if __name__ == "__main__":
         
         *_, patches = axis[0, 0].hist(bins[:-1], bins, weights=not_augmented_test_distances)
         color_patches(patches)
-        annotate_bins(axis[0, 0], not_augmented_test_distances, anotations_x)
-        clean_axis(axis[0, 0])
+        annotate_bins(axis[0, 0], not_augmented_test_distances, annotations_x)
+        clean_axis(axis[0, 0], annotations_x, distances)
         axis[0, 0].set_title("Results without augmentation on test data set")
 
         *_, patches = axis[0, 1].hist(bins[:-1], bins, weights=augmented_test_distances)
         color_patches(patches)
-        annotate_bins(axis[0, 1], augmented_test_distances, anotations_x)
-        clean_axis(axis[0, 1])
+        annotate_bins(axis[0, 1], augmented_test_distances, annotations_x)
+        clean_axis(axis[0, 1], annotations_x, distances)
         axis[0, 1].set_title("Results with augmentation on test data set")
 
         *_, patches = axis[1, 0].hist(bins[:-1], bins, weights=not_augmented_handwritten_distances)
         color_patches(patches)
-        annotate_bins(axis[1, 0], not_augmented_handwritten_distances, anotations_x)
-        clean_axis(axis[1, 0])
+        annotate_bins(axis[1, 0], not_augmented_handwritten_distances, annotations_x)
+        clean_axis(axis[1, 0], annotations_x, distances)
         axis[1, 0].set_title("Results without augmentation on handwritten data set")
 
         *_, patches = axis[1, 1].hist(bins[:-1], bins, weights=augmented_handwritten_distances)
         color_patches(patches)
-        annotate_bins(axis[1, 1], augmented_handwritten_distances, anotations_x)
-        clean_axis(axis[1, 1])
+        annotate_bins(axis[1, 1], augmented_handwritten_distances, annotations_x)
+        clean_axis(axis[1, 1], annotations_x, distances)
         axis[1, 1].set_title("Results with augmentation on handwritten data set")
 
         plt.savefig("results/multi_classifier_results", dpi=400)
         plt.show()
 
-    if args.plot_results_MC:
-        pass # TODO
+    if args.plot_results_MSER:
+        mser_detector = Detector(use_gpu=False)
+
+        MSER_distances = evaluate_MSER_on_handrwritten(mser_detector)
+        figure, axis = plt.subplots(1, 1)
+        figure.set_size_inches(9, 6)
+        plt.subplots_adjust(left=0.02, bottom=0.05, right=1.0, top=1.0, hspace=0.1, wspace=0.02)
+        *_, patches = axis.hist(bins[:-1], bins, weights=MSER_distances)
+        color_patches(patches)
+        annotate_bins(axis, MSER_distances, annotations_x)
+        clean_axis(axis, annotations_x, distances)
+
+        plt.savefig("results/MSER_results", dpi=400)
+        plt.show()
 
     if args.plot_results:
-        pass # TODO
-    
+        augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
+        mser_detector = Detector(use_gpu=False)
+
+        ensemble_distances = evaluate_ensemble_on_handrwritten(augmented_model, mser_detector)
+        figure, axis = plt.subplots(1, 1)
+        figure.set_size_inches(9, 6)
+        plt.subplots_adjust(left=0.02, bottom=0.05, right=1.0, top=1.0, hspace=0.1, wspace=0.02)
+        *_, patches = axis.hist(bins[:-1], bins, weights=ensemble_distances)
+        color_patches(patches)
+        annotate_bins(axis, ensemble_distances, annotations_x)
+        clean_axis(axis, annotations_x, distances)
+
+        plt.savefig("results/ensemble_results", dpi=400)
+        plt.show()
+        

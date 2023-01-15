@@ -5,7 +5,7 @@ from tkinter.messagebox import showinfo
 
 import cv2
 import imutils
-from PIL import ImageTk
+from PIL import ImageTk, Image
 import os
 import numpy as np
 import sys
@@ -35,14 +35,14 @@ def extract_equations(model, image_filename, mser_detector=None):
             valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
             eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 4)
             for equation_result in eq_results:
-                for i in range(0, weight):
+                for _ in range(0, weight):
                     string_labels.append(equation_result)
                 weight = weight - 1
 
         final_prediction = hwe.parse_string_labels(string_labels)
         equations.append(final_prediction)
 
-    return equations, image
+    return equations
 
 def select_file(model, objects, mser_detector=None):
     for tk_object in objects[0]:
@@ -50,9 +50,10 @@ def select_file(model, objects, mser_detector=None):
     objects[0] = []
 
     filetypes = [("images", "*.jpg"), ("images", "*.png")]
-    filename = fd.askopenfilename(title="Choose an image", initialdir='~/', filetypes=filetypes)
-    equations, image = extract_equations(model, filename, mser_detector)
+    file_name = fd.askopenfilename(title="Choose an image", initialdir='~/', filetypes=filetypes)
+    equations = extract_equations(model, file_name, mser_detector)
 
+    image = Image.open(file_name)
     image.thumbnail((800, 500))
     image = ImageTk.PhotoImage(image)
     image_label = tk.Label(root, image=image)

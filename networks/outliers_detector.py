@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import numpy as np
 import torch
@@ -18,9 +19,6 @@ from const_config import CLEANED_PREPROCESSED_PATH
 from const_config import IMAGES_FILENAME
 from const_config import LABELS_FILENAME
 from const_config import SEED
-
-np.random.seed(SEED)
-torch.manual_seed(SEED)
 
 class MergedDataset():
     def __init__(self):
@@ -71,6 +69,12 @@ def model_accuracy(classifier, data_set, batch_size):
     return correct / data_set.__len__()
 
 if __name__ == "__main__":
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
+    random.seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    torch.backends.cudnn.deterministic = True
+    
     classifier = OutliersDetector()
     loss_function = nn.CrossEntropyLoss()
     data_set = MergedDataset()

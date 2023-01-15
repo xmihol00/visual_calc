@@ -103,6 +103,7 @@ if __name__ == "__main__":
         print("Running on GPU")
 
     model = CustomCNN(args.augmentation)
+    model.to(device)
     loss_function = CustomCrossEntropyLoss()
 
     if args.train:       
@@ -138,8 +139,8 @@ if __name__ == "__main__":
             print(f"  Validation loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
             if early_stopper(model, total_loss):
                 break
-
         model.save()
+
     elif args.eval:
         model.load()
         model = model.eval()

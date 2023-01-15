@@ -89,8 +89,9 @@ def samples_from_area(image, areas):
 
             samples = torch.tensor((final_images > 0).astype(np.float32))
             samples = samples.unsqueeze(1)
+            
+            yield samples
 
-        yield samples
 
 def parse_perdictions(predictions):
     string_labels = [None] * PREDICTION_SAMPLES

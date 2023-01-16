@@ -170,6 +170,7 @@ if __name__ == "__main__":
     parser.add_argument("-pd", "--plot_dataset", action="store_true", help="Plot separate symbols and whole equations.")
     parser.add_argument("-t", "--train", choices=["MSER_classifier", "custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Train specified model.")
     parser.add_argument("-e", "--evaluate", choices=["MSER_classifier", "custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Evaluate specified model.")
+    parser.add_argument("-na", "--no_augmentation", action="store_true", help="Train or evaluate model on not augmented data sets, use with -t (--train) and -e (--evaluate) options.")
     parser.add_argument("-prMC", "--plot_results_MC", action="store_true", help="Plot results of the multi-classifier (custom_recursive_CNN).")
     parser.add_argument("-prMSER", "--plot_results_MSER", action="store_true", help="Plot results of the MSER based classifier.")
     parser.add_argument("-pr", "--plot_results", action="store_true", help="Plot results of an ensemble of the multi-classifier and the MSER based classifier.")
@@ -179,15 +180,15 @@ if __name__ == "__main__":
     annotations_x = [i * 10 + 5 for i in range(10)]
     distances = [i for i in range(9)]
 
+    if not (os.path.isfile(COMPRESSED_DATA_SET_1_PATH) and 
+            os.path.isfile(COMPRESSED_DATA_SET_2_PATH) and 
+            os.path.isfile(COMPRESSED_DATA_SET_3_PATH)):
+        print(f"Files with data sets could not be found. Download them as described in the README.", file=sys.stderr)
+
     if args.unzip or args.dataset:
         os.makedirs(DATA_DIR, exist_ok=True)
         os.makedirs(DIGIT_AND_OPERATORS_1_PATH, exist_ok=True)
         os.makedirs(DIGIT_AND_OPERATORS_2_PATH, exist_ok=True)
-
-        if not (os.path.isfile(COMPRESSED_DATA_SET_1_PATH) and 
-                os.path.isfile(COMPRESSED_DATA_SET_2_PATH) and 
-                os.path.isfile(COMPRESSED_DATA_SET_3_PATH)):
-            print(f"Files with data sets could not be found.", file=sys.stderr)
 
         os.system(f"unzip -o {COMPRESSED_DATA_SET_1_PATH} {DATA_SET_1_EXTRACTED} -d {DIGIT_AND_OPERATORS_1_PATH}")
         os.system(f"unzip -o {COMPRESSED_DATA_SET_2_PATH} {DATA_SET_2_EXTRACTED} -d {DIGIT_AND_OPERATORS_2_PATH}")
@@ -217,15 +218,17 @@ if __name__ == "__main__":
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}separated_plot.py")
         os.system(f"python3 -u {DATA_GENERATION_PATH}equation_plot.py")
 
+    augment_switch = "" if args.no_augmentation else "--augmentation"
+
     if args.train:
         if args.train == "MSER_classifier":
             args.train = "mser/classifier"
-        os.system(f"python3 -u {NETWORKS_PATH}{args.train}.py --train --augmentation")
+        os.system(f"python3 -u {NETWORKS_PATH}{args.train}.py --train {augment_switch}")
 
     if args.evaluate:
         if args.evaluate == "MSER_classifier":
             args.evaluate = "mser/classifier"
-        os.system(f"python3 -u {NETWORKS_PATH}{args.evaluate}.py --evaluate --augmentation")
+        os.system(f"python3 -u {NETWORKS_PATH}{args.evaluate}.py --evaluate {augment_switch}")
 
     if args.plot_results_MC:
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)

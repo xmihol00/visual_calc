@@ -20,7 +20,6 @@ from const_config import NUMBER_OF_FILES_TRAINING
 from const_config import BATCH_SIZE_VALIDATION
 from const_config import BATCHES_PER_FILE_VALIDATION
 from const_config import NUMBER_OF_FILES_VALIDATION
-from const_config import MODELS_PATH
 from const_config import CUSTOM_CNN_FILENAME
 from const_config import LABELS_PER_IMAGE
 from const_config import OUTPUTS_PER_LABEL
@@ -33,6 +32,7 @@ from const_config import NOT_AUGMENTED_MODELS_PATH
 from const_config import AUGMENTED_EQUATIONS_PATH
 from const_config import EQUATIONS_PATH
 from const_config import SEED
+from const_config import RESULTS_PATH
 
 class CustomCNN(nn.Module):
     def __init__(self, augmentation):
@@ -157,7 +157,23 @@ if __name__ == "__main__":
                 distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
         
         print(f"distances: {distances}")
-        plt.hist([i for i in range(9)], [i for i in range(10)], weights=distances)
+
+        bins = [i * 10 for i in range(10)]
+        annotations_x = [i * 10 + 5 for i in range(10)]
+
+        figure, axis = plt.subplots(1, 1)
+        axis.set_xticks(annotations_x[:-1], distances)
+        axis.set_yticks([], [])
+        axis.set_frame_on(False)
+        *_, patches = axis.hist(bins[:-1], bins, weights=distances)
+        patches[0].set_facecolor("green")
+        patches[1].set_facecolor("mediumseagreen")
+        patches[2].set_facecolor("orange")
+        for patch in patches[3:]:
+            patch.set_facecolor("red")
+        for count, x_pos in zip(distances, annotations_x):
+            axis.annotate(str(count), (x_pos, count), ha="center", va="bottom", fontweight="bold")
+        plt.savefig(f"{RESULTS_PATH}custom_CNN_evaluation")
         plt.show()
             
     else:

@@ -177,11 +177,11 @@ if __name__ == "__main__":
 
         # plot confusion matrix
         figure, axis = plt.subplots(1, 1)
-        figure.set_size_inches(10, 8.5)
-        plt.subplots_adjust(left=0.08, bottom=0.05, right=0.97, top=0.95, hspace=0.1, wspace=0.02)
+        figure.set_size_inches(10, 8.6)
+        plt.subplots_adjust(left=-0.03, bottom=0.07, right=1.05, top=0.96, hspace=0.1, wspace=0.02)
         confusion_matrix = tf.math.confusion_matrix(test_classes, highest_probability).numpy()
         cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
         cm_display.plot(cmap="Blues", ax=axis)
         plt.savefig(f"{RESULTS_PATH}classifier_confusion_matrix", dpi=400)
-        plt.close()
         plt.show()
+        plt.close()

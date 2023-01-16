@@ -14,6 +14,8 @@ David Mihola, david.mihola@student.tugraz.at
 Robert Stojanovic, robert.stojanovic@student.tugraz.at  
 
 ## Requirements
+The application was run and tested on a linux environment, so we cannot guarantee it working on other operating systems.
+
 We mainly use common python libraries for machine learning and image pre-processing, install these with
 ```
 pip install -r requirements.txt

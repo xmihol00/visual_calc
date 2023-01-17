@@ -115,4 +115,4 @@ Additionaly, we provide a GUI script (``GUI.py``), which lets you select an imag
 We evaluated our approaches using the Levenshtein distance between the ground truth text label and the predicted text label on actual handwritten equations from several writers.
 | ![](results/MSER_results.png) | ![](results/multi_classifier_results.png) | ![](results/ensemble_results.png) |
 |:--:| :--: | :--:|
-| Results of the MSER approach | Results of the only ML approach | Results of the ensemble of the two approaches |
+| Results of the MSER approach | Results of the fully ML based approach | Results of the ensemble of the two approaches |

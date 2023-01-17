@@ -57,7 +57,7 @@ pip install -r requirements.txt
 ```
 Additionaly, you will need to install the following libraries with
 ```
-sudo apt install python3-tk python3-pil python3-pil.imagetk
+sudo apt install unrar python3-tk python3-pil python3-pil.imagetk 
 ```
 
 ## Training, Validating and Testing Data

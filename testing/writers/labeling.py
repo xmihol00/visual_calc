@@ -69,6 +69,14 @@ with open(WRITERS_LABELS, "wb") as labels_file:
         "76/148+5",
         "3*4*2/7",
         "41-32+8",
-        "65*21/9"
+        "65*21/9",
+
+        "13+5*92",
+        "4-68/43",
+        "27*456/1348",
+        "35+89+4-9",
+        "66/713*42",
+        "54-32*8",
+        "781+953",
     ], 
     labels_file, protocol=pickle.HIGHEST_PROTOCOL)

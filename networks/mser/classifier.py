@@ -18,7 +18,7 @@ from const_config import MODELS_PATH
 from const_config import OWN_DATA_PATH
 from const_config import SEED
 
-def load_data(use_premade_dataset=True):
+def load_data(own_data_augmentation=True):
     # Encode string labels to integers
     label_encoder = preprocessing.LabelEncoder()
 
@@ -36,64 +36,57 @@ def load_data(use_premade_dataset=True):
     indices_right = np.where(fit_labels == "]")
     fit_labels = np.delete(fit_labels, indices_right[0])
 
-    if use_premade_dataset:
-        train_images = np.stack(premade_data[:, 0])
-        train_images = np.delete(train_images, indices_left[0], axis=0)
-        train_images = np.delete(train_images, indices_right[0], axis=0)
-        train_labels = fit_labels
+    train_images = np.stack(premade_data[:, 0])
+    train_images = np.delete(train_images, indices_left[0], axis=0)
+    train_images = np.delete(train_images, indices_right[0], axis=0)
+    train_labels = fit_labels
 
-        validation_data = np.load(DIGIT_AND_OPERATORS_1_VALIDATION, allow_pickle=True)
-        validation_labels = np.stack(validation_data[:, 1])
-        val_indices_left = np.where(validation_labels == "[")
-        validation_labels = np.delete(validation_labels, val_indices_left[0])
-        val_indices_right = np.where(validation_labels == "]")
-        validation_labels = np.delete(validation_labels, val_indices_right[0])
-        validation_images = np.stack(validation_data[:, 0])
-        validation_images = np.delete(validation_images, val_indices_left[0], axis=0)
-        validation_images = np.delete(validation_images, val_indices_right[0], axis=0)
+    validation_data = np.load(DIGIT_AND_OPERATORS_1_VALIDATION, allow_pickle=True)
+    validation_labels = np.stack(validation_data[:, 1])
+    val_indices_left = np.where(validation_labels == "[")
+    validation_labels = np.delete(validation_labels, val_indices_left[0])
+    val_indices_right = np.where(validation_labels == "]")
+    validation_labels = np.delete(validation_labels, val_indices_right[0])
+    validation_images = np.stack(validation_data[:, 0])
+    validation_images = np.delete(validation_images, val_indices_left[0], axis=0)
+    validation_images = np.delete(validation_images, val_indices_right[0], axis=0)
 
-        test_data = np.load(DIGIT_AND_OPERATORS_1_TEST, allow_pickle=True)
-        test_labels = np.stack(test_data[:, 1])
-        test_indices_left = np.where(test_labels == "[")
-        test_labels = np.delete(test_labels, test_indices_left[0])
-        test_indices_right = np.where(test_labels == "]")
-        test_labels = np.delete(test_labels, test_indices_right[0])
-        test_images = np.stack(test_data[:, 0])
-        test_images = np.delete(test_images, test_indices_left[0], axis=0)
-        test_images = np.delete(test_images, test_indices_right[0], axis=0)
+    test_data = np.load(DIGIT_AND_OPERATORS_1_TEST, allow_pickle=True)
+    test_labels = np.stack(test_data[:, 1])
+    test_indices_left = np.where(test_labels == "[")
+    test_labels = np.delete(test_labels, test_indices_left[0])
+    test_indices_right = np.where(test_labels == "]")
+    test_labels = np.delete(test_labels, test_indices_right[0])
+    test_images = np.stack(test_data[:, 0])
+    test_images = np.delete(test_images, test_indices_left[0], axis=0)
+    test_images = np.delete(test_images, test_indices_right[0], axis=0)
 
-    own_data_labels = np.load(f'{OWN_DATA_PATH}robert_handwritten_dataset_labels.npy', allow_pickle=True)
-    own_data_images_gray = np.load(f'{OWN_DATA_PATH}robert_handwritten_dataset_images.npy', allow_pickle=True)
+    if own_data_augmentation:
+        own_data_labels = np.load(f'{OWN_DATA_PATH}robert_handwritten_dataset_labels.npy', allow_pickle=True)
+        own_data_images_gray = np.load(f'{OWN_DATA_PATH}robert_handwritten_dataset_images.npy', allow_pickle=True)
 
-    # Thresholding to have same format as other dataset
-    _, own_data_images = cv2.threshold(own_data_images_gray, 127, 255, cv2.THRESH_BINARY)
-    own_data_images = (own_data_images / 255).astype(int)
+        # Thresholding to have same format as other dataset
+        _, own_data_images = cv2.threshold(own_data_images_gray, 127, 255, cv2.THRESH_BINARY)
+        own_data_images = (own_data_images / 255).astype(int)
 
-    # Split data into train/test/validation sets
-    own_data_size = own_data_labels.size
-    test_split = int(own_data_size * 0.15)
-    validation_split = int(own_data_size * 0.1)
-    own_test_data_images = own_data_images[0:test_split]
-    own_test_data_labels = own_data_labels[0:test_split]
-    own_validation_data_images = own_data_images[test_split:validation_split + test_split]
-    own_validation_data_labels = own_data_labels[test_split:validation_split + test_split]
-    own_training_data_images = own_data_images[validation_split + test_split:]
-    own_training_data_labels = own_data_labels[validation_split + test_split:]
+        # Split data into train/test/validation sets
+        own_data_size = own_data_labels.size
+        test_split = int(own_data_size * 0.15)
+        validation_split = int(own_data_size * 0.1)
+        own_test_data_images = own_data_images[0:test_split]
+        own_test_data_labels = own_data_labels[0:test_split]
+        own_validation_data_images = own_data_images[test_split:validation_split + test_split]
+        own_validation_data_labels = own_data_labels[test_split:validation_split + test_split]
+        own_training_data_images = own_data_images[validation_split + test_split:]
+        own_training_data_labels = own_data_labels[validation_split + test_split:]
 
-    if use_premade_dataset:
+    if own_data_augmentation:
         train_images = np.concatenate((train_images, own_training_data_images))
         train_labels = np.concatenate((train_labels, own_training_data_labels))
         test_images = np.concatenate((test_images, own_test_data_images))
         test_labels = np.concatenate((test_labels, own_test_data_labels))
         validation_images = np.concatenate((validation_images, own_validation_data_images))
         validation_labels = np.concatenate((validation_labels, own_validation_data_labels))
-    else:
-        train_images = own_training_data_images
-        train_labels = own_training_data_labels
-        test_images = own_test_data_images
-        test_labels = own_test_data_labels
-        validation_images = own_validation_data_images
-        validation_labels = own_validation_data_labels
 
     label_encoder.fit(fit_labels)
     train_classes = label_encoder.transform(train_labels)
@@ -116,7 +109,8 @@ if __name__ == "__main__":
     train_images, train_classes, test_images, test_classes, validation_images, validation_classes, label_encoder = load_data(args.augmentation)
     
     # Save the encoder
-    np.save(f'{MODELS_PATH}test_model/classes.npy', label_encoder.classes_)
+    os.makedirs(f'{MODELS_PATH}encoder', exist_ok=True)
+    np.save(f'{MODELS_PATH}encoder/classes.npy', label_encoder.classes_)
 
     # Recognition model
     model = tf.keras.models.Sequential([
@@ -145,10 +139,12 @@ if __name__ == "__main__":
         history = model.fit(train_images, train_classes,
                             validation_data=(validation_images, validation_classes),
                             callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=3, mode="max", restore_best_weights=True)],
-                            epochs=100)
+                            epochs=100,
+                            verbose=2)
 
         # Store the trained model
-        model.save(f'{MODELS_PATH}test_model')
+        os.makedirs(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}', exist_ok=True)
+        model.save(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}')
 
         # Plot the results of training
         figure, axis = plt.subplots(2, 1)
@@ -169,9 +165,9 @@ if __name__ == "__main__":
         plt.close()
 
     elif args.evaluate: # Evaluate the model
-        model.load_weights(f'{MODELS_PATH}test_model').expect_partial()
+        model.load_weights(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}').expect_partial()
         labels = label_encoder.classes_
-        total_predictions = model.predict(test_images)
+        total_predictions = model.predict(test_images, verbose=2)
         highest_probability = np.argmax(total_predictions, axis=1)
         labels[0] = "/"
 

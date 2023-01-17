@@ -144,10 +144,10 @@ class Detector:
     def __init__(self, use_gpu=True):
         self.__configGPU(use_gpu)
         dirname = os.path.dirname(__file__)
-        model_filename = os.path.join(dirname, '../../models/test_model')
+        model_filename = os.path.join(dirname, '../../models/classifier_own_data_augmentation')
         self.__model = keras.models.load_model(model_filename)
         self.__label_encoder = preprocessing.LabelEncoder()
-        classes_filename = os.path.join(dirname, '../../models/test_model/classes.npy')
+        classes_filename = os.path.join(dirname, '../../models/encoder/classes.npy')
         self.__label_encoder.classes_ = np.load(classes_filename)
         # MSER returns the areas of interest
         self.__mser = cv2.MSER_create(delta=25, min_area=20, max_variation=0.4)

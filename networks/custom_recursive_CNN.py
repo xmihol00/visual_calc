@@ -184,6 +184,8 @@ if __name__ == "__main__":
         annotations_x = [i * 10 + 5 for i in range(10)]
 
         figure, axis = plt.subplots(1, 1)
+        figure.set_size_inches(10, 8.6)
+        plt.subplots_adjust(left=-0.03, bottom=0.07, right=1.05, top=0.96, hspace=0.1, wspace=0.02)
         axis.set_xticks(annotations_x[:-1], distances)
         axis.set_yticks([], [])
         axis.set_frame_on(False)

@@ -1,17 +1,52 @@
 # Visual Calculator
 The core idea of this project is to calculate hand written equations from images. The images may for example look like:  
-* Equation made by concatenating separate digits and operators.  
-![example1](testing/proposal_images/eq_concat.png)
-* Equation written digitally.  
-![example2](testing/proposal_images/eq_computer_gen.png)
-* Handwritten equation.  
-![example3](testing/proposal_images/eq_handwritten.png)  
+| ![](testing/proposal_images/eq_concat.png) | ![](testing/proposal_images/eq_computer_gen.png) | ![](testing/proposal_images/eq_handwritten.png) |
+|:--:| :--: | :--:|
+| Equation made by concatenating separate digits and operators | Equation written digitally | Handwritten equation |
 
 For further description of this project, see the proposal (``proposal.pdf``) and the (``report.pdf``).
 
 ## Authors
 David Mihola, david.mihola@student.tugraz.at  
 Robert Stojanovic, robert.stojanovic@student.tugraz.at  
+
+## Repository structure
+```
+--|
+  |-- annotation/                 - scripts for creating our own data set with digits and operators
+  |
+  |-- data_generation/            - scripts for generating and plotting data set with equations
+  |
+  |-- models/                     - weights of trained models
+  |
+  |-- networks/                   - scripts with our models, data loaders, loss functions ect.
+  |
+  |-- own_data/                   - our own data set with digits and operators
+  |
+  |-- results/                    - plots with results
+  |
+  |-- screenshots/                - screenshots of the GUI application
+  |
+  |-- testing/                    - test images of mostly actually handwritten equations and scripts for testing
+  |
+  |-- training_logs/              - files with captured progress of training of our models
+  |
+  |-- const_config.py             - script with constants used in all other scripts
+  |
+  |-- final.py                    - the final script for data sets pre-processing, trainig and evaluation
+  |
+  |-- GUI.py                      - the GUI application
+  |
+  |-- label_extractors.py         - script for extraction of text labels from the output of our models
+  |
+  |-- proposal.pdf                - the proposal of this project
+  |
+  |-- README.md                   - this file
+  |
+  |-- report.pdf                  - the final report with detailed description of this project
+  |
+  |-- requirements.txt            - the python requirements to run our scripts 
+```
 
 ## Requirements
 The application was run and tested on a linux environment, so we cannot guarantee it working on other operating systems.
@@ -70,4 +105,12 @@ Additionaly, we provide a GUI script (``GUI.py``), which lets you select an imag
 ``python3 final.py -t custom_recursive_CNN      `` - Trains the recursive CNN on augmented data.
 
 ### Screenshots of the GUI
-TODO
+| ![](screenshots/GUI_start.png) | ![](screenshots/GUI_select_file.png) | ![](screenshots/GUI_results.png) |
+|:--:| :--: | :--:|
+| Starting screen | Selection of an image with an equation or equations | Calculated results of detected equations |
+
+## Results
+We evaluated our approaches using the Levenshtein distance between the ground truth text label and the predicted text label on actual handwritten equations from several writers.
+| ![](results/MSER_results.png) | ![](results/multi_classifier_results.png) | ![](results/ensemble_results.png) |
+|:--:| :--: | :--:|
+| Results of the MSER approach | Results of the only ML approach | Results of the ensemble of the two approaches |

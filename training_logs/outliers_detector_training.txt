@@ -1,0 +1,25 @@
+Loss in epoch 1, batch 100: 0.5779549479484558
+Loss in epoch 1, batch 200: 0.342546671628952
+Loss in epoch 1, batch 300: 0.3222637176513672
+Loss in epoch 1, batch 400: 0.16219772398471832
+Loss in epoch 1, batch 500: 0.23913078010082245
+Loss in epoch 1, batch 600: 0.17008067667484283
+Loss in epoch 1, batch 700: 0.32420188188552856
+Loss in epoch 1, batch 800: 0.20369432866573334
+Loss in epoch 1, batch 900: 0.14954687654972076
+Loss in epoch 1, batch 1000: 0.1723056137561798
+Loss in epoch 1, batch 1100: 0.1959589421749115
+Loss in epoch 1, batch 1200: 0.1626700609922409
+Loss in epoch 1, batch 1300: 0.214328795671463
+Loss in epoch 1, batch 1400: 0.27160316705703735
+Loss in epoch 1, batch 1500: 0.1071607694029808
+Loss in epoch 1, batch 1600: 0.2715083360671997
+Loss in epoch 1, batch 1700: 0.22348734736442566
+Loss in epoch 1, batch 1800: 0.13926218450069427
+Loss in epoch 1, batch 1900: 0.17462414503097534
+Loss in epoch 1, batch 2000: 0.1888808161020279
+Loss in epoch 1, batch 2100: 0.19520582258701324
+Loss in epoch 1, batch 2200: 0.06917552649974823
+Loss in epoch 1, batch 2300: 0.21030293405056
+Average loss in epoch 1: 0.24789541258779038
+Model accuracy: 96.08570098876953%

@@ -91,7 +91,9 @@ def evaluate_model_on_handwritten_set(model):
     
     distances = [0] * 9
     for label, prediction in zip(labels, predicted_equations):
-        distances[lv.distance(label, prediction, score_cutoff=7)] += 1
+        distance = lv.distance(label, prediction, score_cutoff=7)
+        #print(distance, label, prediction)
+        distances[distance] += 1
 
     return distances
 
@@ -119,7 +121,9 @@ def evaluate_ensemble_on_handrwritten(model, mser_detector):
     
     distances = [0] * 9
     for label, prediction in zip(labels, predicted_equations):
-        distances[lv.distance(label, prediction, score_cutoff=7)] += 1
+        distance = lv.distance(label, prediction, score_cutoff=7)
+        #print(distance, label, prediction)
+        distances[distance] += 1
 
     return distances
 
@@ -151,7 +155,7 @@ def predict_MSER(mser_detector, area):
     img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
     img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
     valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
-    eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 2)
+    eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 3)
     weight = 6
     for equation_result in eq_results:
         for _ in range(0, weight):

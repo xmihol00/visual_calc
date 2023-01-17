@@ -118,11 +118,9 @@ def extract_string_labels(predictions):
     return string_labels
 
 def parse_string_labels(string_labels):
-    filtered_string_labels = [ string_label for string_label in string_labels if re.match(r"^(\d+[\+\-\*/])+\d+$", string_label) ]
-
     try:
-        final_prediction = max(filtered_string_labels, key=lambda x: sum([x == y for y in filtered_string_labels]))
+        final_prediction = max(string_labels, key=lambda x: sum([x == y for y in string_labels]))
     except:
-        final_prediction = "error"
+        final_prediction = ""
 
     return final_prediction

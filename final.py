@@ -145,18 +145,18 @@ def evaluate_MSER_on_handrwritten(mser_detector):
 
 def predict_MSER(mser_detector, area):
     string_labels = []
-    weight = 4
     gray = (area * 255).astype(np.uint8)
     gray = 255 - gray
     padded_gray = cv2.copyMakeBorder(gray, 80, 80, 120, 120, cv2.BORDER_CONSTANT, value=255)
     img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
     img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
     valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
-    eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 4)
+    eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 2)
+    weight = 6
     for equation_result in eq_results:
         for _ in range(0, weight):
             string_labels.append(equation_result)
-        weight = weight - 1
+        weight = weight - 2
     
     return string_labels
 

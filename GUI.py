@@ -24,8 +24,9 @@ def extract_equations(model, image_filename, mser_detector=None):
         predictions = model(sample)
         string_labels = hwe.extract_string_labels(predictions)
         
+        string_labels = []
         area = image[row1:row2, col1:col2]
-        weight = 4
+        weight = 5
         if mser_detector is not None:
             gray = (area * 255).astype(np.uint8)
             gray = 255 - gray
@@ -33,7 +34,7 @@ def extract_equations(model, image_filename, mser_detector=None):
             img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
             img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
             valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
-            eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 4)
+            eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 3)
             for equation_result in eq_results:
                 for _ in range(0, weight):
                     string_labels.append(equation_result)

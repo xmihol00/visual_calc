@@ -175,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--train", choices=["MSER_classifier", "custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Train specified model.")
     parser.add_argument("-e", "--evaluate", choices=["MSER_classifier", "custom_recursive_CNN", "custom_CNN", "YOLO_inspired_CNN"], help="Evaluate specified model.")
     parser.add_argument("-na", "--no_augmentation", action="store_true", help="Train or evaluate model on not augmented data sets, use with -t (--train) and -e (--evaluate) options.")
+    parser.add_argument("-eMC", "--evaluate_MC", action="store_true", help="Evaluate the multi multi-classifier (custom_recursive_CNN) with and without augmentation.")
     parser.add_argument("-prMC", "--plot_results_MC", action="store_true", help="Plot results of the multi-classifier (custom_recursive_CNN).")
     parser.add_argument("-prMSER", "--plot_results_MSER", action="store_true", help="Plot results of the MSER based classifier.")
     parser.add_argument("-pr", "--plot_results", action="store_true", help="Plot results of an ensemble of the multi-classifier and the MSER based classifier.")
@@ -233,8 +234,8 @@ if __name__ == "__main__":
         if args.evaluate == "MSER_classifier":
             args.evaluate = "mser/classifier"
         os.system(f"python3 -u {NETWORKS_PATH}{args.evaluate}.py --evaluate {augment_switch}")
-
-    if args.plot_results_MC:
+    
+    if args.evaluate_MC:
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)
         augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
 
@@ -271,6 +272,21 @@ if __name__ == "__main__":
         annotate_bins(axis[1, 1], augmented_handwritten_distances, annotations_x)
         clean_axis(axis[1, 1], annotations_x, distances)
         axis[1, 1].set_title("Results with augmentation on handwritten data set")
+
+        plt.savefig(f"{RESULTS_PATH}multi_classifier_evaluation", dpi=400)
+        plt.show()
+    
+    if args.plot_results_MC:
+        augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
+
+        augmented_handwritten_distances = evaluate_model_on_handwritten_set(augmented_model)
+        figure, axis = plt.subplots(1, 1)
+        figure.set_size_inches(9, 6)
+        plt.subplots_adjust(left=0.02, bottom=0.05, right=1.0, top=1.0, hspace=0.1, wspace=0.02)
+        *_, patches = axis.hist(bins[:-1], bins, weights=augmented_handwritten_distances)
+        color_patches(patches)
+        annotate_bins(axis, augmented_handwritten_distances, annotations_x)
+        clean_axis(axis, annotations_x, distances)
 
         plt.savefig(f"{RESULTS_PATH}multi_classifier_results", dpi=400)
         plt.show()

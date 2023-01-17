@@ -91,6 +91,7 @@ options:
   -e {MSER_classifier,custom_recursive_CNN,custom_CNN}, --evaluate {MSER_classifier,custom_recursive_CNN,custom_CNN}
                                 Evaluate specified model.
   -na, --no_augmentation        Train or evaluate model on not augmented data sets, use with -t (--train) and -e (--evaluate) options.
+  -eMC, --evaluate_MC           Evaluate the multi multi-classifier (custom_recursive_CNN) with and without augmentation.
   -prMC, --plot_results_MC      Plot results of the multi-classifier (custom_recursive_CNN).
   -prMSER, --plot_results_MSER  Plot results of the MSER based classifier.
   -pr, --plot_results           Plot results of an ensemble of the multi-classifier and the MSER based classifier.
@@ -102,6 +103,7 @@ Additionaly, we provide a GUI script (``GUI.py``), which lets you select an imag
 ``python3 final.py -prMC -prMSER -pr            `` - Plots all results as bar plot of Levenshtein distances.  
 ``python3 final.py -e MSER_classifier           `` - Evaluates the classifier on augmented data set and plots a confusion matrix.  
 ``python3 final.py -e custom_recursive_CNN      `` - Evaluates the recursive CNN on augmented data set and plots a bar plot of Levenshtein distances.  
+``python3 final.py -eMC                         `` - Evaluates the recursive CNN on augmented and not augmented data sets and plots a bar plot of Levenshtein distances.  
 ``python3 final.py -t custom_recursive_CNN      `` - Trains the recursive CNN on augmented data.
 
 ### Screenshots of the GUI

@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
         # Store the trained model
         os.makedirs(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}', exist_ok=True)
-        model.save(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}')
+        model.save(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}/mser_classifier.h5', save_format="h5")
 
         # Plot the results of training
         figure, axis = plt.subplots(2, 1)

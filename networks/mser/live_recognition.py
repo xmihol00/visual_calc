@@ -1,4 +1,5 @@
 import cv2
+import imutils
 import numpy as np
 from networks.mser.detector import Detector
 from utils import try_eval_equation
@@ -53,7 +54,7 @@ if __name__ == '__main__':
         if ret is False:
             continue
 
-        frame = np.resize(frame, (frame_height, frame_width, 3))
+        frame = imutils.resize(frame, width=frame_width)
         vis = evaluate_frame(detector, frame, False)
         cv2.imshow('Result', vis)
 

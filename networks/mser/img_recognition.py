@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     eq_results = detector.compute_equation(valid_boxes, labels, probabilities, 3)
     evaluated_res = try_eval_equation(eq_results[0])
-    cv2.putText(vis_img, str(eq_results[0]) + " = " + str(evaluated_res), (int(frame_width / 2) - 32, 16), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 2)
+    cv2.putText(vis_img, str(eq_results[0]) + " = " + str(evaluated_res), (16, 16), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 2)
 
     cv2.imshow('Result', vis_img)
     cv2.waitKey(0)

@@ -27,11 +27,13 @@ label_dict = { "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "
 data_set_1 = np.concatenate((np.load(DIGIT_AND_OPERATORS_1_TRAIN, allow_pickle=True),
                              np.load(DIGIT_AND_OPERATORS_1_VALIDATION, allow_pickle=True),
                              np.load(DIGIT_AND_OPERATORS_1_TEST, allow_pickle=True)))
+
+# select only needed symbols from the data set
 data_set_1 = data_set_1[((data_set_1[:, 1] >= "0") & (data_set_1[:, 1] <= "9")) | (data_set_1[:, 1] == "+") |
                          (data_set_1[:, 1] == "-") | (data_set_1[:, 1] == "*") | (data_set_1[:, 1] == "%")]
 
 sample_count = data_set_1.shape[0]
-for directory in os.listdir(f"{DIGIT_AND_OPERATORS_2_PATH}"):
+for directory in os.listdir(f"{DIGIT_AND_OPERATORS_2_PATH}"): # count all of the samples in merged data set 2 and 3
     sample_count += len(os.listdir(f"{DIGIT_AND_OPERATORS_2_PATH}{directory}"))
 
 images = np.zeros((sample_count, IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.float32)
@@ -49,6 +51,7 @@ for directory, label in [("0/", 0), ("1/", 1), ("2/", 2), ("3/", 3), ("4/", 4), 
                          ("7/", 7), ("8/", 8), ("9/", 9),
                          ("+/", 10), ("-/", 11), ("x/", 12), (",/", 13)]:
     for file_name in os.listdir(f"{DIGIT_AND_OPERATORS_2_PATH}{directory}"):
+        # open, resize and conver to numpy array
         image = np.array(Image.open(f"{DIGIT_AND_OPERATORS_2_PATH}{directory}{file_name}").resize((IMAGE_HEIGHT, IMAGE_WIDTH)))
 
         if image.sum() * 2 < MAX_IMAGE_PIXEL_SUM: # determins wheater the character is on black or white background
@@ -63,6 +66,7 @@ for directory, label in [("0/", 0), ("1/", 1), ("2/", 2), ("3/", 3), ("4/", 4), 
 np.save(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", images)
 np.save(f"{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}", labels)
 
+# print stats of the generated data set
 print(f"Number of samples: {sample_count}")
 print(f"Images file size: {os.stat(f'{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}').st_size / (1024 * 1024)} MB")
 print(f"Labels file size: {os.stat(f'{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}').st_size / (1024 * 1024)} MB")

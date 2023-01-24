@@ -17,7 +17,7 @@ Robert Stojanovic, robert.stojanovic@student.tugraz.at
   |
   |-- data_generation/            - scripts for generating and plotting data set with equations
   |
-  |-- models/                     - weights of trained models
+  |-- models/                     - weights of trained models on GPU
   |
   |-- networks/                   - scripts with our models, data loaders, loss functions ect.
   |

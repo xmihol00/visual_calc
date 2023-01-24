@@ -16,6 +16,8 @@ for directory in [ TRAINING_PREPROCESSED_PATH, VALIDATION_PREPROCESSED_PATH, TES
         sample_count = samples.shape[0]
         figure, axis = plt.subplots(PLOT_WIDTH_HEIGHT, PLOT_WIDTH_HEIGHT)
         figure.suptitle(f"{directory}{file_name}")
+
+        # plot 16 samples
         for i in range(PLOT_WIDTH_HEIGHT):
             for j in range(PLOT_WIDTH_HEIGHT):
                 axis[i, j].imshow(samples[rnd.randint(0, sample_count - 1)], cmap="gray")
@@ -25,5 +27,5 @@ for directory in [ TRAINING_PREPROCESSED_PATH, VALIDATION_PREPROCESSED_PATH, TES
 
         plt.get_current_fig_manager().full_screen_toggle()
         plt.show(block=False)
-        plt.pause(1.5)
+        plt.pause(1.5) # show for 1.5 seconds and then close
         plt.close()

@@ -123,16 +123,18 @@ if __name__ == "__main__":
 
     model = CustomRecursiveCNN(device, args.augmentation)
     model.to(device)
-    loss_function = CustomCrossEntropyLoss()
+    loss_function = CustomCrossEntropyLoss() # just basic CE loss inside
     
     if args.train:
-        model.change_batch_size(BATCH_SIZE_TRAINING)
+        model.change_batch_size(BATCH_SIZE_TRAINING) # specify batch size for the recurrence
+
+        # load data with custom data loader to save memory
         training_loader = DataLoader("training/", equations_path, BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
         validation_loader = DataLoader("validation/", equations_path, BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 5, 0.25)
-        early_stopper = EarlyStopping()
+        scheduler = sdl.StepLR(optimizer, 5, 0.25) # decay learning rate each 5 epochs by 0.25
+        early_stopper = EarlyStopping() # custom early stopping with patience of 3
 
         for i in range(1, 125):
             model.train()

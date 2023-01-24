@@ -17,6 +17,8 @@ for _ in range(3):
     sample_count = images.shape[0]
     figure, axis = plt.subplots(PLOT_WIDTH_HEIGHT, PLOT_WIDTH_HEIGHT)
     figure.suptitle(f"{CLEANED_PREPROCESSED_PATH}")
+
+    # plot 16 samples with labels
     for i in range(PLOT_WIDTH_HEIGHT):
         for j in range(PLOT_WIDTH_HEIGHT):
             index = rnd.randint(0, sample_count - 1)
@@ -28,5 +30,5 @@ for _ in range(3):
     
     plt.get_current_fig_manager().full_screen_toggle()
     plt.show(block=False)
-    plt.pause(1.5)
+    plt.pause(1.5) # show for 1.5 s and then close 
     plt.close()

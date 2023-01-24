@@ -25,7 +25,6 @@ class ImagePlotter():
         self.directory = directory
         self.figure, self.axis = plt.subplots(self.subplot_x_cnt, self.subplot_y_cnt)
         self.figure.suptitle(self.directory)
-        self.operator_dict = { 10.0: "+", 11.0: "-", 12.0: "*", 13.0: "/"}
         self.label_extractor = label_extractors.labels_only_class
     
     def plot(self, images, labels, idx):
@@ -36,6 +35,7 @@ class ImagePlotter():
         self.axis[self.row_idx, self.col_idx].set_yticks([], [])
         self.axis[self.row_idx, self.col_idx].set_frame_on(False)
 
+        # update the plot indices and show plot if no axis are left
         self.col_idx += 1
         if self.col_idx == self.subplot_y_cnt:
             self.col_idx = 0
@@ -43,9 +43,9 @@ class ImagePlotter():
             if self.row_idx == self.subplot_x_cnt:
                 self.row_idx = 0
                 plt.get_current_fig_manager().full_screen_toggle()
-                plt.show(block=False)
-                plt.pause(6)
-                plt.close()
+                plt.show(block=False) 
+                plt.pause(6) # show the plot for 6 seconds
+                plt.close() # then close it automatically
                 self.figure, self.axis = plt.subplots(self.subplot_x_cnt, self.subplot_y_cnt)
                 self.figure.suptitle(self.directory)
     

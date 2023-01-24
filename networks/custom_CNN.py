@@ -54,7 +54,7 @@ class CustomCNN(nn.Module):
             nn.LeakyReLU(0.1)
         )
 
-        self.image_part = nn.Sequential(
+        self.part_of_image = nn.Sequential(
             nn.Conv2d(128, 256, (3, 3), padding=0),
             nn.BatchNorm2d(256),
             nn.LeakyReLU(0.1),
@@ -71,7 +71,7 @@ class CustomCNN(nn.Module):
         x = self.whole_image(x)
         for i in range(LABELS_PER_IMAGE):
             j = 4 * i
-            self.results[i] = self.image_part(x[:, :, :, j:j+4])
+            self.results[i] = self.part_of_image(x[:, :, :, j:j+4]) # slice the input input from part 1 of the network
         return torch.cat(self.results, 1).reshape(-1, OUTPUTS_PER_LABEL)
     
     def load(self):
@@ -83,6 +83,7 @@ class CustomCNN(nn.Module):
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":
+    # fix randomness
     torch.manual_seed(SEED)
     np.random.seed(SEED)
     random.seed(SEED)
@@ -103,32 +104,33 @@ if __name__ == "__main__":
 
     model = CustomCNN(args.augmentation)
     model.to(device)
-    loss_function = CustomCrossEntropyLoss()
+    loss_function = CustomCrossEntropyLoss() # just basic CE loss inside
 
-    if args.train:       
+    if args.train:
+        # load data with custom data loader to save memory
         training_loader = DataLoader("training/", equations_path, BATCH_SIZE_TRAINING, BATCHES_PER_FILE_TRAINING, NUMBER_OF_FILES_TRAINING, device)
         validation_loader = DataLoader("validation/", equations_path, BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 5, 0.25)
-        early_stopper = EarlyStopping()
+        scheduler = sdl.StepLR(optimizer, 5, 0.25) # decay learning rate each 5 epochs by 0.25
+        early_stopper = EarlyStopping() # custom early stopping with patience of 3
 
         for i in range(1, 125):
-            model.train()
+            model.train() # trainig mode
             total_loss = 0
             for images, labels in training_loader:
-                output = model(images)
-                loss = loss_function(output, labels)
+                output = model(images) # predict
+                loss = loss_function(output, labels) # compute loss
 
                 optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                loss.backward()     # compute gradients
+                optimizer.step()    # update weights 
                 total_loss += loss.item()
             
             scheduler.step()
             print(f"Training loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_TRAINING * NUMBER_OF_FILES_TRAINING)}")
             
-            model.eval()
+            model.eval() # evaluation mode
             total_loss = 0
             for images, labels in validation_loader:
                 output = model(images)
@@ -136,13 +138,13 @@ if __name__ == "__main__":
                 total_loss += loss.item()
             
             print(f"  Validation loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
-            if early_stopper(model, total_loss):
+            if early_stopper(model, total_loss): # no improvement in multiple successive epochs
                 break
         model.save()
 
     elif args.evaluate:
         model.load()
-        model = model.eval()
+        model.eval() # evaluation mode
         test_dataloader = DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
         distances = [0] * 9
@@ -161,6 +163,7 @@ if __name__ == "__main__":
         bins = [i * 10 for i in range(10)]
         annotations_x = [i * 10 + 5 for i in range(10)]
 
+        # bar plot
         figure, axis = plt.subplots(1, 1)
         figure.set_size_inches(10, 8.6)
         plt.subplots_adjust(left=-0.03, bottom=0.07, right=1.05, top=0.96, hspace=0.1, wspace=0.02)
@@ -188,9 +191,10 @@ if __name__ == "__main__":
             for i in range(BATCH_SIZE_TESTING):
                 prediction = model(images[i : i + 1])
                 
-                labeled = label_extractors.labels_only_class(labels, i)
-                classified = label_extractors.prediction_only_class(prediction)
+                labeled = label_extractors.labels_only_class(labels, i) # get the string label
+                classified = label_extractors.prediction_only_class(prediction) # get the string prediction
 
+                # plot of test samples with prediction and ground truth
                 plt.imshow(images[i][0].numpy(), cmap='gray')
                 plt.title(f"Image classified as {classified} and labeled as {labeled}.")
                 plt.show()

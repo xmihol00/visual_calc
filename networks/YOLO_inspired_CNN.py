@@ -34,6 +34,7 @@ class YOLOInspiredCNN(nn.Module):
     def __init__(self):
         super().__init__()
 
+        # create the network from its main building blocks
         self.downsample_blocks = nn.ModuleList([blocks.CNN_downsampling(1, 32), blocks.CNN_downsampling(32, 64), blocks.CNN_downsampling(64, 128)])
         self.residual_blocks = nn.ModuleList([blocks.CNN_residual(32), blocks.CNN_residual(64), blocks.CNN_residual(128)])
         self.YOLO_block = blocks.CNN_head(128, OUTPUTS_PER_LABEL)
@@ -41,7 +42,7 @@ class YOLOInspiredCNN(nn.Module):
     def forward(self, x):
         for i in range(len(self.residual_blocks)):
             x = self.downsample_blocks[i](x)
-            x = x + self.residual_blocks[i](x)
+            x = x + self.residual_blocks[i](x) # residual connection
         
         x = self.YOLO_block(x)
         return x.reshape(x.shape[0] * LABELS_PER_IMAGE, OUTPUTS_PER_LABEL)
@@ -55,6 +56,7 @@ class YOLOInspiredCNN(nn.Module):
             torch.save(self.state_dict(), file)
 
 if __name__ == "__main__":
+    # fix the randomness
     torch.manual_seed(SEED)
     np.random.seed(SEED)
     random.seed(SEED)
@@ -74,7 +76,7 @@ if __name__ == "__main__":
         print("Running on GPU")
 
     model = YOLOInspiredCNN()
-    loss_function = BCEBiasedFollowedByCELoss()
+    loss_function = BCEBiasedFollowedByCELoss() # custom loss function composed of BCE loss and CE loss
     model.to(device)
     
     if args.train:
@@ -82,8 +84,8 @@ if __name__ == "__main__":
         validation_loader = DataLoader("validation/", equations_path, BATCH_SIZE_VALIDATION, BATCHES_PER_FILE_VALIDATION, NUMBER_OF_FILES_VALIDATION, device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        scheduler = sdl.StepLR(optimizer, 5, 0.25)
-        early_stopper = EarlyStopping()
+        scheduler = sdl.StepLR(optimizer, 5, 0.25) # decay learning rate each 5 epochs by 0.25
+        early_stopper = EarlyStopping() # custom early stopping with patience of 3
 
         for i in range(1, 125):
             model.train()

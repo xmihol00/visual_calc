@@ -30,10 +30,11 @@ for label, target_file_name in enumerate(["zeros", "ones", "twos", "threes", "fo
     for i, sample_index in enumerate(class_indices):
         image = all_images[sample_index]
         coordinates = np.argwhere(image > 0)
+        # crop the width just to the symbol and keep the same size
         target_file[i] = image[:, coordinates.min(axis=0)[1]:coordinates.max(axis=0)[1] + 1]
     
     validation_idx = int(sample_count * 0.8)
     testing_idx = int(sample_count * 0.9)
-    np.save(f"{TRAINING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[:validation_idx])
-    np.save(f"{VALIDATION_PREPROCESSED_PATH}{target_file_name}.npy", target_file[validation_idx:testing_idx])
-    np.save(f"{TESTING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[testing_idx:])
+    np.save(f"{TRAINING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[:validation_idx]) # 80 %
+    np.save(f"{VALIDATION_PREPROCESSED_PATH}{target_file_name}.npy", target_file[validation_idx:testing_idx]) # 10 %
+    np.save(f"{TESTING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[testing_idx:]) # 10 %

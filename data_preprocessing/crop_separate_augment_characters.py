@@ -34,23 +34,27 @@ for label, target_file_name in enumerate(["zeros", "ones", "twos", "threes", "fo
         j = i * 3
         image = all_images[sample_index]
         coordinates = np.argwhere(image > 0)
+        # crop the width just to the symbol and keep the same size
         target_file[j] = image[:, coordinates.min(axis=0)[1]:coordinates.max(axis=0)[1] + 1]
+        
+        # make both digit and operators smaller by 2 pixels
         pil_image = Image.fromarray((target_file[j] * 255).astype(np.uint8), 'L')
         pil_image.thumbnail((pil_image.width, pil_image.height - 2), Image.BOX)
         target_file[j + 1] = (np.asarray(pil_image) > 0).astype(np.float32)
-        if target_file_name in ["pluses", "minuses", "asterisks", "slashes"]:
+
+        if target_file_name in ["pluses", "minuses", "asterisks", "slashes"]: # make operators smaller by 6 pixels
             pil_image = Image.fromarray((target_file[j] * 255).astype(np.uint8), 'L')
             pil_image.thumbnail((pil_image.width, pil_image.height - 6), Image.BOX)
             padded_image = np.zeros((pil_image.height + 4, pil_image.width))
             padded_image[2:pil_image.height + 2, :] = (np.asarray(pil_image) > 0).astype(np.float32)
             target_file[j + 2] = padded_image
-        else:
+        else: # make digits larger by 3 pixels
             pil_image = Image.fromarray((target_file[j] * 255).astype(np.uint8), 'L')
             pil_image = ImageOps.contain(pil_image, (pil_image.width + 3, pil_image.height + 3))
             target_file[j + 2] = (np.asarray(pil_image) >= 128).astype(np.float32)
 
     validation_idx = int(sample_count * 0.8)
     testing_idx = int(sample_count * 0.9)
-    np.save(f"{TRAINING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[:validation_idx])
-    np.save(f"{VALIDATION_PREPROCESSED_PATH}{target_file_name}.npy", target_file[validation_idx:testing_idx])
-    np.save(f"{TESTING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[testing_idx:])
+    np.save(f"{TRAINING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[:validation_idx]) # 80 %
+    np.save(f"{VALIDATION_PREPROCESSED_PATH}{target_file_name}.npy", target_file[validation_idx:testing_idx]) # 10 %
+    np.save(f"{TESTING_PREPROCESSED_PATH}{target_file_name}.npy", target_file[testing_idx:]) # 10 %

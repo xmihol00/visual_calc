@@ -6,10 +6,10 @@ def CNN_downsampling(in_channels, out_channels):
         nn.Conv2d(in_channels, out_channels, (3, 3), stride=1, padding=0),
         nn.BatchNorm2d(out_channels),
         nn.LeakyReLU(0.1),
-        nn.Conv2d(out_channels, intermidiate_channels, (3, 3), stride=2, padding=1),
+        nn.Conv2d(out_channels, intermidiate_channels, (3, 3), stride=2, padding=1), # strided convolution as a pooling layer
         nn.BatchNorm2d(intermidiate_channels),
         nn.LeakyReLU(0.1),
-        nn.Conv2d(intermidiate_channels, out_channels, (1, 1), stride=1, padding=0),
+        nn.Conv2d(intermidiate_channels, out_channels, (1, 1), stride=1, padding=0), # reduction of the number of channels
         nn.BatchNorm2d(out_channels),
         nn.LeakyReLU(0.1)
     )
@@ -31,7 +31,7 @@ def CNN_head(in_channels, out_channels):
         nn.Conv2d(in_channels, intermidiate_channels, (3, 3), stride=1, padding=0),
         nn.BatchNorm2d(intermidiate_channels),
         nn.LeakyReLU(0.1),
-        nn.Conv2d(intermidiate_channels, intermidiate_channels, (1, 16), stride=1, padding=0),
+        nn.Conv2d(intermidiate_channels, intermidiate_channels, (1, 16), stride=1, padding=0), # reduce the width by 15
         nn.BatchNorm2d(intermidiate_channels),
         nn.LeakyReLU(0.1),
         nn.Conv2d(intermidiate_channels, out_channels, (1, 1), stride=1, padding=0),

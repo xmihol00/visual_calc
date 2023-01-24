@@ -92,7 +92,6 @@ def evaluate_model_on_handwritten_set(model):
     distances = [0] * 9
     for label, prediction in zip(labels, predicted_equations):
         distance = lv.distance(label, prediction, score_cutoff=7)
-        #print(distance, label, prediction)
         distances[distance] += 1
 
     return distances
@@ -122,7 +121,6 @@ def evaluate_ensemble_on_handrwritten(model, mser_detector):
     distances = [0] * 9
     for label, prediction in zip(labels, predicted_equations):
         distance = lv.distance(label, prediction, score_cutoff=7)
-        #print(distance, label, prediction)
         distances[distance] += 1
 
     return distances
@@ -190,7 +188,7 @@ if __name__ == "__main__":
             os.path.isfile(COMPRESSED_DATA_SET_3_PATH)):
         print(f"Files with data sets could not be found. Download them as described in the README.", file=sys.stderr)
 
-    if args.unzip or args.dataset:
+    if args.unzip or args.dataset: # extract data sets from zip and rar
         os.makedirs(DATA_DIR, exist_ok=True)
         os.makedirs(DIGIT_AND_OPERATORS_1_PATH, exist_ok=True)
         os.makedirs(DIGIT_AND_OPERATORS_2_PATH, exist_ok=True)
@@ -208,34 +206,34 @@ if __name__ == "__main__":
             os.makedirs(f"{DIGIT_AND_OPERATORS_2_PATH}{output_folder_name}", exist_ok=True)
             os.system(f"tar -zxvf {COMPRESSED_DATA_SET_3_PATH} -C {DIGIT_AND_OPERATORS_2_PATH}{output_folder_name} --strip-components 2 curated/{input_folder_name} ")
 
-    if args.preprocessing or args.dataset:
+    if args.preprocessing or args.dataset: # merge different data sets, clean outliers, crop the width to just symbols, resize the simbols
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}merge_preprocess_datasets.py")
         os.system(f"python3 -u {NETWORKS_PATH}outliers_detector.py --clean")
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_augment_characters.py")
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_characters.py")
 
-    if args.equation_generation or args.dataset:
+    if args.equation_generation or args.dataset: # generate augmented and not augmented rquations
         os.system(f"python3 -u {DATA_GENERATION_PATH}equation_generator.py --augment")
         os.system(f"python3 -u {DATA_GENERATION_PATH}equation_generator.py")
 
-    if args.plot_dataset:
+    if args.plot_dataset: # plot the data set creation process at different stages 
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}merged_plot.py")
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}separated_plot.py")
         os.system(f"python3 -u {DATA_GENERATION_PATH}equation_plot.py")
 
     augment_switch = "" if args.no_augmentation else "--augmentation"
 
-    if args.train:
+    if args.train: # train the chosen network
         if args.train == "MSER_classifier":
             args.train = "mser/classifier"
         os.system(f"python3 -u {NETWORKS_PATH}{args.train}.py --train {augment_switch}")
 
-    if args.evaluate:
+    if args.evaluate: # evaluate the chosen network
         if args.evaluate == "MSER_classifier":
             args.evaluate = "mser/classifier"
         os.system(f"python3 -u {NETWORKS_PATH}{args.evaluate}.py --evaluate {augment_switch}")
     
-    if args.evaluate_MC:
+    if args.evaluate_MC: # evaluate the multi-classifier on augmented and not augmented test sets and on handrwritten set
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)
         augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
 
@@ -276,7 +274,7 @@ if __name__ == "__main__":
         plt.savefig(f"{RESULTS_PATH}multi_classifier_evaluation", dpi=400)
         plt.show()
     
-    if args.plot_results_MC:
+    if args.plot_results_MC: # evaluate the multi-clasifier on just a handwritten test set
         augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
 
         augmented_handwritten_distances = evaluate_model_on_handwritten_set(augmented_model)
@@ -291,7 +289,7 @@ if __name__ == "__main__":
         plt.savefig(f"{RESULTS_PATH}multi_classifier_results", dpi=400)
         plt.show()
 
-    if args.plot_results_MSER:
+    if args.plot_results_MSER: # evaluate the MSER variant on handwritten test set
         mser_detector = Detector(use_gpu=False)
 
         MSER_distances = evaluate_MSER_on_handrwritten(mser_detector)
@@ -306,7 +304,7 @@ if __name__ == "__main__":
         plt.savefig(f"{RESULTS_PATH}MSER_results", dpi=400)
         plt.show()
 
-    if args.plot_results:
+    if args.plot_results: # evaluate the ensemble
         augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
         mser_detector = Detector(use_gpu=False)
 

@@ -24,7 +24,7 @@ def prediction(predictions, sep=' '):
         if torch.sigmoid(prediction[0]) > 0.5:
             idx = torch.argmax(prediction[1:])
             if idx >= NUMBER_OF_DIGITS:
-                label += f"{sep}{[' + ', ' - ', ' * ', ' / ', ''][idx - NUMBER_OF_DIGITS]}{sep}"
+                label += f"{sep}{['+', '-', '*', '/', ''][idx - NUMBER_OF_DIGITS]}{sep}"
             else:
                 label += f"{idx}"
     
@@ -33,7 +33,7 @@ def prediction(predictions, sep=' '):
 def labels_only_class(labels, idx, sep=' '):
     label_str = ""
     for label in labels[idx, :, 1]:
-        if label < NUMBER_OF_DIGITS:
+        if label < NUMBER_OF_DIGITS: # label contains digit
             label_str += f"{label}"
         elif label < NUMBER_OF_DIGITS + NUMBER_OF_OPERATORS: # label contains operator
             label_str += f"{sep}{OPERATOR_DICT[label]}{sep}"
@@ -44,9 +44,9 @@ def prediction_only_class(predictions, sep=' '):
     label = ""
     for prediction in predictions:
         idx = torch.argmax(prediction)
-        if idx < NUMBER_OF_DIGITS:
+        if idx < NUMBER_OF_DIGITS: # label contains digit
             label += f"{idx}"
-        elif idx < NUMBER_OF_DIGITS + NUMBER_OF_OPERATORS:
+        elif idx < NUMBER_OF_DIGITS + NUMBER_OF_OPERATORS: # label contains operator
             label += f"{sep}{['+', '-', '*', '/', ''][idx - NUMBER_OF_DIGITS]}{sep}"
     
     return label

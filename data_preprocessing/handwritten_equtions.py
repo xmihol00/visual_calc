@@ -1,11 +1,8 @@
 from PIL import Image
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import sys
-import re
-import glob
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -96,9 +93,6 @@ def parse_perdictions(predictions):
         j = i * LABELS_PER_IMAGE
         string_labels[i] = label_extractors.prediction_only_class(predictions[j:j + LABELS_PER_IMAGE], sep='')
 
-    # strings with syntactically valid equations
-    #string_labels = [ string_label for string_label in string_labels if re.match(r"^(\d+[\+\-\*/])+\d+$", string_label) ]
-
     try:
         final_prediction = max(string_labels, key=lambda x: sum([x == y for y in string_labels]))
     except:
@@ -115,8 +109,6 @@ def extract_string_labels(predictions):
     return string_labels
 
 def parse_string_labels(string_labels):
-    #string_labels = [ string_label for string_label in string_labels if re.match(r"^(\d+[\+\-\*/])+\d+$", string_label) ]
-
     try:
         final_prediction = max(string_labels, key=lambda x: sum([x == y for y in string_labels]))
     except:

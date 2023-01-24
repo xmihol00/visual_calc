@@ -87,17 +87,17 @@ if __name__ == "__main__":
         scheduler = sdl.StepLR(optimizer, 5, 0.25) # decay learning rate each 5 epochs by 0.25
         early_stopper = EarlyStopping() # custom early stopping with patience of 3
 
-        for i in range(1, 125):
-            model.train()
+        for i in range(1, 125): # training loop
+            model.train() # training mode
             total_loss = 0
             for images, labels in training_loader:
                 
-                output = model(images)
-                loss = loss_function(output, labels)
+                output = model(images)                  # predict
+                loss = loss_function(output, labels)    # compute loss
 
                 optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                loss.backward()                         # compute gradients
+                optimizer.step()                        # update weights 
                 total_loss += loss.item()
                 
                 del images, labels
@@ -105,7 +105,7 @@ if __name__ == "__main__":
             scheduler.step()
             print(f"Training loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_TRAINING * NUMBER_OF_FILES_TRAINING)}")
 
-            model.eval()
+            model.eval() # evaluation mode
             total_loss = 0
             for images, labels in validation_loader:
                 output = model(images)
@@ -115,14 +115,16 @@ if __name__ == "__main__":
                 del images, labels
             
             print(f"  Validation loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
-            if early_stopper(model, total_loss):
+            if early_stopper(model, total_loss): # no improvement in multiple successive epochs
                 break
         
         model.save()
 
-    elif args.evaluate:
+    elif args.evaluate: # evaluate
         model.load()
         model.eval()
+
+        # plot each sample with prediction and ground truth
         for images, labels in DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device):
             labels = labels.numpy()
             for i in range(BATCH_SIZE_TRAINING):

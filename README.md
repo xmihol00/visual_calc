@@ -4,7 +4,7 @@ The core idea of this project is to calculate hand written equations from images
 |:--:| :--: | :--:|
 | Equation made by concatenating separate digits and operators | Equation written digitally | Handwritten equation |
 
-For further description of this project, see the proposal (``proposal.pdf``) and the (``report.pdf``).
+For further description of this project, see the proposal (``proposal.pdf``) and the report (``report.pdf``).
 
 ## Authors
 David Mihola, david.mihola@student.tugraz.at  
@@ -45,7 +45,7 @@ Robert Stojanovic, robert.stojanovic@student.tugraz.at
   |
   |-- report.pdf                  - the final report with detailed description of this project
   |
-  |-- requirements.txt            - the python requirements to run our scripts 
+  |-- requirements.txt            - the Python requirements to run our scripts 
 ```
 
 ## Requirements
@@ -55,12 +55,12 @@ We mainly use common python libraries for machine learning and image pre-process
 ```
 pip install -r requirements.txt
 ```
-Additionaly, you will need to install the following libraries with
+Additionaly, you will need to install the following programs and libraries with
 ```
 sudo apt install unrar python3-tk python3-pil python3-pil.imagetk 
 ```
 
-## Training, Validating and Testing Data
+## Train, validation and test data
 Download these data sets:
 * https://www.kaggle.com/datasets/xainano/handwrittenmathsymbols,
 * https://www.kaggle.com/datasets/michelheusser/handwritten-digits-and-operators,
@@ -97,7 +97,9 @@ options:
   -pr, --plot_results           Plot results of an ensemble of the multi-classifier and the MSER based classifier.
 ```
 
-### Evaluation scripts
+### Examples how to run the final script
+Make sure to run the correct Python command on your machine. If ``python3`` does not work, change it also in the final script by modifying the ``PYTHON_COMMAND`` variable.
+
 ``python3 final.py -d                           `` - Pre-processes, cleans, augments and generates equations from the downloaded data sets, this **must be run first** before any of the following commands.   
 ``python3 final.py -prMC -prMSER -pr            `` - Plots all results as bar plot of Levenshtein distances.  
 ``python3 final.py -e MSER_classifier           `` - Evaluates the classifier on augmented data set and plots a confusion matrix.  
@@ -105,9 +107,8 @@ options:
 ``python3 final.py -eMC                         `` - Evaluates the recursive CNN on augmented and not augmented data sets and plots a bar plot of Levenshtein distances.  
 
 ## Running the demo application
-``python GUI.py`` - Runs the graphical interface which allows you to select an image with equations and compute the equations within it. 
+``python3 GUI.py`` - Runs the graphical interface which allows you to select an image with equations and calculate their results. 
 We also provide testing images in the ``testing/`` directory and its subdirectories with the GUI script.
-
 
 ### Screenshots of the GUI
 | ![](screenshots/GUI_start.png) | ![](screenshots/GUI_select_file.png) | ![](screenshots/GUI_results.png) |

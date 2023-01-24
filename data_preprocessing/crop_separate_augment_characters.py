@@ -34,7 +34,7 @@ for label, target_file_name in enumerate(["zeros", "ones", "twos", "threes", "fo
         j = i * 3
         image = all_images[sample_index]
         coordinates = np.argwhere(image > 0)
-        # crop the width just to the symbol and keep the same size
+        # crop the width just to the symbol and keep the same height
         target_file[j] = image[:, coordinates.min(axis=0)[1]:coordinates.max(axis=0)[1] + 1]
         
         # make both digit and operators smaller by 2 pixels

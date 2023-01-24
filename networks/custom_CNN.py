@@ -118,13 +118,13 @@ if __name__ == "__main__":
         for i in range(1, 125):
             model.train() # trainig mode
             total_loss = 0
-            for images, labels in training_loader:
-                output = model(images) # predict
-                loss = loss_function(output, labels) # compute loss
+            for images, labels in training_loader: # training loop
+                output = model(images)                  # predict
+                loss = loss_function(output, labels)    # compute loss
 
                 optimizer.zero_grad()
-                loss.backward()     # compute gradients
-                optimizer.step()    # update weights 
+                loss.backward()                         # compute gradients
+                optimizer.step()                        # update weights 
                 total_loss += loss.item()
             
             scheduler.step()
@@ -154,9 +154,9 @@ if __name__ == "__main__":
             
             for i in range(BATCH_SIZE_TESTING):
                 j = i * LABELS_PER_IMAGE
-                labeled = label_extractors.labels_only_class(labels, i, sep="")
-                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE], sep="")
-                distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
+                labeled = label_extractors.labels_only_class(labels, i, sep="") # get the string label
+                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE], sep="") # get string prediction
+                distances[lv.distance(labeled, classified, score_cutoff=7)] += 1   # evaluation using Levenshtein distance
         
         print(f"distances: {distances}")
 

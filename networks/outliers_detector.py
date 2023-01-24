@@ -61,7 +61,7 @@ class OutliersDetector(nn.Module):
         return self.model(x)
 
 def model_accuracy(classifier, data_set, batch_size):
-    classifier = classifier.eval()
+    classifier.eval()
     correct = 0
     for images, labels in DataLoader(data_set, batch_size):
         output = classifier(images)
@@ -70,6 +70,7 @@ def model_accuracy(classifier, data_set, batch_size):
     return correct / data_set.__len__()
 
 if __name__ == "__main__":
+    # fix randomness
     torch.manual_seed(SEED)
     np.random.seed(SEED)
     random.seed(SEED)
@@ -87,55 +88,60 @@ if __name__ == "__main__":
     data_set = MergedDataset()
     batch_size = 128
 
-    if args.train:
+    if args.train: # train
         optimizer = torch.optim.Adam(classifier.parameters(), lr=0.005)
         nmber_of_batches = data_set.__len__() / batch_size
         average_loss = 0
 
-        for i in range(1, 16):
+        for i in range(1, 16): # training loop
             j = 0
             classifier = classifier.train()
             for images, labels in DataLoader(data_set, batch_size):
-                output = classifier(images)
-                loss = loss_function(output, labels)
+                output = classifier(images)             # predict
+                loss = loss_function(output, labels)    # compute loss
 
                 optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                loss.backward()                         # compute gradients
+                optimizer.step()                        # update weights 
                 average_loss += loss.item() / nmber_of_batches
                 j += 1
                 if j % 100 == 0:
                     print(f"Loss in epoch {i}, batch {j}: {loss.item()}")        
 
             print(f"Average loss in epoch {i}: {average_loss}")
-            with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "wb") as file:
-                torch.save(classifier.state_dict(), file)
 
             accuracy = model_accuracy(classifier, data_set, batch_size)
             print(f"Model accuracy: {accuracy * 100}%")
-            if accuracy > 0.9:
+
+            if accuracy > 0.9: # ensure the model is underfitted
+                with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "wb") as file:
+                    torch.save(classifier.state_dict(), file)
                 break
 
-    elif args.evaluate:
+    elif args.evaluate: # evaluate
+        with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "rb") as file:
+            classifier.load_state_dict(torch.load(file))
+
         accuracy = model_accuracy(classifier, data_set, batch_size)
         print(f"Model accuracy: {accuracy * 100:.2f}%")
 
-    elif args.clean:
+    elif args.clean: # clean the data set using the underfitted model
         with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "rb") as file:
             classifier.load_state_dict(torch.load(file))
 
         correct_indices = torch.empty((0))
-        classifier = classifier.eval()
+        classifier = classifier.eval() # evaluation mode
         softmax = nn.Softmax(dim=1)
 
         while True:
             batch = data_set.get_batch(batch_size)
-            if batch == None:
+            if batch == None: # no more data to be cleaned
                 break
                 
             index_shift, images, labels = batch
-            output = classifier(images)
+            output = classifier(images) # predict
             
+            # find indices of samples which are correctly predicted and the prediction is with confidence greater than 85 %
             indices = torch.add((torch.argmax(output, dim=1) == labels * (softmax(output) > 0.85).sum(dim=1)).nonzero(), index_shift)
             correct_indices = torch.cat((correct_indices, indices))
         
@@ -146,14 +152,21 @@ if __name__ == "__main__":
         correct_indices = correct_indices.to(torch.int32).numpy()
 
         os.makedirs(CLEANED_PREPROCESSED_PATH, exist_ok=True)
+
+        # clean and save the data set
         np.save(f"{CLEANED_PREPROCESSED_PATH}{IMAGES_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{IMAGES_FILENAME}", allow_pickle=True)[correct_indices].squeeze(1))
         np.save(f"{CLEANED_PREPROCESSED_PATH}{LABELS_FILENAME}", np.load(f"{ALL_MERGED_PREPROCESSED_PATH}{LABELS_FILENAME}", allow_pickle=True)[correct_indices].squeeze(1))
 
+        # print the size after cleaning
         print("Images file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{IMAGES_FILENAME}').st_size / (1024 * 1024)))
         print("Labels file size: %.3f MB" % (os.stat(f'{CLEANED_PREPROCESSED_PATH}{LABELS_FILENAME}').st_size / (1024 * 1024)))
 
     else:
-        classifier = classifier.eval()
+        with open(f"{MODELS_PATH}{OUTLIERS_DETECTOR_FILENAME}", "rb") as file:
+            classifier.load_state_dict(torch.load(file))
+        classifier.eval()
+
+        # plot each sample with prediction and ground truth
         for image, label in DataLoader(data_set, 1):
             output = classifier(image)
             classified = torch.argmax(output).item()

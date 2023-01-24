@@ -19,20 +19,23 @@ from const_config import PREDICTION_SAMPLES
 
 def extract_equations(model, image_filename, mser_detector=None):
     equations = []
-    image, areas = hwe.equation_areas(image_filename)
+    image, areas = hwe.equation_areas(image_filename) # get areas of equations on the image
     for sample, (row1, row2, col1, col2) in zip(hwe.samples_from_area(image, areas), areas):
-        predictions = model(sample)
-        string_labels = hwe.extract_string_labels(predictions)
+        predictions = model(sample) # predict multiple times the same equation 
+        string_labels = hwe.extract_string_labels(predictions) # parse predictions to string
         
         area = image[row1:row2, col1:col2]
         if mser_detector is not None:
+            # convert part of the image with an equation to desired format
             gray = (area * 255).astype(np.uint8)
             gray = 255 - gray
             padded_gray = cv2.copyMakeBorder(gray, 80, 80, 120, 120, cv2.BORDER_CONSTANT, value=255)
             img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
             img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
             valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
-            eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 3)
+            eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 3) # get 3 most likely equations
+
+            # weight most probable predictions by 6, 4 and 2 
             weight = 6
             for equation_result in eq_results:
                 for _ in range(0, weight):
@@ -45,14 +48,18 @@ def extract_equations(model, image_filename, mser_detector=None):
     return equations
 
 def select_file(model, objects, mser_detector=None):
-    for tk_object in objects[0]:
+    for tk_object in objects[0]: # remove all GUI elemets from previous calculation
         tk_object.destroy()
     objects[0] = []
 
+    # open file explorer
     filetypes = [("images", "*.jpg"), ("images", "*.png")]
     file_name = fd.askopenfilename(title="Choose an image", initialdir='~/', filetypes=filetypes)
+
+    # get the predictions for the equations on the given image
     equations = extract_equations(model, file_name, mser_detector)
 
+    # display the detected image
     image = Image.open(file_name)
     image.thumbnail((800, 500))
     image = ImageTk.PhotoImage(image)
@@ -64,26 +71,26 @@ def select_file(model, objects, mser_detector=None):
     counter = 3
     objects_idx = 1
     for equation in equations:
-        if not len(equation):
-            continue
-
         try:
-            result = eval(equation)
+            result = eval(equation) # calculate the result of the detected equation
         except:
             result = "error"
         
+        # create GUI elements
         equation_entry = tk.Entry(root)
         equation_entry.insert(0, equation)
         equal_label = tk.Label(root, text="=")
         result_label = tk.Label(root, text=result)
         button = tk.Button(root, text="recalculate", command=lambda equation_entry=equation_entry, result_label=result_label: recalculate_cell(equation_entry, result_label))
 
+        # append GUI elements to the window
         equation_entry.grid(row=counter, column=0, pady=5, padx=(5, 0))
         equal_label.grid(row=counter, column=1, pady=5)
         result_label.grid(row=counter, column=2, pady=5)
         button.grid(row=counter, column=3, pady=5, padx=(0, 5))
         counter += 1
 
+        # save reference to the GUI elements
         objects[0].append(equation_entry)
         objects[0].append(result_label)
         objects[0].append(equal_label)
@@ -92,19 +99,21 @@ def select_file(model, objects, mser_detector=None):
 
 
 def recalculate_cell(equation_entry, equation_label):
-    equation = equation_entry.get()
-    try:
-        result = eval(equation)
+    equation = equation_entry.get() # get the corrected equation
+    try: 
+        result = eval(equation) # calculate the result
     except:
         result = "error"
     
-    equation_label.config(text=result)
+    equation_label.config(text=result) # update the result on GUI
 
 if __name__ == "__main__":
+    # load the best multi-classifier
     model = CustomRecursiveCNN(device="cpu", augmentation=True, batch_size=PREDICTION_SAMPLES)
     model.load()
-    model = model.eval()
-
+    model.eval()
+    
+    # use the MSER detector
     use_gpu = False
     mser_detector = Detector(use_gpu)
 
@@ -122,11 +131,12 @@ if __name__ == "__main__":
         root.tk.call("set", "::tk::dialog::file::showHiddenVar", '0')
     except:
         pass
-
+    
     select_file_label = tk.Label(root, text="Select an image with an equation or equations.")
     open_button = ttk.Button(root, text="select", command=lambda:select_file(model, tk_objects, mser_detector))
 
     select_file_label.grid(row=0, columnspan=4, pady=5)
     open_button.grid(row=1, columnspan=4, pady=5)
 
+    # run the GUI app
     root.mainloop()

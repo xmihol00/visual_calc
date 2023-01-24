@@ -136,22 +136,22 @@ if __name__ == "__main__":
         scheduler = sdl.StepLR(optimizer, 5, 0.25) # decay learning rate each 5 epochs by 0.25
         early_stopper = EarlyStopping() # custom early stopping with patience of 3
 
-        for i in range(1, 125):
-            model.train()
+        for i in range(1, 125): # training loop
+            model.train() # training mode
             total_loss = 0
             for images, labels in training_loader:
-                output = model(images)
-                loss = loss_function(output, labels)
+                output = model(images)                  # predict
+                loss = loss_function(output, labels)    # compute loss
 
                 optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                loss.backward()                         # compute gradients
+                optimizer.step()                        # update weights 
                 total_loss += loss.item()
             
             scheduler.step()
             print(f"Training loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_TRAINING * NUMBER_OF_FILES_TRAINING)}")
             
-            model.eval()
+            model.eval() # evaluation mode
             total_loss = 0
             for images, labels in validation_loader:
                 output = model(images)
@@ -159,16 +159,17 @@ if __name__ == "__main__":
                 total_loss += loss.item()
             
             print(f"  Validation loss in epoch {i}: {total_loss / (BATCHES_PER_FILE_VALIDATION * NUMBER_OF_FILES_VALIDATION)}")
-            if early_stopper(model, total_loss):
+            if early_stopper(model, total_loss): # no improvement in multiple successive epochs
                 break
 
         model.save()
     elif args.evaluate:
         model.load()
         model.change_batch_size(BATCH_SIZE_TESTING)
-        model = model.eval()
+        model.eval() # evaluation mode
         test_dataloader = DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
+        # evaluate using Levenshtein distance with ground truth
         distances = [0] * 9
         for images, labels in test_dataloader:
             predictions = model(images)
@@ -176,8 +177,8 @@ if __name__ == "__main__":
             
             for i in range(BATCH_SIZE_TESTING):
                 j = i * LABELS_PER_IMAGE
-                labeled = label_extractors.labels_only_class(labels, i, sep="")
-                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE], sep="")
+                labeled = label_extractors.labels_only_class(labels, i, sep="") # get the string label
+                classified = label_extractors.prediction_only_class(predictions[j:j+LABELS_PER_IMAGE], sep="") # get the string prediction
                 distances[lv.distance(labeled, classified, score_cutoff=7)] += 1
         
         print(f"distances: {distances}")
@@ -185,6 +186,7 @@ if __name__ == "__main__":
         bins = [i * 10 for i in range(10)]
         annotations_x = [i * 10 + 5 for i in range(10)]
 
+        # bar plot
         figure, axis = plt.subplots(1, 1)
         figure.set_size_inches(10, 8.6)
         plt.subplots_adjust(left=-0.03, bottom=0.07, right=1.05, top=0.96, hspace=0.1, wspace=0.02)
@@ -205,9 +207,10 @@ if __name__ == "__main__":
     else:
         model.load()
         model.change_batch_size(BATCH_SIZE_TESTING)
-        model = model.eval()
+        model.eval() # evaluation mode
         test_dataloader = DataLoader("testing/", equations_path, BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, device)
 
+        # plot each sample with prediction and ground truth
         for images, labels in test_dataloader:
             labels = labels.numpy()
             for i in range(BATCH_SIZE_TESTING):

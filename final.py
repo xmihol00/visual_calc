@@ -38,6 +38,8 @@ from const_config import DATA_PREPROCESSING_PATH
 from const_config import DATA_GENERATION_PATH
 from const_config import NETWORKS_PATH
 
+PYTHON_COMMAND = "python3"
+
 def color_patches(patches):
     patches[0].set_facecolor("green")
     patches[1].set_facecolor("mediumseagreen")
@@ -57,15 +59,16 @@ def clean_axis(axis, annotations_x, distances):
 def evaluate_model_on_test_set(model, augmented):
     model.load()
     model.change_batch_size(BATCH_SIZE_TESTING)
-    model = model.eval()
+    model.eval()
     test_dataloader = DataLoader("testing/", AUGMENTED_EQUATIONS_PATH if augmented else EQUATIONS_PATH,
                                  BATCH_SIZE_TESTING, BATCHES_PER_FILE_TESTING, NUMBER_OF_FILES_TESTING, "cpu")
 
     distances = [0] * 9
     for images, labels in test_dataloader:
-        predictions = model(images)
+        predictions = model(images) # get predictions per batch
         labels = labels.reshape(-1, LABELS_PER_IMAGE, 2).numpy()
         
+        # evaluate bacth using Levenshtein distance
         for i in range(BATCH_SIZE_TESTING):
             j = i * LABELS_PER_IMAGE
             labeled = label_extractors.labels_only_class(labels, i, sep="")
@@ -77,22 +80,22 @@ def evaluate_model_on_test_set(model, augmented):
 def evaluate_model_on_handwritten_set(model):
     model.load()
     model.change_batch_size(PREDICTION_SAMPLES)
-    model = model.eval()
+    model.eval()
 
     predicted_equations = []
     for file_name in sorted(glob.glob(f"{WRITERS_PATH}*.jpg")):
         image, areas = hwe.equation_areas(file_name)
-        for samples in hwe.samples_from_area(image, areas):
+        for samples in hwe.samples_from_area(image, areas): # do multiple predictions for the same equation
             predictions = model(samples)
-            predicted_equations.append(hwe.parse_perdictions(predictions))
+            predicted_equations.append(hwe.parse_perdictions(predictions)) # parse multiple predictions to single result
     
     with open(WRITERS_LABELS, "rb") as labels_file:
         labels = pickle.load(labels_file)
     
+    # evaluate using Levenshtein distance with ground truth
     distances = [0] * 9
     for label, prediction in zip(labels, predicted_equations):
-        distance = lv.distance(label, prediction, score_cutoff=7)
-        distances[distance] += 1
+        distances[lv.distance(label, prediction, score_cutoff=7)] += 1
 
     return distances
 
@@ -100,28 +103,28 @@ def evaluate_model_on_handwritten_set(model):
 def evaluate_ensemble_on_handrwritten(model, mser_detector):
     model.load()
     model.change_batch_size(PREDICTION_SAMPLES)
-    model = model.eval()
+    model.eval()
 
     predicted_equations = []
     for file_name in sorted(glob.glob(f"{WRITERS_PATH}*.jpg")):
         image, areas = hwe.equation_areas(file_name)
         for sample, (row1, row2, col1, col2) in zip(hwe.samples_from_area(image, areas), areas):
-            predictions = model(sample)
-            string_labels = hwe.extract_string_labels(predictions)
+            predictions = model(sample) # predict multiple times the same equation 
+            string_labels = hwe.extract_string_labels(predictions) # get all predictions of multi-classifier
 
             area = image[row1:row2, col1:col2]
-            string_labels += predict_MSER(mser_detector, area)
+            string_labels += predict_MSER(mser_detector, area) # get multiple prediction for MSER variant
 
-            final_prediction = hwe.parse_string_labels(string_labels)
+            final_prediction = hwe.parse_string_labels(string_labels) # get the most occuring prediction
             predicted_equations.append(final_prediction)
 
     with open(WRITERS_LABELS, "rb") as labels_file:
         labels = pickle.load(labels_file)
     
+    # evaluate using Levenshtein distance with ground truth
     distances = [0] * 9
     for label, prediction in zip(labels, predicted_equations):
-        distance = lv.distance(label, prediction, score_cutoff=7)
-        distances[distance] += 1
+        distances[lv.distance(label, prediction, score_cutoff=7)] += 1
 
     return distances
 
@@ -131,14 +134,15 @@ def evaluate_MSER_on_handrwritten(mser_detector):
         image, areas = hwe.equation_areas(file_name)
         for row1, row2, col1, col2 in areas:
             area = image[row1:row2, col1:col2]
-            string_labels = predict_MSER(mser_detector, area)
+            string_labels = predict_MSER(mser_detector, area) # get string predictions 
 
-            final_prediction = hwe.parse_string_labels(string_labels)
+            final_prediction = hwe.parse_string_labels(string_labels) # parse the final prediction
             predicted_equations.append(final_prediction)
 
     with open(WRITERS_LABELS, "rb") as labels_file:
         labels = pickle.load(labels_file)
     
+    # evaluate using Levenshtein distance with ground truth
     distances = [0] * 9
     for label, prediction in zip(labels, predicted_equations):
         distances[lv.distance(label, prediction, score_cutoff=7)] += 1
@@ -147,13 +151,18 @@ def evaluate_MSER_on_handrwritten(mser_detector):
 
 def predict_MSER(mser_detector, area):
     string_labels = []
+
+    # convert part of the image with an equation to desired format
     gray = (area * 255).astype(np.uint8)
     gray = 255 - gray
     padded_gray = cv2.copyMakeBorder(gray, 80, 80, 120, 120, cv2.BORDER_CONSTANT, value=255)
     img = cv2.cvtColor(padded_gray, cv2.COLOR_GRAY2BGR)
     img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
-    valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
-    eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 3)
+
+    valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False) # locate areas with symbols
+    eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 3) # recognize symbols and output string equations sorted by probability
+    
+    # weight most probable predictions by 6, 4 and 2 
     weight = 6
     for equation_result in eq_results:
         for _ in range(0, weight):
@@ -207,31 +216,31 @@ if __name__ == "__main__":
             os.system(f"tar -zxvf {COMPRESSED_DATA_SET_3_PATH} -C {DIGIT_AND_OPERATORS_2_PATH}{output_folder_name} --strip-components 2 curated/{input_folder_name} ")
 
     if args.preprocessing or args.dataset: # merge different data sets, clean outliers, crop the width to just symbols, resize the simbols
-        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}merge_preprocess_datasets.py")
-        os.system(f"python3 -u {NETWORKS_PATH}outliers_detector.py --clean")
-        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_augment_characters.py")
-        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_characters.py")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_PREPROCESSING_PATH}merge_preprocess_datasets.py")
+        os.system(f"{PYTHON_COMMAND} -u {NETWORKS_PATH}outliers_detector.py --clean")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_PREPROCESSING_PATH}crop_separate_augment_characters.py")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_PREPROCESSING_PATH}crop_separate_characters.py")
 
     if args.equation_generation or args.dataset: # generate augmented and not augmented rquations
-        os.system(f"python3 -u {DATA_GENERATION_PATH}equation_generator.py --augment")
-        os.system(f"python3 -u {DATA_GENERATION_PATH}equation_generator.py")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_GENERATION_PATH}equation_generator.py --augment")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_GENERATION_PATH}equation_generator.py")
 
     if args.plot_dataset: # plot the data set creation process at different stages 
-        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}merged_plot.py")
-        os.system(f"python3 -u {DATA_PREPROCESSING_PATH}separated_plot.py")
-        os.system(f"python3 -u {DATA_GENERATION_PATH}equation_plot.py")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_PREPROCESSING_PATH}merged_plot.py")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_PREPROCESSING_PATH}separated_plot.py")
+        os.system(f"{PYTHON_COMMAND} -u {DATA_GENERATION_PATH}equation_plot.py")
 
     augment_switch = "" if args.no_augmentation else "--augmentation"
 
     if args.train: # train the chosen network
         if args.train == "MSER_classifier":
             args.train = "mser/classifier"
-        os.system(f"python3 -u {NETWORKS_PATH}{args.train}.py --train {augment_switch}")
+        os.system(f"{PYTHON_COMMAND} -u {NETWORKS_PATH}{args.train}.py --train {augment_switch}")
 
     if args.evaluate: # evaluate the chosen network
         if args.evaluate == "MSER_classifier":
             args.evaluate = "mser/classifier"
-        os.system(f"python3 -u {NETWORKS_PATH}{args.evaluate}.py --evaluate {augment_switch}")
+        os.system(f"{PYTHON_COMMAND} -u {NETWORKS_PATH}{args.evaluate}.py --evaluate {augment_switch}")
     
     if args.evaluate_MC: # evaluate the multi-classifier on augmented and not augmented test sets and on handrwritten set
         not_augmented_model = CustomRecursiveCNN(device="cpu", augmentation=False)
@@ -243,6 +252,7 @@ if __name__ == "__main__":
         not_augmented_handwritten_distances = evaluate_model_on_handwritten_set(not_augmented_model)
         augmented_handwritten_distances = evaluate_model_on_handwritten_set(augmented_model)
 
+        # plot of 4 bar plots
         figure, axis = plt.subplots(2, 2)
         figure.set_size_inches(10, 7)
         plt.subplots_adjust(left=0.02, bottom=0.05, right=0.98, top=0.95, hspace=0.2, wspace=0.05)
@@ -278,6 +288,8 @@ if __name__ == "__main__":
         augmented_model = CustomRecursiveCNN(device="cpu", augmentation=True)
 
         augmented_handwritten_distances = evaluate_model_on_handwritten_set(augmented_model)
+
+        # bar plot
         figure, axis = plt.subplots(1, 1)
         figure.set_size_inches(9, 6)
         plt.subplots_adjust(left=0.02, bottom=0.05, right=1.0, top=1.0, hspace=0.1, wspace=0.02)
@@ -293,6 +305,8 @@ if __name__ == "__main__":
         mser_detector = Detector(use_gpu=False)
 
         MSER_distances = evaluate_MSER_on_handrwritten(mser_detector)
+
+        # bar plot
         figure, axis = plt.subplots(1, 1)
         figure.set_size_inches(9, 6)
         plt.subplots_adjust(left=0.02, bottom=0.05, right=1.0, top=1.0, hspace=0.1, wspace=0.02)
@@ -309,6 +323,8 @@ if __name__ == "__main__":
         mser_detector = Detector(use_gpu=False)
 
         ensemble_distances = evaluate_ensemble_on_handrwritten(augmented_model, mser_detector)
+
+        # bar plot
         figure, axis = plt.subplots(1, 1)
         figure.set_size_inches(9, 6)
         plt.subplots_adjust(left=0.02, bottom=0.05, right=1.0, top=1.0, hspace=0.1, wspace=0.02)

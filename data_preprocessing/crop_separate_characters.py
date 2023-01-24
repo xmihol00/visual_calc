@@ -30,7 +30,7 @@ for label, target_file_name in enumerate(["zeros", "ones", "twos", "threes", "fo
     for i, sample_index in enumerate(class_indices):
         image = all_images[sample_index]
         coordinates = np.argwhere(image > 0)
-        # crop the width just to the symbol and keep the same size
+        # crop the width just to the symbol and keep the same height
         target_file[i] = image[:, coordinates.min(axis=0)[1]:coordinates.max(axis=0)[1] + 1]
     
     validation_idx = int(sample_count * 0.8)

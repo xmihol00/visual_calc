@@ -22,9 +22,10 @@ mser_detector = Detector(use_gpu=False)
 for file_name in sorted(glob.glob(f"{WRITERS_PATH}*.jpg")):
     image, areas = hwe.equation_areas(file_name)
     for sample, (row1, row2, col1, col2) in zip(hwe.samples_from_area(image, areas), areas):
-        predictions = augmented_model(sample)
-        string_labels = hwe.extract_string_labels(predictions)
+        predictions = augmented_model(sample) # predict multiple times the same equation 
+        string_labels = hwe.extract_string_labels(predictions) # parse predictions to string
 
+        # convert part of the image with an equation to desired format
         area = image[row1:row2, col1:col2]
         gray = (area * 255).astype(np.uint8)
         gray = 255 - gray
@@ -33,6 +34,8 @@ for file_name in sorted(glob.glob(f"{WRITERS_PATH}*.jpg")):
         img = imutils.resize(img, width=320, inter=cv2.INTER_AREA)
         valid_boxes, labels, probabilities = mser_detector.detect_digits_in_img(img, False, False)
         eq_results = mser_detector.compute_equation(valid_boxes, labels, probabilities, 3)
+
+        # weight most probable predictions by 6, 4 and 2 
         weight = 6
         for equation_result in eq_results:
             for _ in range(0, weight):

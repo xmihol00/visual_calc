@@ -74,7 +74,8 @@ rename them respectively to:
 and put the renamed downloaded files to a ``downloads/`` directory in the root directory of the project.
 
 ## Result reproduction
-We prepared a final (``final.py``) script to reproduce the results shown in the report. Using the script you can conveniently train the neural networks or display results using already trained weights by us. Retraining will not changed the results, as we have fixed the randomness. Run the script with
+We prepared a final (``final.py``) script to reproduce the results shown in the report. Using the script you can conveniently train the neural networks or display results using already trained weights by us. Retraining will not changed the results, as we have fixed the randomness. 
+The preprocessing portion to be run on linux or within a linux shell to work properly. Run the script with:
 ```
 python3 final.py [-h] [-u] [-p] [-g] [-d] [-pd] [-t {MSER_classifier,custom_recursive_CNN,custom_CNN}]
                  [-e {MSER_classifier,custom_recursive_CNN,custom_CNN}] [-prMC] [-prMSER] [-pr]

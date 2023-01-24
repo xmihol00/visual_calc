@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
     if args.preprocessing or args.dataset:
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}merge_preprocess_datasets.py")
-        os.system(f"python3 -u {NETWORKS_PATH}outliers_detector.py clean")
+        os.system(f"python3 -u {NETWORKS_PATH}outliers_detector.py --clean")
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_augment_characters.py")
         os.system(f"python3 -u {DATA_PREPROCESSING_PATH}crop_separate_characters.py")
 

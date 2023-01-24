@@ -49,7 +49,7 @@ Robert Stojanovic, robert.stojanovic@student.tugraz.at
 ```
 
 ## Requirements
-The application was run and tested on a linux environment, so we cannot guarantee it working on other operating systems.
+The application was run and tested on a linux environment, so we cannot guarantee it fully working on other operating systems. The demo application should be able to run on most platforms, however.
 
 We mainly use common python libraries for machine learning and image pre-processing, install these with
 ```
@@ -96,15 +96,18 @@ options:
   -prMSER, --plot_results_MSER  Plot results of the MSER based classifier.
   -pr, --plot_results           Plot results of an ensemble of the multi-classifier and the MSER based classifier.
 ```
-Additionaly, we provide a GUI script (``GUI.py``), which lets you select an image from your local storage and displays the results of equations on it. We also provide testing images in the ``testing/`` directory and its subdirectories with the GUI script.
 
-### Examples of final script commands
+### Evaluation scripts
 ``python3 final.py -d                           `` - Pre-processes, cleans, augments and generates equations from the downloaded data sets, this **must be run first** before any of the following commands.   
 ``python3 final.py -prMC -prMSER -pr            `` - Plots all results as bar plot of Levenshtein distances.  
 ``python3 final.py -e MSER_classifier           `` - Evaluates the classifier on augmented data set and plots a confusion matrix.  
 ``python3 final.py -e custom_recursive_CNN      `` - Evaluates the recursive CNN on augmented data set and plots a bar plot of Levenshtein distances.  
 ``python3 final.py -eMC                         `` - Evaluates the recursive CNN on augmented and not augmented data sets and plots a bar plot of Levenshtein distances.  
-``python3 final.py -t custom_recursive_CNN      `` - Trains the recursive CNN on augmented data.
+
+## Running the demo application
+``python GUI.py`` - Runs the graphical interface which allows you to select an image with equations and compute the equations within it. 
+We also provide testing images in the ``testing/`` directory and its subdirectories with the GUI script.
+
 
 ### Screenshots of the GUI
 | ![](screenshots/GUI_start.png) | ![](screenshots/GUI_select_file.png) | ![](screenshots/GUI_results.png) |

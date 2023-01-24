@@ -165,7 +165,7 @@ if __name__ == "__main__":
         plt.close()
 
     elif args.evaluate: # Evaluate the model
-        model.load_weights(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}').expect_partial()
+        model.load_weights(f'{MODELS_PATH}classifier_{"own_data_augmentation" if args.augmentation else "no_augmentation"}/mser_classifier.h5')
         labels = label_encoder.classes_
         total_predictions = model.predict(test_images, verbose=2)
         highest_probability = np.argmax(total_predictions, axis=1)
